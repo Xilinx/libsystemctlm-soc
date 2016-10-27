@@ -1,0 +1,23 @@
+Xilinx libremote-port
+---------------------------------------
+Remote-Port (RP) is an inter-simulator protocol. It assumes a reliable
+point to point communcation with the remote simulation environment.
+
+Setup
+---------------------------------------
+In the SETUP phase a mandatory HELLO packet is exchanged with optional
+CFG packets following. HELLO packets are useful to ensure that both
+sides are speaking the same protocol and using compatible versions.
+
+CFG packets are used to negotiate configuration options. At the moment
+these remain unimplemented.
+
+Once the session is up, communication can start through various other
+commands. The list can be found in the source code.
+
+Commands are carried over RP packets. Every RP packet contains a header
+with length, flags and an ID to track potential responses.
+
+The header is followed by a packet specific payload. You'll find the
+details of the various commands packet layouts in the source code.
+Some commands can carry data/blobs in their payload.

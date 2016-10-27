@@ -1,0 +1,46 @@
+Xilinx libsystemctlm-soc
+---------------------------------------
+This repository contains the code and header files required to connect your
+SystemC application with Xilinx's QEMU. There are three directories.
+
+ libsystemctlm-soc
+ |
+ |-zynq
+ |  Contains the wrapper files required to interface a Zynq-7000 QEMU model
+ |    of the PS with a SystemC model of the PL.
+ |-zynqmp
+ |  Contains the wrapper files required to interface a ZynqMP QEMU model
+ |    of the PS with a SystemC model of the PL.
+ |-libremote-port
+ |  Contains the communitcation library for Remote-Port (RP) that is used for
+ |   inter-simulator communication.
+
+Including in your project
+---------------------------------------
+To include this library in your project you can follow the steps below. This
+assumes that you have cloned this repo in the root direcotry of your project.
+
+See: https://github.com/Xilinx/systemctlm-cosim-demo for an example project using this
+library.
+
+Include this in your Makefile for Zynq-7000 projects:
+  LIBSOC_PATH=libtlm-soc
+  LIBSOC_ZYNQ_PATH=$(LIBSOC_PATH)/zynq
+  SC_OBJS += $(LIBSOC_ZYNQ_PATH)/xilinx-zynq.o
+  CPPFLAGS += -I $(LIBSOC_ZYNQ_PATH)
+
+Include this in your Makefile for ZynqMP projects:
+  LIBSOC_ZYNQMP_PATH=$(LIBSOC_PATH)/zynqmp
+  SC_OBJS += $(LIBSOC_ZYNQMP_PATH)/xilinx-zynqmp.o
+  CPPFLAGS += -I $(LIBSOC_ZYNQMP_PATH)
+
+Include this in your Makefile for all projects:
+  LIBRP_PATH=$(LIBSOC_PATH)/libremote-port
+  C_OBJS += $(LIBRP_PATH)/safeio.o
+  C_OBJS += $(LIBRP_PATH)/remote-port-proto.o
+  C_OBJS += $(LIBRP_PATH)/remote-port-sk.o
+  SC_OBJS += $(LIBRP_PATH)/remote-port-tlm.o
+  SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-memory-master.o
+  SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-memory-slave.o
+  SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-wires.o
+  CPPFLAGS += -I $(LIBRP_PATH)
