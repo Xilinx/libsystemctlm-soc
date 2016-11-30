@@ -134,17 +134,17 @@ static int sk_tcp_client(const char *descr, bool daemon)
 		if (daemon) {
 			if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
 				perror("bind");
-				abort();
+				exit(EXIT_FAILURE);
 			}
 			if (listen(sfd, 10) == -1) {
 				perror("listen");
-				abort();
+				exit(EXIT_FAILURE);
 			}
 			printf("Waiting on connections to %s:%s\n", host, port);
 			sfd = accept(sfd, NULL, NULL);
 			if (sfd < 0) {
 				perror("listen");
-				abort();
+				exit(EXIT_FAILURE);
 			}
 			break;
 		} else {
