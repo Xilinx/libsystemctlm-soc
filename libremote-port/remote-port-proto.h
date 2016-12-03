@@ -195,25 +195,25 @@ static inline void *rp_busaccess_dataptr(struct rp_pkt_busaccess *pkt)
 size_t rp_encode_read(uint32_t id, uint32_t dev,
                       struct rp_pkt_busaccess *pkt,
                       int64_t clk, uint16_t master_id,
-                      uint64_t addr, uint32_t attr, uint32_t size,
+                      uint64_t addr, uint64_t attr, uint32_t size,
                       uint32_t width, uint32_t stream_width);
 
 size_t rp_encode_read_resp(uint32_t id, uint32_t dev,
                            struct rp_pkt_busaccess *pkt,
                            int64_t clk, uint16_t master_id,
-                           uint64_t addr, uint32_t attr, uint32_t size,
+                           uint64_t addr, uint64_t attr, uint32_t size,
                            uint32_t width, uint32_t stream_width);
 
 size_t rp_encode_write(uint32_t id, uint32_t dev,
                        struct rp_pkt_busaccess *pkt,
                        int64_t clk, uint16_t master_id,
-                       uint64_t addr, uint32_t attr, uint32_t size,
+                       uint64_t addr, uint64_t attr, uint32_t size,
                        uint32_t width, uint32_t stream_width);
 
 size_t rp_encode_write_resp(uint32_t id, uint32_t dev,
                        struct rp_pkt_busaccess *pkt,
                        int64_t clk, uint16_t master_id,
-                       uint64_t addr, uint32_t attr, uint32_t size,
+                       uint64_t addr, uint64_t attr, uint32_t size,
                        uint32_t width, uint32_t stream_width);
 
 size_t rp_encode_interrupt(uint32_t id, uint32_t dev,

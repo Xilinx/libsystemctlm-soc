@@ -173,7 +173,7 @@ size_t rp_encode_hello(uint32_t id, uint32_t dev, struct rp_pkt_hello *pkt,
 
 static void rp_encode_busaccess_common(struct rp_pkt_busaccess *pkt,
                                   int64_t clk, uint16_t master_id,
-                                  uint64_t addr, uint32_t attr, uint32_t size,
+                                  uint64_t addr, uint64_t attr, uint32_t size,
                                   uint32_t width, uint32_t stream_width)
 {
     pkt->timestamp = htobe64(clk);
@@ -188,7 +188,7 @@ static void rp_encode_busaccess_common(struct rp_pkt_busaccess *pkt,
 size_t rp_encode_read(uint32_t id, uint32_t dev,
                       struct rp_pkt_busaccess *pkt,
                       int64_t clk, uint16_t master_id,
-                      uint64_t addr, uint32_t attr, uint32_t size,
+                      uint64_t addr, uint64_t attr, uint32_t size,
                       uint32_t width, uint32_t stream_width)
 {
     rp_encode_hdr(&pkt->hdr, RP_CMD_read, id, dev,
@@ -201,7 +201,7 @@ size_t rp_encode_read(uint32_t id, uint32_t dev,
 size_t rp_encode_read_resp(uint32_t id, uint32_t dev,
                            struct rp_pkt_busaccess *pkt,
                            int64_t clk, uint16_t master_id,
-                           uint64_t addr, uint32_t attr, uint32_t size,
+                           uint64_t addr, uint64_t attr, uint32_t size,
                            uint32_t width, uint32_t stream_width)
 {
     rp_encode_hdr(&pkt->hdr, RP_CMD_read, id, dev,
@@ -214,7 +214,7 @@ size_t rp_encode_read_resp(uint32_t id, uint32_t dev,
 size_t rp_encode_write(uint32_t id, uint32_t dev,
                        struct rp_pkt_busaccess *pkt,
                        int64_t clk, uint16_t master_id,
-                       uint64_t addr, uint32_t attr, uint32_t size,
+                       uint64_t addr, uint64_t attr, uint32_t size,
                        uint32_t width, uint32_t stream_width)
 {
     rp_encode_hdr(&pkt->hdr, RP_CMD_write, id, dev,
@@ -227,7 +227,7 @@ size_t rp_encode_write(uint32_t id, uint32_t dev,
 size_t rp_encode_write_resp(uint32_t id, uint32_t dev,
                        struct rp_pkt_busaccess *pkt,
                        int64_t clk, uint16_t master_id,
-                       uint64_t addr, uint32_t attr, uint32_t size,
+                       uint64_t addr, uint64_t attr, uint32_t size,
                        uint32_t width, uint32_t stream_width)
 {
     rp_encode_hdr(&pkt->hdr, RP_CMD_write, id, dev,
