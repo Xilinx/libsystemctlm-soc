@@ -47,6 +47,7 @@ extern "C" {
 #include "remote-port-sk.h"
 };
 #include "xilinx-zynqmp.h"
+#include "tlm-extensions/genattr.h"
 #include <sys/types.h>
 
 xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
@@ -66,9 +67,33 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	  rp_wires_in("wires_in", 16, 0),
 	  rp_wires_out("wires_out", 0, 4),
 	  rp_irq_out("irq_out", 0, 164),
+	  proxy_in("proxy-in", 9),
+	  proxy_out("proxy-out", 9),
 	  pl2ps_irq("pl2ps_irq", 16),
 	  ps2pl_irq("ps2pl_irq", 164)
 {
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> * const out[] = {
+		&rp_axi_hpc0_fpd.sk,
+		&rp_axi_hpc1_fpd.sk,
+		&rp_axi_hp0_fpd.sk,
+		&rp_axi_hp1_fpd.sk,
+		&rp_axi_hp2_fpd.sk,
+		&rp_axi_hp3_fpd.sk,
+		&rp_axi_lpd.sk,
+		&rp_axi_acp_fpd.sk,
+		&rp_axi_ace_fpd.sk,
+	};
+	tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> ** const named[] = {
+		&s_axi_hpc_fpd[0],
+		&s_axi_hpc_fpd[1],
+		&s_axi_hp_fpd[0],
+		&s_axi_hp_fpd[1],
+		&s_axi_hp_fpd[2],
+		&s_axi_hp_fpd[3],
+		&s_axi_lpd,
+		&s_axi_acp_fpd,
+		&s_axi_ace_fpd,
+	};
 	int i;
 
 	/* Expose friendly named PS Master ports.  */
@@ -76,16 +101,20 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	s_axi_hpm_fpd[1] = &rp_axi_hpm1_fpd.sk;
 	s_axi_hpm_lpd = &rp_axi_hpm_lpd.sk;
 
-	/* Expose friendly named PL Master ports.  */
-	s_axi_hpc_fpd[0] = &rp_axi_hpc0_fpd.sk;
-	s_axi_hpc_fpd[1] = &rp_axi_hpc1_fpd.sk;
-	s_axi_hp_fpd[0] = &rp_axi_hp0_fpd.sk;
-	s_axi_hp_fpd[1] = &rp_axi_hp1_fpd.sk;
-	s_axi_hp_fpd[2] = &rp_axi_hp2_fpd.sk;
-	s_axi_hp_fpd[3] = &rp_axi_hp3_fpd.sk;
-	s_axi_lpd = &rp_axi_lpd.sk;
-	s_axi_acp_fpd = &rp_axi_acp_fpd.sk;
-	s_axi_ace_fpd = &rp_axi_ace_fpd.sk;
+	// Connect our Master ID injecting proxies.
+	for (i = 0; i < proxy_in.size(); i++) {
+		char name[32];
+
+		sprintf(name, "proxy_in-%d", i);
+		proxy_in[i].register_b_transport(this,
+						  &xilinx_zynqmp::b_transport,
+						  i);
+		proxy_in[i].register_transport_dbg(this,
+						  &xilinx_zynqmp::transport_dbg,
+						  i);
+		named[i][0] = &proxy_in[i];
+		proxy_out[i].bind(*out[i]);
+	}
 
 	for (i = 0; i < 16; i++) {
 		rp_wires_in.wires_in[i](pl2ps_irq[i]);
@@ -95,6 +124,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 		rp_irq_out.wires_out[i](ps2pl_irq[i]);
 	}
 
+	// Register with Remote-Port.
 	register_dev(0, &rp_axi_hpc0_fpd);
 	register_dev(1, &rp_axi_hpc1_fpd);
 	register_dev(2, &rp_axi_hp0_fpd);
@@ -112,4 +142,64 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	register_dev(12, &rp_wires_in);
 	register_dev(13, &rp_wires_out);
 	register_dev(14, &rp_irq_out);
+}
+
+void xilinx_zynqmp::tie_off(void)
+{
+	tlm_utils::simple_initiator_socket<xilinx_zynqmp> *tieoff_sk;
+	int i;
+
+	remoteport_tlm::tie_off();
+
+	for (i = 0; i < proxy_in.size(); i++) {
+		if (proxy_in[i].size())
+			continue;
+		tieoff_sk = new tlm_utils::simple_initiator_socket<xilinx_zynqmp>();
+		tieoff_sk->bind(proxy_in[i]);
+	}
+}
+
+// Modify the Master ID and pass through transactions.
+void xilinx_zynqmp::b_transport(int id,
+				tlm::tlm_generic_payload& trans,
+				sc_time &delay)
+{
+	// The lower 6 bits of the Master ID are controlled by PL logic.
+	// Upper 7 bits are dictated by the PS.
+	//
+	// Bits [9:6] are the port index + 8.
+	// Bits [12:10] are the TBU index.
+#define MASTER_ID(tbu, id_9_6) ((tbu) << 10 | (id_9_6) << 6)
+	static const uint32_t master_id[9] = {
+		MASTER_ID(0, 8),
+		MASTER_ID(0, 9),
+		MASTER_ID(3, 10),
+		MASTER_ID(4, 11),
+		MASTER_ID(4, 12),
+		MASTER_ID(5, 13),
+		MASTER_ID(2, 14),
+		MASTER_ID(0, 2), /* ACP. No TBU. AXI IDs? */
+		MASTER_ID(0, 15), /* ACE. No TBU.  */
+	};
+	uint64_t mid;
+	genattr_extension *genattr;
+
+	trans.get_extension(genattr);
+	if (!genattr) {
+		genattr = new genattr_extension();
+		trans.set_extension(genattr);
+	}
+
+	mid = genattr->get_master_id();
+	/* PL Logic cannot control upper bits.  */
+	mid &= (1ULL << 6) - 1;
+	mid |= master_id[id];
+	genattr->set_master_id(mid);
+
+	proxy_out[id]->b_transport(trans, delay);
+}
+
+// Passthrough.
+unsigned int xilinx_zynqmp::transport_dbg(int id, tlm::tlm_generic_payload& trans) {
+	return proxy_out[id]->transport_dbg(trans);
 }

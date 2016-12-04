@@ -63,6 +63,19 @@ private:
 	remoteport_tlm_wires rp_wires_out;
 	remoteport_tlm_wires rp_irq_out;
 
+	/*
+	 * In order to get Master-IDs right, we need to proxy all
+	 * transactions and inject generic attributes with Master IDs.
+	 */
+	sc_vector<tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> > proxy_in;
+	sc_vector<tlm_utils::simple_initiator_socket_tagged<xilinx_zynqmp> > proxy_out;
+
+	virtual void b_transport(int id,
+				 tlm::tlm_generic_payload& trans,
+				 sc_time& delay);
+	virtual unsigned int transport_dbg(int id,
+					   tlm::tlm_generic_payload& trans);
+
 public:
 	/*
 	 * HPM0 - 1 _FPD.
@@ -98,14 +111,15 @@ public:
 	 *
 	 * Used to transfer data from the PL to the PS.
 	 */
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_hpc_fpd[2];
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_hp_fpd[4];
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_lpd;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_acp_fpd;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_ace_fpd;
+	tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> *s_axi_hpc_fpd[2];
+	tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> *s_axi_hp_fpd[4];
+	tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> *s_axi_lpd;
+	tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> *s_axi_acp_fpd;
+	tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> *s_axi_ace_fpd;
 
 	sc_vector<sc_signal<bool> > pl2ps_irq;
 	sc_vector<sc_signal<bool> > ps2pl_irq;
 
 	xilinx_zynqmp(sc_core::sc_module_name name, const char *sk_descr);
+	void tie_off(void);
 };
