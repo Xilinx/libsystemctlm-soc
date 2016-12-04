@@ -57,11 +57,7 @@ class remoteport_tlm
 : public sc_core::sc_module
 {
 public:
-	remoteport_tlm_dev *devs[RP_MAX_DEVS];
-
-	const char *sk_descr;
 	sc_in<bool> rst;
-
 
 	SC_HAS_PROCESS(remoteport_tlm);
         remoteport_tlm(sc_core::sc_module_name name,
@@ -86,6 +82,8 @@ public:
 	remoteport_packet pkt_rx;
 
 private:
+	remoteport_tlm_dev *devs[RP_MAX_DEVS];
+	const char *sk_descr;
 	unsigned char *pktbuf_data;
 	/* Socket.  */
 	int fd;
