@@ -69,7 +69,7 @@ public:
 			const char *sk_descr);
 
 	void register_dev(unsigned int dev_id, remoteport_tlm_dev *dev);
-	void tie_off(void);
+	virtual void tie_off(void);
 
 	/* Public to devs.  */
 	uint32_t rp_pkt_id;
