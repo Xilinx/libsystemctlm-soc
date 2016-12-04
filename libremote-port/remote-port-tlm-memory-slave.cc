@@ -42,6 +42,8 @@ extern "C" {
 #include "remote-port-tlm.h"
 #include "remote-port-tlm-memory-slave.h"
 
+#include "tlm-extensions/genattr.h"
+
 using namespace sc_core;
 using namespace std;
 
@@ -59,6 +61,20 @@ void remoteport_tlm_memory_slave::tie_off(void)
 	}
 }
 
+// Convert TLM Generic Attributes into remote-port attributes.
+static inline uint64_t genattr_to_rpattr(genattr_extension *genattr)
+{
+	uint64_t rp_attr = 0;
+
+	if (genattr->get_eop()) {
+		rp_attr |= RP_BUS_ATTR_EOP;
+	}
+	if (genattr->get_secure()) {
+		rp_attr |= RP_BUS_ATTR_SECURE;
+	}
+	return rp_attr;
+}
+
 void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 				       sc_time& delay)
 {
@@ -71,6 +87,15 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	unsigned char *data = trans.get_data_ptr();
 	unsigned int len = trans.get_data_length();
 	unsigned int wid = trans.get_streaming_width();
+	genattr_extension *genattr;
+	uint16_t master_id = 0;
+	uint64_t attr = 0;
+
+	trans.get_extension(genattr);
+	if (genattr) {
+		master_id = genattr->get_master_id();
+		attr |= genattr_to_rpattr(genattr);
+	}
 
 	adaptor->pkt_tx.alloc(sizeof adaptor->pkt_tx.pkt->busaccess + len);
 	clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
@@ -78,8 +103,8 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	if (cmd == tlm::TLM_READ_COMMAND) {
 		plen = rp_encode_read(adaptor->rp_pkt_id++, dev_id,
 					&adaptor->pkt_tx.pkt->busaccess,
-					clk, 0,
-					addr, 0,
+					clk, master_id,
+					addr, attr,
 					len,
 					0,
 					wid);
@@ -87,8 +112,8 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	} else {
 		plen = rp_encode_write(adaptor->rp_pkt_id++, dev_id,
 					&adaptor->pkt_tx.pkt->busaccess,
-					clk, 0,
-					addr, 0,
+					clk, master_id,
+					addr, attr,
 					len,
 					0,
 					wid);
