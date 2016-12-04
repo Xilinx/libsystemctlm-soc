@@ -41,6 +41,7 @@ extern "C" {
 };
 #include "remote-port-tlm.h"
 #include "remote-port-tlm-memory-master.h"
+#include "tlm-extensions/genattr.h"
 
 using namespace sc_core;
 using namespace std;
@@ -52,6 +53,7 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 {
 	tlm::tlm_generic_payload tr;
 	sc_time delay;
+	genattr_extension *genattr;
 
 	adaptor->account_time(pkt.sync.timestamp);
 	if (can_sync && adaptor->m_qk.need_sync()) {
@@ -69,12 +71,21 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	tr.set_dmi_allowed(false);
 	tr.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
+	// Extensions
+	genattr = new(genattr_extension);
+	genattr->set_eop(pkt.busaccess.attributes & RP_BUS_ATTR_EOP);
+	genattr->set_secure(pkt.busaccess.attributes & RP_BUS_ATTR_SECURE);
+	genattr->set_master_id(pkt.busaccess.master_id);
+	tr.set_extension(genattr);
+
 	sk->b_transport(tr, delay);
 	if (tr.get_response_status() != tlm::TLM_OK_RESPONSE) {
 		/* Handle errors.  */
 		printf("bus error\n");
 	}
 	adaptor->m_qk.set(delay);
+
+	tr.release_extension(genattr);
 	return delay;
 }
 
