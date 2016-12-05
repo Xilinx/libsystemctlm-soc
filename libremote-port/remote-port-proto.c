@@ -120,7 +120,34 @@ int rp_decode_payload(struct rp_pkt *pkt)
         assert(pkt->hdr.len >= sizeof pkt->hello.version);
         pkt->hello.version.major = be16toh(pkt->hello.version.major);
         pkt->hello.version.minor = be16toh(pkt->hello.version.minor);
-        used += pkt->hdr.len;
+        used += sizeof pkt->hello.version;
+
+        if ((pkt->hdr.len - used) >= sizeof pkt->hello.caps) {
+            void *offset;
+            int i;
+
+            pkt->hello.caps.offset = be32toh(pkt->hello.caps.offset);
+            pkt->hello.caps.len = be16toh(pkt->hello.caps.len);
+
+            offset = (char *)pkt + pkt->hello.caps.offset;
+            for (i = 0; i < pkt->hello.caps.len; i++) {
+                uint32_t cap;
+
+                /* We don't know if offset is 32bit aligned so use
+                 * memcpy to do the endian conversion.  */
+                memcpy(&cap, offset + i * sizeof cap, sizeof cap);
+                cap = be32toh(cap);
+                memcpy(offset + i * sizeof cap, &cap, sizeof cap);
+            }
+            used += sizeof pkt->hello.caps;
+        } else {
+            pkt->hello.caps.offset = 0;
+            pkt->hello.caps.len = 0;
+        }
+
+        /* Consume everything ignoring additional headers we do not yet
+         * know about.  */
+        used = pkt->hdr.len;
         break;
     case RP_CMD_write:
     case RP_CMD_read:
@@ -161,13 +188,29 @@ void rp_encode_hdr(struct rp_pkt_hdr *hdr, uint32_t cmd, uint32_t id,
     hdr->flags = htobe32(flags);
 }
 
-size_t rp_encode_hello(uint32_t id, uint32_t dev, struct rp_pkt_hello *pkt,
-                       uint16_t version_major, uint16_t version_minor)
+size_t rp_encode_hello_caps(uint32_t id, uint32_t dev, struct rp_pkt_hello *pkt,
+                            uint16_t version_major, uint16_t version_minor,
+                            uint32_t *caps, uint32_t *caps_out,
+                            uint32_t caps_len)
 {
+    size_t psize = sizeof *pkt + sizeof caps[0] * caps_len;
+    unsigned int i;
+
     rp_encode_hdr(&pkt->hdr, RP_CMD_hello, id, dev,
-                  sizeof *pkt - sizeof pkt->hdr, 0);
+                  psize - sizeof pkt->hdr, 0);
     pkt->version.major = htobe16(version_major);
     pkt->version.minor = htobe16(version_minor);
+
+    /* Feature list is appeneded right after the hello packet.  */
+    pkt->caps.offset = htobe32(sizeof *pkt);
+    pkt->caps.len = htobe16(caps_len);
+
+    for (i = 0; i < caps_len; i++) {
+        uint32_t cap;
+
+        cap = caps[i];
+        caps_out[i] = htobe32(cap);
+    }
     return sizeof *pkt;
 }
 
@@ -274,6 +317,30 @@ size_t rp_encode_sync_resp(uint32_t id, uint32_t dev,
 {
     return rp_encode_sync_common(id, dev, pkt, clk, RP_PKT_FLAGS_response);
 }
+
+void rp_process_caps(struct rp_peer_state *peer,
+                     void *caps, size_t caps_len)
+{
+    int i;
+
+    assert(peer->caps.busaccess_ext_base == false);
+
+    for (i = 0; i < caps_len; i++) {
+        uint32_t cap;
+
+        memcpy(&cap, caps + i * sizeof cap, sizeof cap);
+
+        switch (cap) {
+        case CAP_BUSACCESS_EXT_BASE:
+            peer->caps.busaccess_ext_base = true;
+            break;
+        case CAP_BUSACCESS_EXT_BYTE_EN:
+            peer->caps.busaccess_ext_byte_en = true;
+            break;
+        }
+    }
+}
+
 
 void rp_dpkt_alloc(RemotePortDynPkt *dpkt, size_t size)
 {

@@ -51,7 +51,7 @@
 
 
 #define RP_VERSION_MAJOR 4
-#define RP_VERSION_MINOR 0
+#define RP_VERSION_MINOR 1
 
 #if defined(_WIN32) && defined(__MINGW32__)
 /* mingw GCC has a bug with packed attributes.  */
@@ -104,15 +104,29 @@ struct rp_version {
     uint16_t minor;
 } PACKED;
 
+struct rp_capabilities {
+    /* Offset from start of packet.  */
+    uint32_t offset;
+    uint16_t len;
+    uint16_t reserved0;
+} PACKED;
+
+enum {
+    CAP_BUSACCESS_EXT_BASE = 1,    /* New header layout. */
+    CAP_BUSACCESS_EXT_BYTE_EN = 2, /* Support for Byte Enables.  */
+};
+
 struct rp_pkt_hello {
     struct rp_pkt_hdr hdr;
     struct rp_version version;
+    struct rp_capabilities caps;
 } PACKED;
 
 
 enum {
     RP_BUS_ATTR_EOP        =  (1 << 0),
     RP_BUS_ATTR_SECURE     =  (1 << 1),
+    RP_BUS_ATTR_EXT_BASE   =  (1 << 2),
 };
 
 struct rp_pkt_busaccess {
@@ -168,6 +182,11 @@ struct rp_peer_state {
 
     struct rp_version version;
 
+    struct {
+        bool busaccess_ext_base;
+        bool busaccess_ext_byte_en;
+    } caps;
+
     /* Used to normalize our clk.  */
     int64_t clk_base;
 
@@ -183,8 +202,23 @@ void rp_encode_hdr(struct rp_pkt_hdr *hdr,
                    uint32_t cmd, uint32_t id, uint32_t dev, uint32_t len,
                    uint32_t flags);
 
-size_t rp_encode_hello(uint32_t id, uint32_t dev, struct rp_pkt_hello *pkt,
-                       uint16_t version_major, uint16_t version_minor);
+/*
+ * caps is a an array of supported capabilities by the implementor.
+ * caps_out is the encoded (network byte order) version of the
+ * same array. It should be sent to the peer after the hello packet.
+ */
+size_t rp_encode_hello_caps(uint32_t id, uint32_t dev, struct rp_pkt_hello *pkt,
+                            uint16_t version_major, uint16_t version_minor,
+                            uint32_t *caps, uint32_t *features_out,
+                            uint32_t features_len);
+
+/* rp_encode_hello is deprecated in favor of hello_caps.  */
+static inline size_t __attribute__ ((deprecated))
+rp_encode_hello(uint32_t id, uint32_t dev, struct rp_pkt_hello *pkt,
+                uint16_t version_major, uint16_t version_minor) {
+    return rp_encode_hello_caps(id, dev, pkt, version_major, version_minor,
+                                NULL, NULL, 0);
+}
 
 static inline void *rp_busaccess_dataptr(struct rp_pkt_busaccess *pkt)
 {
@@ -228,6 +262,9 @@ size_t rp_encode_sync(uint32_t id, uint32_t dev,
 size_t rp_encode_sync_resp(uint32_t id, uint32_t dev,
                            struct rp_pkt_sync *pkt,
                            int64_t clk);
+
+void rp_process_caps(struct rp_peer_state *peer,
+                     void *caps, size_t caps_len);
 
 /* Dynamically resizable remote port pkt.  */
 
