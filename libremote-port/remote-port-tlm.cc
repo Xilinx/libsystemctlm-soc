@@ -150,6 +150,12 @@ void remoteport_tlm::rp_cmd_hello(struct rp_pkt &pkt)
 			<< endl;
 		exit(EXIT_FAILURE);
 	}
+
+	if (pkt.hello.caps.len) {
+		void *caps = (char *) &pkt + pkt.hello.caps.offset;
+
+		rp_process_caps(&peer, caps, pkt.hello.caps.len);
+	}
 }
 
 void remoteport_tlm::account_time(int64_t rclk)
@@ -177,12 +183,16 @@ void remoteport_tlm::account_time(int64_t rclk)
 
 void remoteport_tlm::rp_say_hello(void)
 {
+	uint32_t caps[] = {
+	};
 	struct rp_pkt_hello pkt;
 	size_t len;
 
-	len = rp_encode_hello(rp_pkt_id++, 0,
-				&pkt, RP_VERSION_MAJOR, RP_VERSION_MINOR);
+	len = rp_encode_hello_caps(rp_pkt_id++, 0,
+				   &pkt, RP_VERSION_MAJOR, RP_VERSION_MINOR,
+				   caps, caps, sizeof caps / sizeof caps[0]);
 	rp_write(&pkt, len);
+	rp_write(caps, sizeof caps);
 }
 
 void remoteport_tlm::rp_cmd_sync(struct rp_pkt &pkt, bool can_sync)
