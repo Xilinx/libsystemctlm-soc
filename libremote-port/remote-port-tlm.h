@@ -23,6 +23,10 @@
  * THE SOFTWARE.
  */
 
+extern "C" {
+#include "remote-port-proto.h"
+};
+
 class remoteport_packet {
 public:
 	union {
@@ -68,6 +72,7 @@ public:
 	virtual void tie_off(void);
 
 	/* Public to devs.  */
+	struct rp_peer_state peer;
 	uint32_t rp_pkt_id;
 
 	bool rp_process(bool sync);

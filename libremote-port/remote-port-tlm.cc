@@ -74,6 +74,7 @@ remoteport_tlm::remoteport_tlm(sc_module_name name,
 	this->rp_pkt_id = 0;
 
 	memset(devs, 0, sizeof devs);
+	memset(&peer, 0, sizeof peer);
 
 	SC_THREAD(process);
 }
