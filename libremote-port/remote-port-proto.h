@@ -51,7 +51,7 @@
 
 
 #define RP_VERSION_MAJOR 4
-#define RP_VERSION_MINOR 1
+#define RP_VERSION_MINOR 2
 
 #if defined(_WIN32) && defined(__MINGW32__)
 /* mingw GCC has a bug with packed attributes.  */
@@ -151,6 +151,51 @@ struct rp_pkt_busaccess {
     uint16_t master_id;
 } PACKED;
 
+
+/* This is the new extended busaccess packet layout.  */
+struct rp_pkt_busaccess_ext_base {
+    struct rp_pkt_hdr hdr;
+    uint64_t timestamp;
+    uint64_t attributes;
+    uint64_t addr;
+
+    /* Length in bytes.  */
+    uint32_t len;
+
+    /* Width of each beat in bytes. Set to zero for unknown (let the remote
+       side choose).  */
+    uint32_t width;
+
+    /* Width of streaming, must be a multiple of width.
+       addr should repeat itself around this width. Set to same as len
+       for incremental (normal) accesses.  In bytes.  */
+    uint32_t stream_width;
+
+    /* Implementation specific source or master-id.  */
+    uint16_t master_id;
+    /* ---- End of 4.0 base busaccess. ---- */
+
+    uint16_t master_id_31_16;   /* MasterID bits [31:16].  */
+    uint32_t master_id_63_32;   /* MasterID bits [63:32].  */
+    /* ---------------------------------------------------
+     * Since hdr is 5 x 32bit, we are now 64bit aligned.  */
+
+    uint32_t data_offset;       /* Offset to data from start of pkt.  */
+    uint32_t next_offset;       /* Offset to next extension. 0 if none.  */
+
+    uint32_t byte_enable_offset;
+    uint32_t byte_enable_len;
+
+    /* ---- End of CAP_BUSACCESS_EXT_BASE. ---- */
+
+    /* If new features are needed that may always occupy space
+     * in the header, then add a new capability and extend the
+     * this area with new fields.
+     * Will help receivers find data_offset and next offset,
+     * even those that don't know about extended fields.
+     */
+} PACKED;
+
 struct rp_pkt_interrupt {
     struct rp_pkt_hdr hdr;
     uint64_t timestamp;
@@ -169,6 +214,7 @@ struct rp_pkt {
         struct rp_pkt_hdr hdr;
         struct rp_pkt_hello hello;
         struct rp_pkt_busaccess busaccess;
+        struct rp_pkt_busaccess_ext_base busaccess_ext_base;
         struct rp_pkt_interrupt interrupt;
         struct rp_pkt_sync sync;
     };
@@ -226,6 +272,47 @@ static inline void *rp_busaccess_dataptr(struct rp_pkt_busaccess *pkt)
     return pkt + 1;
 }
 
+/*
+ * rp_busaccess_rx_dataptr
+ *
+ * Predicts the dataptr for a packet to be transmitted.
+ * This should only be used if you are trying to keep
+ * the entire packet in a linear buffer.
+ */
+static inline unsigned char *
+rp_busaccess_tx_dataptr(struct rp_peer_state *peer,
+                        struct rp_pkt_busaccess_ext_base *pkt)
+{
+    unsigned char *p = (unsigned char *) pkt;
+
+    if (peer->caps.busaccess_ext_base) {
+        /* We always put our data right after the header.  */
+        return p + sizeof *pkt;
+    } else {
+        /* Right after the old packet layout.  */
+        return p + sizeof(struct rp_pkt_busaccess);
+    }
+}
+
+/*
+ * rp_busaccess_rx_dataptr
+ *
+ * Extracts the dataptr from a received packet.
+ */
+static inline unsigned char *
+rp_busaccess_rx_dataptr(struct rp_peer_state *peer,
+                        struct rp_pkt_busaccess_ext_base *pkt)
+{
+    unsigned char *p = (unsigned char *) pkt;
+
+    if (pkt->attributes & RP_BUS_ATTR_EXT_BASE) {
+        return p + pkt->data_offset;
+    } else {
+        /* Right after the old packet layout.  */
+        return p + sizeof(struct rp_pkt_busaccess);
+    }
+}
+
 size_t rp_encode_read(uint32_t id, uint32_t dev,
                       struct rp_pkt_busaccess *pkt,
                       int64_t clk, uint16_t master_id,
@@ -249,6 +336,40 @@ size_t rp_encode_write_resp(uint32_t id, uint32_t dev,
                        int64_t clk, uint16_t master_id,
                        uint64_t addr, uint64_t attr, uint32_t size,
                        uint32_t width, uint32_t stream_width);
+
+struct rp_encode_busaccess_in {
+    uint32_t cmd;
+    uint32_t id;
+    uint32_t flags;
+    uint32_t dev;
+    int64_t clk;
+    uint64_t master_id;
+    uint64_t addr;
+    uint64_t attr;
+    uint32_t size;
+    uint32_t width;
+    uint32_t stream_width;
+};
+
+/* Prepare encode_busaccess input parameters for a packet response.  */
+static inline void
+rp_encode_busaccess_in_rsp_init(struct rp_encode_busaccess_in *in,
+                                struct rp_pkt *pkt) {
+    memset(in, 0, sizeof *in);
+    in->cmd = pkt->hdr.cmd;
+    in->id = pkt->hdr.id;
+    in->flags = pkt->hdr.flags | RP_PKT_FLAGS_response;
+    in->dev = pkt->hdr.dev;
+    /* FIXME: Propagate all master_id fields?  */
+    in->master_id = pkt->busaccess.master_id;
+    in->addr = pkt->busaccess.addr;
+    in->size = pkt->busaccess.len;
+    in->width = pkt->busaccess.width;
+    in->stream_width = pkt->busaccess.stream_width;
+}
+size_t rp_encode_busaccess(struct rp_peer_state *peer,
+                           struct rp_pkt_busaccess_ext_base *pkt,
+                           struct rp_encode_busaccess_in *in);
 
 size_t rp_encode_interrupt(uint32_t id, uint32_t dev,
                            struct rp_pkt_interrupt *pkt,
