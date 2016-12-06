@@ -79,8 +79,8 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 				       sc_time& delay)
 {
 	size_t plen;
-	int64_t clk;
 	bool resp_ready;
+	struct rp_encode_busaccess_in in = {0};
 
 	tlm::tlm_command cmd = trans.get_command();
 	sc_dt::uint64 addr = trans.get_address();
@@ -98,34 +98,35 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	}
 
 	adaptor->pkt_tx.alloc(sizeof adaptor->pkt_tx.pkt->busaccess + len);
-	clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
+	in.clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
 
-	if (cmd == tlm::TLM_READ_COMMAND) {
-		plen = rp_encode_read(adaptor->rp_pkt_id++, dev_id,
-					&adaptor->pkt_tx.pkt->busaccess,
-					clk, master_id,
-					addr, attr,
-					len,
-					0,
-					wid);
-		adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
-	} else {
-		plen = rp_encode_write(adaptor->rp_pkt_id++, dev_id,
-					&adaptor->pkt_tx.pkt->busaccess,
-					clk, master_id,
-					addr, attr,
-					len,
-					0,
-					wid);
-		adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
+	in.cmd = cmd == tlm::TLM_READ_COMMAND ? RP_CMD_read : RP_CMD_write;
+	in.id = adaptor->rp_pkt_id++;
+	in.dev = dev_id;
+	in.master_id = master_id;
+	in.addr = addr;
+	in.attr = attr;
+	in.size = len;
+	in.width = 0;
+	in.stream_width = wid;
+
+	plen = rp_encode_busaccess(&adaptor->peer,
+				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
+				   &in);
+
+	adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
+	if (cmd == tlm::TLM_WRITE_COMMAND) {
 		adaptor->rp_write(data, len);
 	}
+
 	do {
 		resp_ready = adaptor->rp_process(false);
 	} while (!resp_ready);
 
 	if (cmd == tlm::TLM_READ_COMMAND) {
-		memcpy(data, adaptor->pkt_rx.u8 + adaptor->pkt_rx.data_offset, len);
+		uint8_t *rx_data = rp_busaccess_rx_dataptr(&adaptor->peer,
+					   &adaptor->pkt_rx.pkt->busaccess_ext_base);
+		memcpy(data, rx_data, len);
 	}
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }

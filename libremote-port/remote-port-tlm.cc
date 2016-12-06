@@ -184,6 +184,7 @@ void remoteport_tlm::account_time(int64_t rclk)
 void remoteport_tlm::rp_say_hello(void)
 {
 	uint32_t caps[] = {
+		CAP_BUSACCESS_EXT_BASE,
 	};
 	struct rp_pkt_hello pkt;
 	size_t len;

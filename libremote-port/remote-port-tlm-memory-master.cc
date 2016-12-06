@@ -92,30 +92,27 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
 {
 	size_t plen;
-	int64_t clk;
 	sc_time delay;
 	struct rp_pkt lpkt = pkt;
+	unsigned char *data;
+	struct rp_encode_busaccess_in in;
+
+	rp_encode_busaccess_in_rsp_init(&in, &lpkt);
 
 	/* FIXME: We the callee is allowed to yield, and may call
 		us back out again (loop). So we should be reentrant
 		in respect to pkt_tx.  */
-	adaptor->pkt_tx.alloc(sizeof lpkt.busaccess + lpkt.busaccess.len);
+	adaptor->pkt_tx.alloc(sizeof lpkt.busaccess_ext_base + lpkt.busaccess.len);
+	data = rp_busaccess_tx_dataptr(&adaptor->peer,
+				       &adaptor->pkt_tx.pkt->busaccess_ext_base);
 	delay = rp_bus_access(lpkt, can_sync, tlm::TLM_READ_COMMAND,
-		(unsigned char *) (&adaptor->pkt_tx.pkt->busaccess + 1),
-		lpkt.busaccess.len);
+			      data, lpkt.busaccess.len);
 
-	clk = adaptor->rp_map_time(delay);
-	clk += lpkt.busaccess.timestamp;
-
-	plen = rp_encode_read_resp(lpkt.hdr.id, lpkt.hdr.dev,
-				  &adaptor->pkt_tx.pkt->busaccess,
-				  clk,
-				  lpkt.busaccess.master_id,
-				  lpkt.busaccess.addr,
-				  lpkt.busaccess.attributes,
-				  lpkt.busaccess.len,
-				  lpkt.busaccess.width,
-				  lpkt.busaccess.stream_width);
+	in.clk = adaptor->rp_map_time(delay);
+	in.clk += lpkt.busaccess.timestamp;
+	plen = rp_encode_busaccess(&adaptor->peer,
+				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
+				   &in);
 	adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
 }
 
@@ -123,24 +120,20 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 				  unsigned char *data, size_t len)
 {
 	size_t plen;
-	int64_t clk;
 	sc_time delay;
 	struct rp_pkt lpkt = pkt;
+	struct rp_encode_busaccess_in in;
 
+	rp_encode_busaccess_in_rsp_init(&in, &lpkt);
 	delay = rp_bus_access(lpkt, can_sync,
 				tlm::TLM_WRITE_COMMAND, data, len);
 
-	clk = adaptor->rp_map_time(delay);
-	clk += lpkt.busaccess.timestamp;
-	plen = rp_encode_write_resp(lpkt.hdr.id, lpkt.hdr.dev,
-				    &adaptor->pkt_tx.pkt->busaccess,
-				    clk,
-				    lpkt.busaccess.master_id,
-				    lpkt.busaccess.addr,
-				    lpkt.busaccess.attributes,
-				    lpkt.busaccess.len,
-				    lpkt.busaccess.width,
-				    lpkt.busaccess.stream_width);
+	in.clk = adaptor->rp_map_time(delay);
+	in.clk += lpkt.busaccess.timestamp;
+
+	plen = rp_encode_busaccess(&adaptor->peer,
+				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
+				   &in);
 	adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
 }
 
