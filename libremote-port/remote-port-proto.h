@@ -314,6 +314,21 @@ rp_busaccess_rx_dataptr(struct rp_peer_state *peer,
     }
 }
 
+static inline unsigned char *
+rp_busaccess_byte_en_ptr(struct rp_peer_state *peer,
+                         struct rp_pkt_busaccess_ext_base *pkt)
+{
+    unsigned char *p = (unsigned char *) pkt;
+
+    if (pkt->byte_enable_len) {
+        assert(pkt->byte_enable_offset >= sizeof *pkt);
+        assert(pkt->byte_enable_offset + pkt->byte_enable_len
+               <= pkt->hdr.len + sizeof pkt->hdr);
+        return p + pkt->byte_enable_offset;
+    }
+    return NULL;
+}
+
 size_t __attribute__ ((deprecated))
 rp_encode_read(uint32_t id, uint32_t dev,
                struct rp_pkt_busaccess *pkt,
@@ -354,6 +369,7 @@ struct rp_encode_busaccess_in {
     uint32_t size;
     uint32_t width;
     uint32_t stream_width;
+    uint32_t byte_enable_len;
 };
 
 /* Prepare encode_busaccess input parameters for a packet response.  */
@@ -371,6 +387,7 @@ rp_encode_busaccess_in_rsp_init(struct rp_encode_busaccess_in *in,
     in->size = pkt->busaccess.len;
     in->width = pkt->busaccess.width;
     in->stream_width = pkt->busaccess.stream_width;
+    in->byte_enable_len = 0;
 }
 size_t rp_encode_busaccess(struct rp_peer_state *peer,
                            struct rp_pkt_busaccess_ext_base *pkt,

@@ -332,12 +332,6 @@ size_t rp_encode_busaccess(struct rp_peer_state *peer,
         return sizeof *pkt_v4_0 + ret_size;
     }
 
-    rp_encode_hdr(&pkt->hdr, in->cmd, in->id, in->dev,
-                  sizeof *pkt - sizeof pkt->hdr + hsize, in->flags);
-    rp_encode_busaccess_common(pkt_v4_0, in->clk, in->master_id, in->addr,
-                               in->attr | RP_BUS_ATTR_EXT_BASE,
-                               in->size, in->width, in->stream_width);
-
     /* Encode the extended fields.  */
     pkt->master_id_31_16 = htobe16(in->master_id >> 16);
     pkt->master_id_63_32 = htobe32(in->master_id >> 32);
@@ -346,8 +340,15 @@ size_t rp_encode_busaccess(struct rp_peer_state *peer,
     pkt->data_offset = htobe32(sizeof *pkt);
     pkt->next_offset = 0;
 
-    pkt->byte_enable_offset = 0;
-    pkt->byte_enable_len = 0;
+    pkt->byte_enable_offset = htobe32(sizeof *pkt + hsize);
+    pkt->byte_enable_len = htobe32(in->byte_enable_len);
+    hsize += in->byte_enable_len;
+
+    rp_encode_hdr(&pkt->hdr, in->cmd, in->id, in->dev,
+                  sizeof *pkt - sizeof pkt->hdr + hsize, in->flags);
+    rp_encode_busaccess_common(pkt_v4_0, in->clk, in->master_id, in->addr,
+                               in->attr | RP_BUS_ATTR_EXT_BASE,
+                               in->size, in->width, in->stream_width);
 
     return sizeof *pkt + ret_size;
 }
