@@ -85,11 +85,17 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	tlm::tlm_command cmd = trans.get_command();
 	sc_dt::uint64 addr = trans.get_address();
 	unsigned char *data = trans.get_data_ptr();
+	unsigned char *be = trans.get_byte_enable_ptr();
 	unsigned int len = trans.get_data_length();
 	unsigned int wid = trans.get_streaming_width();
 	genattr_extension *genattr;
 	uint16_t master_id = 0;
 	uint64_t attr = 0;
+
+	if (be && !adaptor->peer.caps.busaccess_ext_byte_en) {
+		trans.set_response_status(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE);
+		return;
+	}
 
 	trans.get_extension(genattr);
 	if (genattr) {
@@ -109,6 +115,8 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	in.size = len;
 	in.width = 0;
 	in.stream_width = wid;
+	in.byte_enable_len = trans.get_byte_enable_length();
+
 
 	plen = rp_encode_busaccess(&adaptor->peer,
 				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
@@ -118,6 +126,9 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	if (cmd == tlm::TLM_WRITE_COMMAND) {
 		adaptor->rp_write(data, len);
 	}
+	if (in.byte_enable_len) {
+		adaptor->rp_write(be, in.byte_enable_len);
+	}
 
 	do {
 		resp_ready = adaptor->rp_process(false);
@@ -126,7 +137,32 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	if (cmd == tlm::TLM_READ_COMMAND) {
 		uint8_t *rx_data = rp_busaccess_rx_dataptr(&adaptor->peer,
 					   &adaptor->pkt_rx.pkt->busaccess_ext_base);
-		memcpy(data, rx_data, len);
+
+		// Handle READ byte-enables.
+		//
+		// For reads, we pass along the byte enables to our peer
+		// so that it can avoid issues reads for disabled bytes.
+		// This is may be important for addresses with read side
+		// effects.
+		//
+		// According to the TLM spec, reads with byte-enables
+		// should not modify byte disabled content in the
+		// generic payload data buffer.
+		// The remote peer does not control our buffer, so we
+		// do it here.
+		//
+		if (in.byte_enable_len) {
+			int i;
+
+			for (i = 0; i < len; i++) {
+				uint8_t b = be[i % in.byte_enable_len];
+				if (b == TLM_BYTE_ENABLED) {
+					data[i] = rx_data[i];
+				}
+			}
+                } else {
+			memcpy(data, rx_data, len);
+		}
 	}
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
