@@ -165,12 +165,15 @@ void remoteport_tlm::account_time(int64_t rclk)
 	sc_time delta;
 
 	lclk = rp_map_time(m_qk.get_current_time());
-	if (lclk >= rclk)
-		return;
+	if (lclk >= rclk) {
+		/* lclk may have rounding errors due to conversions.
+                 * To avoid deadlocks, we never allow the delta to be zero.
+                 */
+		delta_ns = 1;
+	} else {
+		delta_ns = rclk - lclk;
+	}
 
-	delta_ns = rclk - lclk;
-
-	assert(delta_ns >= 0);
 	delta = sc_time((double) delta_ns, SC_NS);
 	assert(delta >= SC_ZERO_TIME);
 	if (delta > m_qk.get_global_quantum()) {
