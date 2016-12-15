@@ -173,6 +173,9 @@ void remoteport_tlm::account_time(int64_t rclk)
 	assert(delta_ns >= 0);
 	delta = sc_time((double) delta_ns, SC_NS);
 	assert(delta >= SC_ZERO_TIME);
+	if (delta > m_qk.get_global_quantum()) {
+		delta = m_qk.get_global_quantum();
+	}
 
 #if 0
 	cout << "account rclk=" << rclk << " current=" << m_qk.get_current_time() << " delta=" << delta << endl;
