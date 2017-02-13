@@ -48,6 +48,7 @@ private:
 	remoteport_tlm_memory_master rp_axi_hpm0_fpd;
 	remoteport_tlm_memory_master rp_axi_hpm1_fpd;
 	remoteport_tlm_memory_master rp_axi_hpm_lpd;
+	remoteport_tlm_memory_master rp_lpd_reserved;
 
 	remoteport_tlm_memory_slave rp_axi_hpc0_fpd;
 	remoteport_tlm_memory_slave rp_axi_hpc1_fpd;
@@ -90,6 +91,7 @@ public:
 	 */
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *s_axi_hpm_fpd[2];
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *s_axi_hpm_lpd;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *s_lpd_reserved;
 
 	/*
 	 * HPC0 - 1.

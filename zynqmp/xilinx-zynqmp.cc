@@ -55,6 +55,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	  rp_axi_hpm0_fpd("rp_axi_hpm0_fpd"),
 	  rp_axi_hpm1_fpd("rp_axi_hpm1_fpd"),
 	  rp_axi_hpm_lpd("rp_axi_hpm_lpd"),
+	  rp_lpd_reserved("rp_lpd_reserved"),
 	  rp_axi_hpc0_fpd("rp_axi_hpc0_fpd"),
 	  rp_axi_hpc1_fpd("rp_axi_hpc1_fpd"),
 	  rp_axi_hp0_fpd("rp_axi_hp0_fpd"),
@@ -100,6 +101,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	s_axi_hpm_fpd[0] = &rp_axi_hpm0_fpd.sk;
 	s_axi_hpm_fpd[1] = &rp_axi_hpm1_fpd.sk;
 	s_axi_hpm_lpd = &rp_axi_hpm_lpd.sk;
+	s_lpd_reserved = &rp_lpd_reserved.sk;
 
 	// Connect our Master ID injecting proxies.
 	for (i = 0; i < proxy_in.size(); i++) {
@@ -142,6 +144,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	register_dev(12, &rp_wires_in);
 	register_dev(13, &rp_wires_out);
 	register_dev(14, &rp_irq_out);
+	register_dev(15, &rp_lpd_reserved);
 }
 
 void xilinx_zynqmp::tie_off(void)
