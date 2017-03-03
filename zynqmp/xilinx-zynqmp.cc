@@ -95,7 +95,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 		&s_axi_acp_fpd,
 		&s_axi_ace_fpd,
 	};
-	int i;
+	unsigned int i;
 
 	/* Expose friendly named PS Master ports.  */
 	s_axi_hpm_fpd[0] = &rp_axi_hpm0_fpd.sk;
@@ -150,7 +150,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 void xilinx_zynqmp::tie_off(void)
 {
 	tlm_utils::simple_initiator_socket<xilinx_zynqmp> *tieoff_sk;
-	int i;
+	unsigned int i;
 
 	remoteport_tlm::tie_off();
 

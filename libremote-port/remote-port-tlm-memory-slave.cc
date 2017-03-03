@@ -152,7 +152,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		// do it here.
 		//
 		if (in.byte_enable_len) {
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++) {
 				uint8_t b = be[i % in.byte_enable_len];
