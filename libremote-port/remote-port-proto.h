@@ -320,7 +320,8 @@ rp_busaccess_byte_en_ptr(struct rp_peer_state *peer,
 {
     unsigned char *p = (unsigned char *) pkt;
 
-    if (pkt->byte_enable_len) {
+    if ((pkt->attributes & RP_BUS_ATTR_EXT_BASE)
+        && pkt->byte_enable_len) {
         assert(pkt->byte_enable_offset >= sizeof *pkt);
         assert(pkt->byte_enable_offset + pkt->byte_enable_len
                <= pkt->hdr.len + sizeof pkt->hdr);
