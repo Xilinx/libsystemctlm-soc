@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-#define _BSD_SOURCE
+#define _DEFEFAUL_SOURCE
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
