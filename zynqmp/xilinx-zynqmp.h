@@ -40,6 +40,16 @@
 #include "remote-port-tlm-memory-master.h"
 #include "remote-port-tlm-memory-slave.h"
 #include "remote-port-tlm-wires.h"
+class xilinx_emio_bank
+{
+private:
+public:
+	sc_vector<sc_signal<bool> > in;
+	sc_vector<sc_signal<bool> > out;
+	sc_vector<sc_signal<bool> > out_enable;
+	xilinx_emio_bank(const char *name_in, const char *name_out,
+		         const char *name_out_en, int num);
+};
 
 class xilinx_zynqmp
 : public remoteport_tlm
@@ -63,6 +73,9 @@ private:
 	remoteport_tlm_wires rp_wires_in;
 	remoteport_tlm_wires rp_wires_out;
 	remoteport_tlm_wires rp_irq_out;
+	remoteport_tlm_wires rp_emio0;
+	remoteport_tlm_wires rp_emio1;
+	remoteport_tlm_wires rp_emio2;
 
 	/*
 	 * In order to get Master-IDs right, we need to proxy all
@@ -122,6 +135,9 @@ public:
 	sc_vector<sc_signal<bool> > pl2ps_irq;
 	sc_vector<sc_signal<bool> > ps2pl_irq;
 
+	xilinx_emio_bank *emio[3];
+
 	xilinx_zynqmp(sc_core::sc_module_name name, const char *sk_descr);
+	~xilinx_zynqmp(void);
 	void tie_off(void);
 };

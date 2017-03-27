@@ -50,6 +50,15 @@ extern "C" {
 #include "tlm-extensions/genattr.h"
 #include <sys/types.h>
 
+xilinx_emio_bank::xilinx_emio_bank(const char *name_in, const char *name_out,
+				   const char *name_out_en, int num)
+	:in(name_in, num),
+	 out(name_out, num),
+	 out_enable(name_out_en, num)
+{
+    return;
+}
+
 xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	: remoteport_tlm(name, -1, sk_descr),
 	  rp_axi_hpm0_fpd("rp_axi_hpm0_fpd"),
@@ -68,6 +77,9 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	  rp_wires_in("wires_in", 16, 0),
 	  rp_wires_out("wires_out", 0, 4),
 	  rp_irq_out("irq_out", 0, 164),
+	  rp_emio0("emio0", 32, 64),
+	  rp_emio1("emio1", 32, 64),
+	  rp_emio2("emio2", 32, 64),
 	  proxy_in("proxy-in", 9),
 	  proxy_out("proxy-out", 9),
 	  pl2ps_irq("pl2ps_irq", 16),
@@ -96,6 +108,19 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 		&s_axi_ace_fpd,
 	};
 	unsigned int i;
+
+	for (i = 0; i < 3; i++) {
+		char emio_in_name[20];
+		char emio_out_name[20];
+		char emio_out_en_name[20];
+		snprintf(emio_in_name, sizeof(emio_in_name), "emio_%d_in", i);
+		snprintf(emio_out_name, sizeof(emio_out_name),
+			 "emio_%d_out", i);
+		snprintf(emio_out_en_name, sizeof(emio_out_en_name),
+			 "emio_out_en_%d", i);
+		emio[i] = new xilinx_emio_bank(emio_in_name, emio_out_name,
+                                      emio_out_en_name, 32);
+	}
 
 	/* Expose friendly named PS Master ports.  */
 	s_axi_hpm_fpd[0] = &rp_axi_hpm0_fpd.sk;
@@ -126,6 +151,18 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 		rp_irq_out.wires_out[i](ps2pl_irq[i]);
 	}
 
+	for (i = 0; i < 32; i++) {
+		rp_emio0.wires_out[i](emio[0]->out[i]);
+		rp_emio1.wires_out[i](emio[1]->out[i]);
+		rp_emio2.wires_out[i](emio[2]->out[i]);
+		rp_emio0.wires_in[i](emio[0]->in[i]);
+		rp_emio1.wires_in[i](emio[1]->in[i]);
+		rp_emio2.wires_in[i](emio[2]->in[i]);
+		rp_emio0.wires_out[i + 32](emio[0]->out_enable[i]);
+		rp_emio1.wires_out[i + 32](emio[1]->out_enable[i]);
+		rp_emio2.wires_out[i + 32](emio[2]->out_enable[i]);
+	}
+
 	// Register with Remote-Port.
 	register_dev(0, &rp_axi_hpc0_fpd);
 	register_dev(1, &rp_axi_hpc1_fpd);
@@ -145,6 +182,9 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	register_dev(13, &rp_wires_out);
 	register_dev(14, &rp_irq_out);
 	register_dev(15, &rp_lpd_reserved);
+	register_dev(16, &rp_emio0);
+	register_dev(17, &rp_emio1);
+	register_dev(18, &rp_emio2);
 }
 
 void xilinx_zynqmp::tie_off(void)
@@ -159,6 +199,13 @@ void xilinx_zynqmp::tie_off(void)
 			continue;
 		tieoff_sk = new tlm_utils::simple_initiator_socket<xilinx_zynqmp>();
 		tieoff_sk->bind(proxy_in[i]);
+	}
+}
+
+xilinx_zynqmp::~xilinx_zynqmp(void)
+{
+	for(int i = 0; i < 3; i++) {
+		delete(emio[i]);
 	}
 }
 
