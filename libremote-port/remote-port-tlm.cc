@@ -117,7 +117,7 @@ ssize_t remoteport_tlm::rp_read(void *rbuf, size_t count)
 {
 	ssize_t r;
 
-	r = safe_read(fd, rbuf, count);
+	r = rp_safe_read(fd, rbuf, count);
 	if (r < (ssize_t)count) {
 		if (r < 0)
 			perror(__func__);
@@ -130,7 +130,7 @@ ssize_t remoteport_tlm::rp_write(const void *wbuf, size_t count)
 {
 	ssize_t r;
 
-	r = safe_write(fd, wbuf, count);
+	r = rp_safe_write(fd, wbuf, count);
 	if (r < (ssize_t)count) {
 		if (r < 0)
 			perror(__func__);

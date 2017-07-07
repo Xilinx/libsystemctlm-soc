@@ -48,7 +48,7 @@ long splice(int fd_in, off_t *off_in, int fd_out,
 #endif
 
 ssize_t
-safe_read(int fd, void *rbuf, size_t count)
+rp_safe_read(int fd, void *rbuf, size_t count)
 {
 	ssize_t r;
 	size_t rlen = 0;
@@ -67,7 +67,7 @@ safe_read(int fd, void *rbuf, size_t count)
 }
 
 ssize_t
-safe_write(int fd, const void *wbuf, size_t count)
+rp_safe_write(int fd, const void *wbuf, size_t count)
 {
 	ssize_t r;
 	size_t wlen = 0;
@@ -89,7 +89,7 @@ safe_write(int fd, const void *wbuf, size_t count)
 }
 
 /* Try to splice if possible.  */
-int safe_copyfd(int s, off64_t off, size_t olen, int d)
+int rp_safe_copyfd(int s, off64_t off, size_t olen, int d)
 {
 	static unsigned char buf[16 * 1024];
 	int len = olen;
@@ -140,7 +140,7 @@ int safe_copyfd(int s, off64_t off, size_t olen, int d)
 		while (rlen && wlen < rlen) 
 		{
 			int w;
-			w = safe_write(d, buf + wlen, rlen - wlen);
+			w = rp_safe_write(d, buf + wlen, rlen - wlen);
 			if (w == -1) {
 				D(perror("write"));
 				break;
