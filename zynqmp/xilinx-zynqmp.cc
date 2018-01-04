@@ -83,7 +83,8 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	  proxy_in("proxy-in", 9),
 	  proxy_out("proxy-out", 9),
 	  pl2ps_irq("pl2ps_irq", 16),
-	  ps2pl_irq("ps2pl_irq", 164)
+	  ps2pl_irq("ps2pl_irq", 164),
+	  pl_resetn("pl_resetn", 4)
 {
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> * const out[] = {
 		&rp_axi_hpc0_fpd.sk,
@@ -154,13 +155,27 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
 	for (i = 0; i < 32; i++) {
 		rp_emio0.wires_out[i](emio[0]->out[i]);
 		rp_emio1.wires_out[i](emio[1]->out[i]);
-		rp_emio2.wires_out[i](emio[2]->out[i]);
+		if (i < 28) {
+			/* Top 4 PL reset signals go via a proxy.  */
+			rp_emio2.wires_out[i](emio[2]->out[i]);
+		}
 		rp_emio0.wires_in[i](emio[0]->in[i]);
 		rp_emio1.wires_in[i](emio[1]->in[i]);
 		rp_emio2.wires_in[i](emio[2]->in[i]);
 		rp_emio0.wires_out[i + 32](emio[0]->out_enable[i]);
 		rp_emio1.wires_out[i + 32](emio[1]->out_enable[i]);
 		rp_emio2.wires_out[i + 32](emio[2]->out_enable[i]);
+	}
+
+	for (i = 0; i < 4; i++) {
+		char name[32];
+
+		sprintf(name, "pl_resetn_splitter[%d]", i);
+		pl_resetn_splitter[i] = new wire_splitter(name, 2);
+
+		pl_resetn_splitter[i]->in(rp_emio2.wires_out[28 + i]);
+		pl_resetn_splitter[i]->out[0](pl_resetn[i]);
+		pl_resetn_splitter[i]->out[1](emio[2]->out[28 + i]);
 	}
 
 	// Register with Remote-Port.

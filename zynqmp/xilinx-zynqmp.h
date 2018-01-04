@@ -40,6 +40,8 @@
 #include "remote-port-tlm-memory-master.h"
 #include "remote-port-tlm-memory-slave.h"
 #include "remote-port-tlm-wires.h"
+#include "tlm-modules/wire-splitter.h"
+
 class xilinx_emio_bank
 {
 private:
@@ -84,12 +86,16 @@ private:
 	sc_vector<tlm_utils::simple_target_socket_tagged<xilinx_zynqmp> > proxy_in;
 	sc_vector<tlm_utils::simple_initiator_socket_tagged<xilinx_zynqmp> > proxy_out;
 
+	/*
+	 * Proxies for friendly named pl_resets.
+	 */
+	wire_splitter *pl_resetn_splitter[4];
+
 	virtual void b_transport(int id,
 				 tlm::tlm_generic_payload& trans,
 				 sc_time& delay);
 	virtual unsigned int transport_dbg(int id,
 					   tlm::tlm_generic_payload& trans);
-
 public:
 	/*
 	 * HPM0 - 1 _FPD.
@@ -136,6 +142,11 @@ public:
 	sc_vector<sc_signal<bool> > ps2pl_irq;
 
 	xilinx_emio_bank *emio[3];
+	/*
+	 * 4 PL resets, same as EMIO[2][31:28] but with friendly names.
+	 * See the TRM, Chapter 27 GPIO, page 761.
+	 */
+	sc_vector<sc_signal<bool> > pl_resetn;
 
 	xilinx_zynqmp(sc_core::sc_module_name name, const char *sk_descr);
 	~xilinx_zynqmp(void);
