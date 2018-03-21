@@ -27,7 +27,7 @@
 SC_MODULE(wire_splitter) {
 private:
 	void work() {
-		int i;
+		unsigned int i;
 		bool v = in.read();
 
 		/* Drive the input signal onto all outputs.  */
