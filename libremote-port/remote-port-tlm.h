@@ -55,7 +55,7 @@ public:
 	virtual void tie_off(void) {} ;
 };
 
-#define RP_MAX_DEVS 64
+#define RP_MAX_DEVS 512
 
 class remoteport_tlm
 : public sc_core::sc_module
