@@ -92,6 +92,16 @@ void remoteport_tlm_wires::cmd_interrupt(struct rp_pkt &pkt, bool can_sync)
 //	printf("wires_out[%d]=%d\n", lpkt.interrupt.line,lpkt.interrupt.val);
 	assert(lpkt.interrupt.line < cfg.nr_wires_out);
 	wires_out[lpkt.interrupt.line].write(lpkt.interrupt.val);
+
+	/*
+	 * Yield to make line-updates visible immediately.
+	 * Otherwise a line-update followed by a back-to-back
+	 * transaction that inspects the state of the line
+	 * may not reflect the update.
+	 */
+	if (can_sync) {
+		wait(SC_ZERO_TIME);
+	}
 }
 
 void remoteport_tlm_wires::wire_update(void)
