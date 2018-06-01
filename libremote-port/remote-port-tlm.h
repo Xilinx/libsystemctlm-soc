@@ -54,6 +54,12 @@ public:
 	unsigned int dev_id;
 	remoteport_tlm *adaptor;
 
+	struct {
+		remoteport_packet pkt;
+		sc_event ev;
+		bool valid;
+	} resp;
+
 	virtual void cmd_write(struct rp_pkt &pkt, bool can_sync,
 			       unsigned char *data, size_t len) {};
 	virtual void cmd_read(struct rp_pkt &pkt, bool can_sync) {} ;

@@ -79,7 +79,6 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 				       sc_time& delay)
 {
 	size_t plen;
-	bool resp_ready;
 	struct rp_encode_busaccess_in in = {0};
 
 	tlm::tlm_command cmd = trans.get_command();
@@ -130,13 +129,18 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		adaptor->rp_write(be, in.byte_enable_len);
 	}
 
+	resp.valid = false;
 	do {
-		resp_ready = adaptor->rp_process(false);
-	} while (!resp_ready);
+		if (adaptor->current_process_is_adaptor()) {
+			adaptor->rp_process(true);
+		} else {
+			wait(resp.ev);
+		}
+	} while (!resp.valid);
 
 	if (cmd == tlm::TLM_READ_COMMAND) {
 		uint8_t *rx_data = rp_busaccess_rx_dataptr(&adaptor->peer,
-					   &adaptor->pkt_rx.pkt->busaccess_ext_base);
+					   &resp.pkt.pkt->busaccess_ext_base);
 
 		// Handle READ byte-enables.
 		//

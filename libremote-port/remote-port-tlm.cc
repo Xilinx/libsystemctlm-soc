@@ -255,12 +255,16 @@ bool remoteport_tlm::rp_process(bool can_sync)
 		dlen = rp_decode_payload(pkt_rx.pkt);
 		data = pkt_rx.u8 + sizeof pkt_rx.pkt->hdr + dlen;
 		datalen = pkt_rx.pkt->hdr.len - dlen;
+
+		dev = devs[pkt_rx.pkt->hdr.dev];
 		if (pkt_rx.pkt->hdr.flags & RP_PKT_FLAGS_response) {
 			pkt_rx.data_offset = sizeof pkt_rx.pkt->hdr + dlen;
+			pkt_rx.copy(dev->resp.pkt);
+			dev->resp.valid = true;
+			dev->resp.ev.notify();
 			return true;
 		}
 
-		dev = devs[pkt_rx.pkt->hdr.dev];
 //		printf("%s: cmd=%d dev=%d\n", __func__, pkt_rx.pkt->hdr.cmd, pkt_rx.pkt->hdr.dev);
 		switch (pkt_rx.pkt->hdr.cmd) {
 		case RP_CMD_hello:
