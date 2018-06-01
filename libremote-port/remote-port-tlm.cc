@@ -63,6 +63,13 @@ void remoteport_packet::alloc(size_t new_size)
 	}
 }
 
+void remoteport_packet::copy(remoteport_packet &pkt)
+{
+	pkt.alloc(size);
+	pkt.data_offset = data_offset;
+	memcpy(pkt.u8, u8, size);
+}
+
 remoteport_tlm::remoteport_tlm(sc_module_name name,
 			int fd,
 			const char *sk_descr)

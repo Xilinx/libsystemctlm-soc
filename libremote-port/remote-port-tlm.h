@@ -41,6 +41,9 @@ public:
 		free(u8);
 	}
 	void alloc(size_t size);
+	// Copies this packet onto pkt, including allocation of
+	// necessary space.
+	void copy(class remoteport_packet &pkt);
 };
 
 class remoteport_tlm;
