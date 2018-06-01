@@ -37,6 +37,9 @@ public:
 	size_t size;
 
 	remoteport_packet(void);
+	~remoteport_packet(void) {
+		free(u8);
+	}
 	void alloc(size_t size);
 };
 
