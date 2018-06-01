@@ -86,6 +86,9 @@ public:
 	ssize_t rp_write(const void *wbuf, size_t count);
 	int64_t rp_map_time(sc_time t);
 	void account_time(int64_t rp_time_ns);
+	// Returns true if the current SC_THREAD is the remote-port
+	// thread for this adaptor.
+	bool current_process_is_adaptor(void);
 
 	tlm_utils::tlm_quantumkeeper m_qk;
 
@@ -98,6 +101,8 @@ private:
 	unsigned char *pktbuf_data;
 	/* Socket.  */
 	int fd;
+
+	sc_process_handle adaptor_proc;
 
 	void rp_say_hello(void);
 	void rp_cmd_hello(struct rp_pkt &pkt);

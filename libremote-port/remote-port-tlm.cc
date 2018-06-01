@@ -294,8 +294,16 @@ bool remoteport_tlm::rp_process(bool can_sync)
 	return false;
 }
 
+bool remoteport_tlm::current_process_is_adaptor(void)
+{
+	sc_process_handle h = sc_get_current_process_handle();
+	return adaptor_proc == h;
+}
+
 void remoteport_tlm::process(void)
 {
+	adaptor_proc = sc_get_current_process_handle();
+
 	if (fd == -1) {
 		fd = sk_open(sk_descr);
 		if (fd == -1) {
