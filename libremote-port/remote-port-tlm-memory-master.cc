@@ -27,6 +27,7 @@
 
 #include <inttypes.h>
 #include <sys/utsname.h>
+#include <assert.h>
 
 #include "systemc.h"
 #include "tlm_utils/simple_initiator_socket.h"
@@ -95,6 +96,7 @@ void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
 	sc_time delay;
 	struct rp_pkt lpkt = pkt;
 	unsigned char *data;
+	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
 
 	rp_encode_busaccess_in_rsp_init(&in, &lpkt);
@@ -102,18 +104,18 @@ void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
 	/* FIXME: We the callee is allowed to yield, and may call
 		us back out again (loop). So we should be reentrant
 		in respect to pkt_tx.  */
-	adaptor->pkt_tx.alloc(sizeof lpkt.busaccess_ext_base + lpkt.busaccess.len);
+	pkt_tx.alloc(sizeof lpkt.busaccess_ext_base + lpkt.busaccess.len);
 	data = rp_busaccess_tx_dataptr(&adaptor->peer,
-				       &adaptor->pkt_tx.pkt->busaccess_ext_base);
+				       &pkt_tx.pkt->busaccess_ext_base);
 	delay = rp_bus_access(lpkt, can_sync, tlm::TLM_READ_COMMAND,
 			      data, lpkt.busaccess.len);
 
 	in.clk = adaptor->rp_map_time(delay);
 	in.clk += lpkt.busaccess.timestamp;
 	plen = rp_encode_busaccess(&adaptor->peer,
-				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
+				   &pkt_tx.pkt->busaccess_ext_base,
 				   &in);
-	adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
+	adaptor->rp_write(pkt_tx.pkt, plen);
 }
 
 void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
@@ -122,6 +124,7 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 	size_t plen;
 	sc_time delay;
 	struct rp_pkt lpkt = pkt;
+	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
 
 	rp_encode_busaccess_in_rsp_init(&in, &lpkt);
@@ -132,9 +135,10 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 	in.clk += lpkt.busaccess.timestamp;
 
 	plen = rp_encode_busaccess(&adaptor->peer,
-				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
+				   &pkt_tx.pkt->busaccess_ext_base,
 				   &in);
-	adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
+	adaptor->rp_write(pkt_tx.pkt, plen);
+	assert(plen <= sizeof pkt_tx.pkt->busaccess_ext_base);
 }
 
 void remoteport_tlm_memory_master::tie_off(void)

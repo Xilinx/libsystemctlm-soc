@@ -87,6 +87,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	unsigned char *be = trans.get_byte_enable_ptr();
 	unsigned int len = trans.get_data_length();
 	unsigned int wid = trans.get_streaming_width();
+	remoteport_packet pkt_tx;
 	genattr_extension *genattr;
 	uint16_t master_id = 0;
 	uint64_t attr = 0;
@@ -102,7 +103,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		attr |= genattr_to_rpattr(genattr);
 	}
 
-	adaptor->pkt_tx.alloc(sizeof adaptor->pkt_tx.pkt->busaccess + len);
+	pkt_tx.alloc(sizeof pkt_tx.pkt->busaccess + len);
 	in.clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
 
 	in.cmd = cmd == tlm::TLM_READ_COMMAND ? RP_CMD_read : RP_CMD_write;
@@ -118,10 +119,10 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 
 
 	plen = rp_encode_busaccess(&adaptor->peer,
-				   &adaptor->pkt_tx.pkt->busaccess_ext_base,
+				   &pkt_tx.pkt->busaccess_ext_base,
 				   &in);
 
-	adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
+	adaptor->rp_write(pkt_tx.pkt, plen);
 	if (cmd == tlm::TLM_WRITE_COMMAND) {
 		adaptor->rp_write(data, len);
 	}

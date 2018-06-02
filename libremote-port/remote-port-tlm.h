@@ -98,9 +98,6 @@ public:
 
 	tlm_utils::tlm_quantumkeeper m_qk;
 
-	remoteport_packet pkt_tx;
-	remoteport_packet pkt_rx;
-
 private:
 	remoteport_tlm_dev *devs[RP_MAX_DEVS];
 	const char *sk_descr;

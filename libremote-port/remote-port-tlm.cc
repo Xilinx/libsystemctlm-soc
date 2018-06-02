@@ -59,6 +59,7 @@ void remoteport_packet::alloc(size_t new_size)
 			cerr << "out of mem" << endl;
 			exit(EXIT_FAILURE);
 		}
+		memset(u8 + size, 0, new_size - size);
 		size = new_size;
 	}
 }
@@ -199,7 +200,7 @@ void remoteport_tlm::rp_say_hello(void)
 	uint32_t caps[] = {
 		CAP_BUSACCESS_EXT_BASE,
 	};
-	struct rp_pkt_hello pkt;
+	struct rp_pkt_hello pkt = {0};
 	size_t len;
 
 	len = rp_encode_hello_caps(rp_pkt_id++, 0,
@@ -213,6 +214,7 @@ void remoteport_tlm::rp_cmd_sync(struct rp_pkt &pkt, bool can_sync)
 {
 	size_t plen;
         int64_t clk;
+	remoteport_packet pkt_tx;
 
 	account_time(pkt.sync.timestamp);
 
@@ -235,8 +237,10 @@ void remoteport_tlm::rp_cmd_sync(struct rp_pkt &pkt, bool can_sync)
 
 bool remoteport_tlm::rp_process(bool can_sync)
 {
+	remoteport_packet pkt_rx;
 	ssize_t r;
 
+	pkt_rx.alloc(sizeof(pkt_rx.pkt->hdr) + 128);
 	while (1) {
 		remoteport_tlm_dev *dev;
 		unsigned char *data;

@@ -106,9 +106,12 @@ void remoteport_tlm_wires::cmd_interrupt(struct rp_pkt &pkt, bool can_sync)
 
 void remoteport_tlm_wires::wire_update(void)
 {
+	remoteport_packet pkt_tx;
         size_t plen;
         int64_t clk;
         unsigned int i;
+
+	pkt_tx.alloc(sizeof pkt_tx.pkt->interrupt);
 
         clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
         for (i = 0; i < cfg.nr_wires_in; i++) {
@@ -116,9 +119,9 @@ void remoteport_tlm_wires::wire_update(void)
                         bool val = wires_in[i].read();
                         plen = rp_encode_interrupt(adaptor->rp_pkt_id++,
                                                    dev_id,
-                                                   &adaptor->pkt_tx.pkt->interrupt,
+                                                   &pkt_tx.pkt->interrupt,
                                                    clk, i, 0, val);
-                        adaptor->rp_write(adaptor->pkt_tx.pkt, plen);
+                        adaptor->rp_write(pkt_tx.pkt, plen);
                 }
         }
 }
