@@ -91,6 +91,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	genattr_extension *genattr;
 	uint16_t master_id = 0;
 	uint64_t attr = 0;
+	unsigned int ri;
 
 	if (be && !adaptor->peer.caps.busaccess_ext_byte_en) {
 		trans.set_response_status(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE);
@@ -130,18 +131,12 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		adaptor->rp_write(be, in.byte_enable_len);
 	}
 
-	resp.valid = false;
-	do {
-		if (adaptor->current_process_is_adaptor()) {
-			adaptor->rp_process(true);
-		} else {
-			wait(resp.ev);
-		}
-	} while (!resp.valid);
+	ri = response_wait(in.id);
+	assert(resp[ri].pkt.pkt->hdr.id == in.id);
 
 	if (cmd == tlm::TLM_READ_COMMAND) {
 		uint8_t *rx_data = rp_busaccess_rx_dataptr(&adaptor->peer,
-					   &resp.pkt.pkt->busaccess_ext_base);
+					   &resp[ri].pkt.pkt->busaccess_ext_base);
 
 		// Handle READ byte-enables.
 		//
@@ -169,5 +164,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 			memcpy(data, rx_data, len);
 		}
 	}
+	// Give back the RP response slot.
+	response_done(ri);
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }

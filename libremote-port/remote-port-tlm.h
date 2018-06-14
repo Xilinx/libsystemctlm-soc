@@ -48,17 +48,44 @@ public:
 
 class remoteport_tlm;
 
+#define RP_MAX_OUTSTANDING_TRANSACTIONS 256
 class remoteport_tlm_dev
 {
 public:
 	unsigned int dev_id;
 	remoteport_tlm *adaptor;
 
+	// Response slots to handling multiple outstanding transactions.
 	struct {
 		remoteport_packet pkt;
 		sc_event ev;
+		uint32_t id;
+		bool used;
 		bool valid;
-	} resp;
+	} resp[RP_MAX_OUTSTANDING_TRANSACTIONS];
+
+	remoteport_tlm_dev(void) {
+		unsigned int i;
+
+		for (i = 0; i < sizeof resp / sizeof resp[0]; i++) {
+			resp[i].used = false;
+			resp[i].id = 0;
+			resp[i].valid = false;
+		}
+	}
+
+	// Used to lookup a response slot that is currently
+	// waiting for a given remote-port packet ID.
+	unsigned int response_lookup(uint32_t id);
+
+	// Called by devices that need to wait for a response
+	// for a given remote-port packet ID.
+	// An index into resp[] will be returned.
+	unsigned int response_wait(uint32_t id);
+
+	// Called by devices when they no longer need the
+	// response slot returned by response_wait().
+	void response_done(unsigned int resp_idx);
 
 	virtual void cmd_write(struct rp_pkt &pkt, bool can_sync,
 			       unsigned char *data, size_t len) {};

@@ -96,6 +96,68 @@ void remoteport_tlm::register_dev(unsigned int dev_id, remoteport_tlm_dev *dev)
 	dev->dev_id = dev_id;
 }
 
+unsigned int remoteport_tlm_dev::response_lookup(uint32_t id)
+{
+	unsigned int i;
+	unsigned int ret = ~0;
+
+	// Find a response slot waiting for id.
+	for (i = 0; i < (sizeof resp / sizeof resp[0]); i++) {
+		if (resp[i].used && resp[i].id == id) {
+			ret = i;
+			break;
+		}
+	}
+	return ret;
+}
+
+unsigned int remoteport_tlm_dev::response_wait(uint32_t id)
+{
+	unsigned int i;
+
+	// Find a free response slot.
+	for (i = 0; i < (sizeof resp / sizeof resp[0]); i++) {
+		if (!resp[i].used)
+			break;
+	}
+
+	if (i >= (sizeof resp / sizeof resp[0])) {
+	// If not OK, we ran out of outstanding response space.
+	// Increase RP_MAX_OUTSTANDING_TRANSACTIONS in remote-port-tlm.h
+		printf("Outstanding transactions overrun!\n");
+		printf("Increase RP_MAX_OUTSTANDING_TRANSACTIONS in remote-port-tlm.h\n");
+		assert(i < (sizeof resp / sizeof resp[0]));
+	}
+
+	// Now, wait for the reponse.
+	resp[i].id = id;
+	resp[i].used = true;
+
+	do {
+		// We only want the remote-port thread to be
+		// processing RP packets. If the RP thread is
+		// processing a request that in turn is calling us
+		// to wait for a reponse, we process packets
+		// recursively.
+		//
+		// Otherwise, we wait for the response slot
+		// event to wake us up once the RP thread has
+		// received our response.
+		if (adaptor->current_process_is_adaptor()) {
+			adaptor->rp_process(true);
+		} else {
+			wait(resp[i].ev);
+		}
+	} while (!resp[i].valid);
+	return i;
+}
+
+void remoteport_tlm_dev::response_done(unsigned int index)
+{
+	resp[index].valid = false;
+	resp[index].used = false;
+}
+
 /* Convert an sc_time into int64 nanoseconds trying to avoid rounding errors.
    Why make this easy when you don't have to?  */
 int64_t remoteport_tlm::rp_map_time(sc_time t)
@@ -262,10 +324,16 @@ bool remoteport_tlm::rp_process(bool can_sync)
 
 		dev = devs[pkt_rx.pkt->hdr.dev];
 		if (pkt_rx.pkt->hdr.flags & RP_PKT_FLAGS_response) {
+			unsigned int ri;
+
 			pkt_rx.data_offset = sizeof pkt_rx.pkt->hdr + dlen;
-			pkt_rx.copy(dev->resp.pkt);
-			dev->resp.valid = true;
-			dev->resp.ev.notify();
+
+			ri = dev->response_lookup(pkt_rx.pkt->hdr.id);
+			assert(ri != ~0U);
+
+			pkt_rx.copy(dev->resp[ri].pkt);
+			dev->resp[ri].valid = true;
+			dev->resp[ri].ev.notify();
 			return true;
 		}
 
