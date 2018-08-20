@@ -28,6 +28,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //
 
+#ifndef GENATTR_H__
+#define GENATTR_H__
+
 // Generator for Setters and Getters.
 #define PROP_GETSET_GEN(name, type, def) \
 	type get_ ## name (void) const { return name ; }	\
@@ -95,3 +98,5 @@ public:
 		return new genattr_extension(*this);
 	}
 };
+
+#endif /* GENATTR_H__ */
