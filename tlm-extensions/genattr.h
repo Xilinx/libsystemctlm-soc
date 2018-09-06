@@ -67,10 +67,13 @@ private:
 
 	// AMBA width of a single burst transfer (beat) in bytes.
 	uint32_t burst_width;
+
+	uint32_t transaction_id;
 public:
 	PROP_GETSET_GEN(secure, bool, true);
 	PROP_GETSET_GEN(master_id, uint64_t, 0);
 	PROP_GETSET_GEN(burst_width, uint32_t, 0);
+	PROP_GETSET_GEN(transaction_id, uint32_t, 0);
 
 	// Compatibility layer for older versions and other frameworks.
 
