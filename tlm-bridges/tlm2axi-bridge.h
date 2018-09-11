@@ -105,12 +105,16 @@ public:
 	class Transaction
 	{
 	public:
-		Transaction(tlm::tlm_generic_payload& gp, sc_time& delay) :
+		Transaction(tlm::tlm_generic_payload& gp, sc_time& delay,
+			    uint32_t AxID) :
 			m_gp(gp),
-			m_delay(delay)
+			m_delay(delay),
+			AxID(AxID)
 		{}
 
 		tlm::tlm_generic_payload& GetGP() { return m_gp; }
+
+		uint32_t GetAxID() { return AxID; }
 
 		sc_time& GetDelay() { return m_delay; }
 
@@ -119,6 +123,7 @@ public:
 		tlm::tlm_generic_payload& m_gp;
 		sc_time& m_delay;
 		sc_event m_done;
+		uint32_t AxID;
 	};
 
 	sc_fifo<Transaction*> transFifo;
@@ -136,8 +141,16 @@ private:
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay)
 	{
-		Transaction tr(trans, delay);
+		genattr_extension *genattr;
+		uint32_t AxID = 0;
 
+		// Does this GP carry a transaction ID?
+		trans.get_extension(genattr);
+		if (genattr) {
+			AxID = genattr->get_transaction_id();
+		}
+
+		Transaction tr(trans, delay, AxID);
 		// Hand it over to the singal wiggling machinery.
 		transFifo.write(&tr);
 		// Wait until the transaction is done.
