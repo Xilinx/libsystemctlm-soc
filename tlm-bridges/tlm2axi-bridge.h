@@ -130,7 +130,7 @@ public:
 
 	sc_fifo<Transaction*> transFifo;
 
-	sc_fifo<Transaction*> rdRespFifo;
+	std::vector<Transaction*> rdResponses;
 
 	sc_fifo<Transaction*> wrDataFifo;
 	std::vector<Transaction*> wrResponses;
@@ -330,7 +330,7 @@ private:
 							prot,
 							GetNumBeats(trans),
 							transaction_id);
-				rdRespFifo.write(tr);
+				rdResponses.push_back(tr);
 			} else {
 				write_address_phase(trans.get_address(),
 							burstType,
@@ -347,17 +347,15 @@ private:
 		rready.write(false);
 
 		while (true) {
-			Transaction *tr = rdRespFifo.read();
-			tlm::tlm_generic_payload *trans = &tr->GetGP();
-			unsigned char *data = trans->get_data_ptr();
-			unsigned int len = trans->get_data_length();
+			Transaction *tr = NULL;
+			tlm::tlm_generic_payload *trans = NULL;
+			unsigned char *data = NULL;
+			unsigned int len = 0;
 			uint64_t data64 = 0;
-			unsigned int bitoffset;
+			unsigned int bitoffset = 0;
 			unsigned int pos = 0;
 
-			bitoffset = (trans->get_address() * 8) % DATA_WIDTH;
-
-			while (pos < len) {
+			while (pos < len || tr == NULL) {
 				rready.write(true);
 
 				wait(clk.posedge_event());
@@ -366,6 +364,18 @@ private:
 					sc_bv<128> data128 = 0;
 					unsigned int readlen;
 					unsigned int w;
+
+					if (tr == NULL) {
+						uint32_t rid_u32 = rid.read().to_uint64();
+
+						tr = LookupAxID(rdResponses, rid_u32);
+						assert(tr);
+
+						trans = &tr->GetGP();
+						bitoffset = (trans->get_address() * 8) % DATA_WIDTH;
+						data = trans->get_data_ptr();
+						len = trans->get_data_length();
+					}
 
 					readlen = (DATA_WIDTH - bitoffset) / 8;
 					readlen = readlen <= len ? readlen : len;
