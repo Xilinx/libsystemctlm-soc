@@ -465,9 +465,7 @@ tlm2axi_bridge<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH
 	tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport);
 
 	SC_THREAD(address_phase);
-
 	SC_THREAD(read_resp_phase);
-
 	SC_THREAD(write_data_phase);
 	SC_THREAD(write_resp_phase);
 }
