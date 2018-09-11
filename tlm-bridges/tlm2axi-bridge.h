@@ -348,14 +348,14 @@ private:
 
 		while (true) {
 			Transaction *tr = rdRespFifo.read();
-			tlm::tlm_generic_payload& trans = tr->GetGP();
-			unsigned char *data = trans.get_data_ptr();
-			unsigned int len = trans.get_data_length();
+			tlm::tlm_generic_payload *trans = &tr->GetGP();
+			unsigned char *data = trans->get_data_ptr();
+			unsigned int len = trans->get_data_length();
 			uint64_t data64 = 0;
 			unsigned int bitoffset;
 			unsigned int pos = 0;
 
-			bitoffset = (trans.get_address() * 8) % DATA_WIDTH;
+			bitoffset = (trans->get_address() * 8) % DATA_WIDTH;
 
 			while (pos < len) {
 				rready.write(true);
@@ -391,15 +391,15 @@ private:
 			switch (rresp.read().to_uint64()) {
 			case AXI_OKAY:
 			case AXI_EXOKAY:
-				trans.set_response_status(tlm::TLM_OK_RESPONSE);
+				trans->set_response_status(tlm::TLM_OK_RESPONSE);
 				break;
 			case AXI_DECERR:
 				D(printf("DECERR\n"));
-				trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+				trans->set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
 				break;
 			case AXI_SLVERR:
 				D(printf("SLVERR\n"));
-				trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+				trans->set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
 				break;
 			}
 
