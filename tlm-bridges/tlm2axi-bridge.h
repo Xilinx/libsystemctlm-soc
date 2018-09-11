@@ -188,19 +188,18 @@ private:
 		awvalid.write(false);
 	}
 
-
-	enum { NumBurstWidths = 8 };
-
 	bool ValidateBurstWidth(uint32_t burst_width)
 	{
-		uint8_t AXIBurstWidths[NumBurstWidths] = { 1, 2, 4, 8, 16, 32, 64, 128 };
+		static const unsigned int widths[] = {
+			1, 2, 4, 8, 16, 32, 64, 128
+		};
+		int i;
 
-		for (int i = 0; i < NumBurstWidths; i++) {
-			if (AXIBurstWidths[i] == burst_width) {
+		for (i = 0; i < sizeof widths / sizeof widths[0]; i++) {
+			if (widths[i] == burst_width) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
