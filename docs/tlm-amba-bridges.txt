@@ -1,0 +1,88 @@
+TLM AMBA Bridges
+----------------
+Several TLM AMBA bridges are implemented in this repository. The purpose of
+these bridges is to translate transactions to/from TLM Generic Payload
+to/from AMBA wire signaling.
+
+TLM Generic Payload transactions do not carry enough detail to express
+some of the concepts used by the AXI protocol. To model these, we've
+added an optional extension called Generic Attributes that describes
+common transaction attributes in a bus protocol agnostic way. Well,
+in reality they are a little biased towards AMBA but that is the intent.
+The extension can carry attributes like a Secure/Non-Secure bit, a
+transaction ID and more. These attributes are optional to use by
+any TLM interconnect component so they can flow around even through
+components that are not aware of them. Once they reach one of our
+bridges, they attributes will be used to synthesize AXI traffic.
+
+Principles
+----------
+P1. The bridges target the LT TLM programming style.
+Unless we have a strong reason to, we try to stick to the LT programming
+style.
+
+P2. Bridges are transparent
+Generally, a bridge should to the largest extent possible be transparent.
+This is because what we are actually trying to implement, does not really
+exist on real hardware.
+Architecturally we should not modify transactions in ways such as buffering,
+caching or upsizing. Instead, the bridge should aim at mapping GP's and
+AXI signaling to each other as directly as possible. Still, in some cases
+TLM transactions and RTL have so different semantics that the flows need
+to be altered.
+
+TLM-to-AXI
+----------
+The TLM to AXI bridge implements the translation between TLM Generic Payloads
+coming from a TLM Initiator and bridges them over to AXI signaling as an
+AXI Master.
+
+
+                     .----------.
+  TLM target socket | TLM-2-AXI |
+  <---------------->|  Bridge   |
+     b_transport()  '-----------'
+                         /|\
+                          | AXI Master port
+                          |
+                          |           AXI Slave port .-----------.
+                           `------------------------>| AXI Slave |
+                                                     |___________|
+
+
+The flow is basically that a TLM module sends traffic onto the bridges
+target_socket calling our b_transport() function. At this point we
+receive a TLM Generic Payload potentially with a Generic Attributes extension.
+
+Timing
+------
+The generic payload transaction may already be anottated with a delay.
+Since we will translate this LT style transaction into RTL signal
+wiggling that needs to wait for signal changes, we need to get rid of
+the anottated delay by waiting for it and setting it to zero.
+
+Multiple Outstanding transactions
+---------------------------------
+Our slave port's b_transport() can be called by multiple threads
+simultaneously. This means that multiple masters, or even a single
+multi-threaded master issue multiple outstanding transactions
+towards our bridge. In order to fully utilize the pipelined nature
+of the AXI protocol, we need to utilize this multi-threaded
+TLM programming style to fill the various pipeline stages of the
+bridge.
+
+This is achieved by implementing the various phases in
+separate threads and by using FIFOs to decouple the caller and
+the various phases from each other.
+
+Transaction Ordering
+--------------------
+The TLM-to-AXI side of things can rely on the fact that previous
+components have not broken the AXI ordering rules. So what we need
+to make sure is that we don't reorder transactions as they come in,
+so we won't. We could in theory try to optimize the traffic, but
+we shouldn't according to our principle P1, so we don't.
+
+AXI-to-TLM
+----------
+TODO
