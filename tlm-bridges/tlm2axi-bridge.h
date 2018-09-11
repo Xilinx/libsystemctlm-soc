@@ -136,12 +136,12 @@ private:
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay)
 	{
-		Transaction *tr = new Transaction(trans, delay);
-		transFifo.write(tr);
+		Transaction tr(trans, delay);
 
-		wait(tr->DoneEvent());
-
-		delete tr;
+		// Hand it over to the singal wiggling machinery.
+		transFifo.write(&tr);
+		// Wait until the transaction is done.
+		wait(tr.DoneEvent());
 	}
 
 	void read_address_phase(sc_dt::uint64 addr,
