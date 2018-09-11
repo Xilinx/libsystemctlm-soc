@@ -163,6 +163,17 @@ private:
 		return tr;
 	}
 
+	// Useful for debugging the response handling.
+	void print_vec(std::vector<Transaction*> &vec, const char *name) {
+		int i;
+
+		printf("name=%s size=%d\n", name, (int)vec.size());
+		for (i = 0; i < vec.size(); i++) {
+			printf("vec[%d].AxID = %d\n", i, vec[i]->GetAxID());
+		}
+		printf("\n");
+	}
+
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay)
 	{
