@@ -1,8 +1,9 @@
 /*
  * TLM-2.0 to AXI bridge.
  *
- * Copyright (c) 2017 Xilinx Inc.
- * Written by Edgar E. Iglesias.
+ * Copyright (c) 2017-2018 Xilinx Inc.
+ * Written by Edgar E. Iglesias,
+ *            Francisco Iglesias.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
