@@ -174,6 +174,12 @@ private:
 		genattr_extension *genattr;
 		uint32_t AxID = 0;
 
+		// Since we're going todo waits in order to wiggle the
+		// AXI signals, we need to eliminate the accumulated
+		// TLM delay.
+		wait(delay);
+		delay = SC_ZERO_TIME;
+
 		// Does this GP carry a transaction ID?
 		trans.get_extension(genattr);
 		if (genattr) {
