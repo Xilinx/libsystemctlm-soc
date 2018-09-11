@@ -107,10 +107,8 @@ public:
 	class Transaction
 	{
 	public:
-		Transaction(tlm::tlm_generic_payload& gp, sc_time& delay,
-			    uint32_t AxID) :
+		Transaction(tlm::tlm_generic_payload& gp, uint32_t AxID) :
 			m_gp(gp),
-			m_delay(delay),
 			AxID(AxID)
 		{}
 
@@ -118,12 +116,9 @@ public:
 
 		uint32_t GetAxID() { return AxID; }
 
-		sc_time& GetDelay() { return m_delay; }
-
 		sc_event& DoneEvent() { return m_done; }
 	private:
 		tlm::tlm_generic_payload& m_gp;
-		sc_time& m_delay;
 		sc_event m_done;
 		uint32_t AxID;
 	};
@@ -137,8 +132,7 @@ public:
 
 
 private:
-	int prepare_wbeat(tlm::tlm_generic_payload& trans, sc_time& delay,
-			unsigned int offset);
+	int prepare_wbeat(tlm::tlm_generic_payload& trans, unsigned int offset);
 
 	// Lookup a transaction in a vector. If found, return
 	// the pointer and remove it.
@@ -186,7 +180,7 @@ private:
 			AxID = genattr->get_transaction_id();
 		}
 
-		Transaction tr(trans, delay, AxID);
+		Transaction tr(trans, AxID);
 		// Hand it over to the singal wiggling machinery.
 		transFifo.write(&tr);
 		// Wait until the transaction is done.
@@ -435,14 +429,13 @@ private:
 		while (true) {
 			Transaction *tr = wrDataFifo.read();
 			tlm::tlm_generic_payload& trans = tr->GetGP();
-			sc_time& delay = tr->GetDelay();
 			unsigned int len = trans.get_data_length();
 			unsigned int beat = 1;
 			unsigned int nr_beats = GetNumBeats(trans);
 			unsigned int pos = 0;
 
 			while (pos < len) {
-				pos += prepare_wbeat(trans, delay, pos);
+				pos += prepare_wbeat(trans, pos);
 				wlast.write(beat == nr_beats);
 				beat++;
 				do {
@@ -545,8 +538,7 @@ template
 <class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH>
 int tlm2axi_bridge
 <BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH>
-::prepare_wbeat(tlm::tlm_generic_payload& trans, sc_time& delay,
-                unsigned int offset)
+::prepare_wbeat(tlm::tlm_generic_payload& trans, unsigned int offset)
 {
 	sc_dt::uint64 addr = trans.get_address();
 	unsigned char *data = trans.get_data_ptr();
