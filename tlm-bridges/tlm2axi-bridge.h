@@ -123,7 +123,8 @@ public:
 		uint32_t AxID;
 	};
 
-	sc_fifo<Transaction*> transFifo;
+	sc_fifo<Transaction*> rdTransFifo;
+	sc_fifo<Transaction*> wrTransFifo;
 
 	std::vector<Transaction*> rdResponses;
 
@@ -188,7 +189,11 @@ private:
 
 		Transaction tr(trans, AxID);
 		// Hand it over to the singal wiggling machinery.
-		transFifo.write(&tr);
+		if (trans.is_read()) {
+			rdTransFifo.write(&tr);
+		} else {
+			wrTransFifo.write(&tr);
+		}
 		// Wait until the transaction is done.
 		wait(tr.DoneEvent());
 	}
@@ -287,7 +292,7 @@ private:
 		return nrBeats;
 	}
 
-	void address_phase()
+	void address_phase(sc_fifo<Transaction*> &transFifo)
 	{
 		while (true) {
 			Transaction *tr = transFifo.read();
@@ -351,6 +356,14 @@ private:
 				wrDataFifo.write(tr);
 			}
 		}
+	}
+
+	void read_address_phase() {
+		address_phase(rdTransFifo);
+	}
+
+	void write_address_phase() {
+		address_phase(wrTransFifo);
 	}
 
 	void read_resp_phase()
@@ -534,7 +547,8 @@ tlm2axi_bridge<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH
 {
 	tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport);
 
-	SC_THREAD(address_phase);
+	SC_THREAD(read_address_phase);
+	SC_THREAD(write_address_phase);
 	SC_THREAD(read_resp_phase);
 	SC_THREAD(write_data_phase);
 	SC_THREAD(write_resp_phase);
