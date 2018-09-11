@@ -27,6 +27,8 @@
 #define TLM2AXI_BRIDGE_H__
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
+#include <vector>
+
 #include "tlm-bridges/amba.h"
 #include "tlm-extensions/genattr.h"
 
@@ -131,12 +133,35 @@ public:
 	sc_fifo<Transaction*> rdRespFifo;
 
 	sc_fifo<Transaction*> wrDataFifo;
-	sc_fifo<Transaction*> wrRespFifo;
+	std::vector<Transaction*> wrResponses;
 
 
 private:
 	int prepare_wbeat(tlm::tlm_generic_payload& trans, sc_time& delay,
 			unsigned int offset);
+
+	// Lookup a transaction in a vector. If found, return
+	// the pointer and remove it.
+	Transaction *LookupAxID(std::vector<Transaction*> &vec,
+					      uint32_t id)
+	{
+		Transaction *tr = NULL;
+		int i;
+
+		// Find _FIRST_ bid in vector
+		for (i = 0; i < vec.size(); i++) {
+			if (vec[i]->GetAxID() == id) {
+				break;
+			}
+		}
+
+		// If found, remove and return it.
+		if (i < vec.size()) {
+			tr = vec[i];
+			vec.erase(vec.begin() + i);
+		}
+		return tr;
+	}
 
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay)
@@ -407,7 +432,7 @@ private:
 			wlast.write(false);
 			wvalid.write(false);
 
-			wrRespFifo.write(tr);
+			wrResponses.push_back(tr);
 		}
 	}
 
@@ -416,14 +441,26 @@ private:
 		bready.write(false);
 
 		while (true) {
-			Transaction *tr = wrRespFifo.read();
-			tlm::tlm_generic_payload& trans = tr->GetGP();
+			Transaction *tr;
+			uint32_t bid_u32;
+			int i;
 
 			bready.write(true);
 			do {
 				wait(clk.posedge_event());
 			} while (bvalid.read() == false);
 			bready.write(false);
+
+			bid_u32 = bid.read().to_uint64();
+
+			tr = LookupAxID(wrResponses, bid_u32);
+			if (!tr) {
+				// FATAL ERROR
+				// FIXME: report this in a nice way.
+				assert(0);
+			}
+
+			tlm::tlm_generic_payload& trans = tr->GetGP();
 
 			// Set TLM response
 			switch (bresp.read().to_uint64()) {
