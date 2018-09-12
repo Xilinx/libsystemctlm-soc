@@ -75,6 +75,13 @@ public:
 	PROP_GETSET_GEN(burst_width, uint32_t, 0);
 	PROP_GETSET_GEN(transaction_id, uint32_t, 0);
 
+	genattr_bus() {
+		set_secure();
+		set_master_id();
+		set_burst_width();
+		set_transaction_id();
+	}
+
 	// Compatibility layer for older versions and other frameworks.
 
 	// AMBA Compat.
