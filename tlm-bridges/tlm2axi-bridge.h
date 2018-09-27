@@ -447,7 +447,13 @@ private:
 						uint32_t rid_u32 = to_uint(rid);
 
 						tr = LookupAxID(rdResponses, rid_u32);
-						assert(tr);
+
+						if (!tr) {
+							SC_REPORT_ERROR("tlm2axi-bridge",
+								"Received a read response "
+								"with an unexpected "
+								"transaction ID");
+						}
 
 						trans = &tr->GetGP();
 						bitoffset = (trans->get_address() * 8) % DATA_WIDTH;
@@ -542,9 +548,9 @@ private:
 
 			tr = LookupAxID(wrResponses, bid_u32);
 			if (!tr) {
-				// FATAL ERROR
-				// FIXME: report this in a nice way.
-				assert(0);
+				SC_REPORT_ERROR("tlm2axi-bridge",
+					"Received a write response "
+					"with an unexpected transaction ID");
 			}
 
 			tlm::tlm_generic_payload& trans = tr->GetGP();
