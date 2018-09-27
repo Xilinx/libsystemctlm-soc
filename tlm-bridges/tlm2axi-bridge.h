@@ -110,7 +110,7 @@ public:
 	sc_in<sc_bv<ID_WIDTH> > rid;
 	sc_in<bool> rlast;
 
-	static const uint32_t DATA_BUS_BYTES = DATA_WIDTH/8;
+private:
 
 	class Transaction
 	{
@@ -184,16 +184,6 @@ public:
 		uint32_t AxID;
 	};
 
-	sc_fifo<Transaction*> rdTransFifo;
-	sc_fifo<Transaction*> wrTransFifo;
-
-	std::vector<Transaction*> rdResponses;
-
-	sc_fifo<Transaction*> wrDataFifo;
-	std::vector<Transaction*> wrResponses;
-
-
-private:
 	int prepare_wbeat(tlm::tlm_generic_payload& trans, unsigned int offset);
 
 	// Lookup a transaction in a vector. If found, return
@@ -583,6 +573,16 @@ private:
 			tr->DoneEvent().notify();
 		}
 	}
+
+	static const uint32_t DATA_BUS_BYTES = DATA_WIDTH/8;
+
+	sc_fifo<Transaction*> rdTransFifo;
+	sc_fifo<Transaction*> wrTransFifo;
+
+	std::vector<Transaction*> rdResponses;
+
+	sc_fifo<Transaction*> wrDataFifo;
+	std::vector<Transaction*> wrResponses;
 };
 
 template
