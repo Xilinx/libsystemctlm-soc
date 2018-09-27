@@ -37,7 +37,14 @@
 
 template
 <class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH,
-	int ID_WIDTH = 8>
+	int ID_WIDTH = 8,
+	int AxLEN_WIDTH = 8,
+	int AxLOCK_WIDTH = 1,
+	int AWUSER_WIDTH = 2,
+	int ARUSER_WIDTH = 2,
+	int WUSER_WIDTH = 2,
+	int RUSER_WIDTH = 2,
+	int BUSER_WIDTH = 2>
 class tlm2axi_bridge
 : public sc_core::sc_module
 {
@@ -54,29 +61,29 @@ public:
 	sc_in<BOOL_TYPE> awready;
 	sc_out<ADDR_TYPE<ADDR_WIDTH> > awaddr;
 	sc_out<DATA_TYPE<3> > awprot;
-	sc_out<sc_bv<2> > awuser;
+	sc_out<sc_bv<AWUSER_WIDTH> > awuser;
 	sc_out<sc_bv<4> > awregion;
 	sc_out<sc_bv<4> > awqos;
 	sc_out<sc_bv<4> > awcache;
 	sc_out<sc_bv<2> > awburst;
 	sc_out<sc_bv<3> > awsize;
-	sc_out<sc_bv<8> > awlen;
+	sc_out<sc_bv<AxLEN_WIDTH> > awlen;
 	sc_out<sc_bv<ID_WIDTH> > awid;
-	sc_out<sc_bv<4> > awlock;
+	sc_out<sc_bv<AxLOCK_WIDTH> > awlock;
 
 	/* Write data channel.  */
 	sc_out<BOOL_TYPE> wvalid;
 	sc_in<BOOL_TYPE> wready;
 	sc_out<DATA_TYPE<DATA_WIDTH> > wdata;
 	sc_out<ADDR_TYPE<DATA_WIDTH/8> > wstrb;
-	sc_out<sc_bv<2> > wuser;
+	sc_out<sc_bv<WUSER_WIDTH> > wuser;
 	sc_out<bool> wlast;
 
 	/* Write response channel.  */
 	sc_in<BOOL_TYPE> bvalid;
 	sc_out<BOOL_TYPE> bready;
 	sc_in<DATA_TYPE<2> > bresp;
-	sc_in<sc_bv<2> > buser;
+	sc_in<sc_bv<BUSER_WIDTH> > buser;
 	sc_in<sc_bv<ID_WIDTH> > bid;
 
 	/* Read address channel.  */
@@ -84,21 +91,21 @@ public:
 	sc_in<BOOL_TYPE> arready;
 	sc_out<ADDR_TYPE<ADDR_WIDTH> > araddr;
 	sc_out<DATA_TYPE<3> > arprot;
-	sc_out<sc_bv<2> > aruser;
+	sc_out<sc_bv<ARUSER_WIDTH> > aruser;
 	sc_out<sc_bv<4> > arregion;
 	sc_out<sc_bv<4> > arqos;
 	sc_out<sc_bv<4> > arcache;
 	sc_out<sc_bv<2> > arburst;
 	sc_out<sc_bv<3> > arsize;
-	sc_out<sc_bv<8> > arlen;
+	sc_out<sc_bv<AxLEN_WIDTH> > arlen;
 	sc_out<sc_bv<ID_WIDTH> > arid;
-	sc_out<sc_bv<4> > arlock;
+	sc_out<sc_bv<AxLOCK_WIDTH> > arlock;
 
 	/* Read data channel.  */
 	sc_in<BOOL_TYPE> rvalid;
 	sc_out<BOOL_TYPE> rready;
 	sc_in<DATA_TYPE<DATA_WIDTH> > rdata;
-	sc_in<ADDR_TYPE<2> > rresp;
+	sc_in<ADDR_TYPE<RUSER_WIDTH> > rresp;
 	sc_in<sc_bv<2> > ruser;
 	sc_in<sc_bv<ID_WIDTH> > rid;
 	sc_in<bool> rlast;
@@ -579,8 +586,21 @@ private:
 };
 
 template
-<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH>
-tlm2axi_bridge<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH> ::tlm2axi_bridge(sc_module_name name)
+<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH,
+	int AxLEN_WIDTH, int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH, int RUSER_WIDTH, int BUSER_WIDTH>
+tlm2axi_bridge<BOOL_TYPE,
+		ADDR_TYPE,
+		ADDR_WIDTH,
+		DATA_TYPE,
+		DATA_WIDTH,
+		ID_WIDTH,
+		AxLEN_WIDTH,
+		AxLOCK_WIDTH,
+		AWUSER_WIDTH,
+		ARUSER_WIDTH,
+		WUSER_WIDTH,
+		RUSER_WIDTH,
+		BUSER_WIDTH>::tlm2axi_bridge(sc_module_name name)
 	: sc_module(name), tgt_socket("tgt-socket"),
 	clk("clk"),
 	awvalid("awvalid"),
@@ -617,9 +637,21 @@ tlm2axi_bridge<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH
 }
 
 template
-<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH>
-int tlm2axi_bridge
-<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH>
+<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH,
+	int AxLEN_WIDTH, int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH, int RUSER_WIDTH, int BUSER_WIDTH>
+int tlm2axi_bridge<BOOL_TYPE,
+		ADDR_TYPE,
+		ADDR_WIDTH,
+		DATA_TYPE,
+		DATA_WIDTH,
+		ID_WIDTH,
+		AxLEN_WIDTH,
+		AxLOCK_WIDTH,
+		AWUSER_WIDTH,
+		ARUSER_WIDTH,
+		WUSER_WIDTH,
+		RUSER_WIDTH,
+		BUSER_WIDTH>
 ::prepare_wbeat(tlm::tlm_generic_payload& trans, unsigned int offset)
 {
 	sc_dt::uint64 addr = trans.get_address();
