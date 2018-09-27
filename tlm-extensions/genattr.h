@@ -44,6 +44,10 @@ private:
 	bool eop;
 
 public:
+	genattr_stream() :
+		eop(false)
+	{}
+
 	PROP_GETSET_GEN(eop, bool, true)
 };
 
