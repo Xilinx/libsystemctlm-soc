@@ -44,4 +44,11 @@ enum {
 	AXI_PROT_NS = 1 << 1,
 	AXI_PROT_INSN = 1 << 2,
 };
+
+enum {
+	AXI_LOCK_NORMAL = 1 << 0,
+	AXI_LOCK_EXCLUSIVE = 1 << 1,
+	AXI_LOCK_LOCKED = 1 << 2,
+};
+
 #endif

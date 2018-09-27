@@ -62,7 +62,7 @@ public:
 	sc_out<sc_bv<3> > awsize;
 	sc_out<sc_bv<8> > awlen;
 	sc_out<sc_bv<ID_WIDTH> > awid;
-	sc_out<bool > awlock;
+	sc_out<sc_bv<4> > awlock;
 
 	/* Write data channel.  */
 	sc_out<BOOL_TYPE> wvalid;
@@ -92,7 +92,7 @@ public:
 	sc_out<sc_bv<3> > arsize;
 	sc_out<sc_bv<8> > arlen;
 	sc_out<sc_bv<ID_WIDTH> > arid;
-	sc_out<bool > arlock;
+	sc_out<sc_bv<4> > arlock;
 
 	/* Read data channel.  */
 	sc_in<BOOL_TYPE> rvalid;
@@ -111,15 +111,68 @@ public:
 		Transaction(tlm::tlm_generic_payload& gp, uint32_t AxID) :
 			m_gp(gp),
 			AxID(AxID)
-		{}
+		{
+			gp.get_extension(m_genattr);
+		}
 
 		tlm::tlm_generic_payload& GetGP() { return m_gp; }
 
 		uint32_t GetAxID() { return AxID; }
 
+		uint64_t GetAddress() { return m_gp.get_address(); }
+
+		uint8_t GetAxLock()
+		{
+			uint8_t AxLock = AXI_LOCK_NORMAL;
+
+			if (m_genattr) {
+				if (m_genattr->get_exclusive()) {
+					AxLock = AXI_LOCK_EXCLUSIVE;
+				} else if (m_genattr->get_locked()) {
+					AxLock = AXI_LOCK_LOCKED;
+				}
+			}
+			return AxLock;
+		}
+
+		uint8_t GetAxCache()
+		{
+			uint8_t AxCache = 0;
+
+			if (m_genattr) {
+				 AxCache = m_genattr->get_bufferable() |
+						(m_genattr->get_modifiable() << 1) |
+						(m_genattr->get_read_allocate() << 2) |
+						(m_genattr->get_write_allocate() << 3);
+			}
+
+			return AxCache;
+		}
+
+		uint8_t GetAxQoS()
+		{
+			uint8_t AxQoS = 0;
+
+			if (m_genattr) {
+				AxQoS = m_genattr->get_qos();
+			}
+			return AxQoS;
+		}
+
+		uint8_t GetAxRegion()
+		{
+			uint8_t AxRegion = 0;
+
+			if (m_genattr) {
+				AxRegion = m_genattr->get_region();
+			}
+			return AxRegion;
+		}
+
 		sc_event& DoneEvent() { return m_done; }
 	private:
 		tlm::tlm_generic_payload& m_gp;
+		genattr_extension *m_genattr;
 		sc_event m_done;
 		uint32_t AxID;
 	};
@@ -199,18 +252,22 @@ private:
 		wait(tr.DoneEvent());
 	}
 
-	void read_address_phase(sc_dt::uint64 addr,
+	void read_address_phase(Transaction *rt,
 					uint8_t burstType,
 					unsigned int prot,
 					unsigned int nr_beats,
 					uint32_t transaction_id)
 	{
-		araddr.write(addr);
+		araddr.write(rt->GetAddress());
 		arprot.write(prot);
 		arsize.write((DATA_WIDTH/8)/2);
 		arlen.write(nr_beats - 1);
 		arburst.write(burstType);
 		arid.write(transaction_id);
+		arlock.write(rt->GetAxLock());
+		arcache.write(rt->GetAxCache());
+		arqos.write(rt->GetAxQoS());
+		arregion.write(rt->GetAxRegion());
 
 		arvalid.write(true);
 
@@ -221,18 +278,22 @@ private:
 		arvalid.write(false);
 	}
 
-	void write_address_phase(sc_dt::uint64 addr,
+	void write_address_phase(Transaction *wt,
 					uint8_t burstType,
 					unsigned int prot,
 					unsigned int nr_beats,
 					uint32_t transaction_id)
 	{
-		awaddr.write(addr);
+		awaddr.write(wt->GetAddress());
 		awprot.write(prot);
 		awsize.write((DATA_WIDTH/8)/2);
 		awlen.write(nr_beats - 1);
 		awburst.write(burstType);
 		awid.write(transaction_id);
+		awlock.write(wt->GetAxLock());
+		awcache.write(wt->GetAxCache());
+		awqos.write(wt->GetAxQoS());
+		awregion.write(wt->GetAxRegion());
 
 		awvalid.write(true);
 
@@ -342,14 +403,14 @@ private:
 
 			/* Send the address.  */
 			if (trans.is_read()) {
-				read_address_phase(trans.get_address(),
+				read_address_phase(tr,
 							burstType,
 							prot,
 							GetNumBeats(trans),
 							transaction_id);
 				rdResponses.push_back(tr);
 			} else {
-				write_address_phase(trans.get_address(),
+				write_address_phase(tr,
 							burstType,
 							prot,
 							GetNumBeats(trans),
@@ -544,7 +605,7 @@ tlm2axi_bridge<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH, ID_WIDTH
 	rvalid("rvalid"),
 	rready("rready"),
 	rdata("rdata"),
-	rresp("rresp")
+	rresp("rresp"),
 {
 	tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport);
 
