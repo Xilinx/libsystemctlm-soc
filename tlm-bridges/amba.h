@@ -51,6 +51,21 @@ enum {
 	AXI_LOCK_LOCKED = 1 << 2,
 };
 
+enum {
+	AXI3_AxLOCK_WIDTH = 2,
+	AXI4_AxLOCK_WIDTH = 1,
+};
+
+enum AXIVersion {
+	V_AXI4,
+	V_AXI3,
+};
+
+enum {
+	AXI3_MAX_BURSTLENGTH = 16,
+	AXI4_MAX_BURSTLENGTH = 256,
+};
+
 template<int N>
 struct __AXISignal
 {

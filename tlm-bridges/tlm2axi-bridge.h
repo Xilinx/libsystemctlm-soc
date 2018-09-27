@@ -52,7 +52,8 @@ class tlm2axi_bridge
 public:
 	tlm_utils::simple_target_socket<tlm2axi_bridge> tgt_socket;
 
-	tlm2axi_bridge(sc_core::sc_module_name name);
+	tlm2axi_bridge(sc_core::sc_module_name name,
+			AXIVersion version = V_AXI4);
 	SC_HAS_PROCESS(tlm2axi_bridge);
 
 	sc_in<bool> clk;
@@ -73,6 +74,7 @@ public:
 	sc_out<AXISignal(AxLOCK_WIDTH) > awlock;
 
 	/* Write data channel.  */
+	sc_out<AXISignal(ID_WIDTH) > wid;	// AXI3 only
 	sc_out<bool > wvalid;
 	sc_in<bool > wready;
 	sc_out<sc_bv<DATA_WIDTH> > wdata;
@@ -136,7 +138,8 @@ private:
 			if (m_genattr) {
 				if (m_genattr->get_exclusive()) {
 					AxLock = AXI_LOCK_EXCLUSIVE;
-				} else if (m_genattr->get_locked()) {
+				} else if (AxLOCK_WIDTH > AXI4_AxLOCK_WIDTH &&
+						m_genattr->get_locked()) {
 					AxLock = AXI_LOCK_LOCKED;
 				}
 			}
@@ -185,7 +188,7 @@ private:
 		uint32_t AxID;
 	};
 
-	int prepare_wbeat(tlm::tlm_generic_payload& trans, unsigned int offset);
+	int prepare_wbeat(Transaction *tr, unsigned int offset);
 
 	// Lookup a transaction in a vector. If found, return
 	// the pointer and remove it.
@@ -347,6 +350,10 @@ private:
 
 		if (dataLen % burst_width) {
 			nrBeats++;
+		}
+
+		if (nrBeats > m_maxBurstLength) {
+			SC_REPORT_ERROR("tlm2axi", "AXI to large burst length");
 		}
 
 		return nrBeats;
@@ -514,7 +521,7 @@ private:
 			unsigned int pos = 0;
 
 			while (pos < len) {
-				pos += prepare_wbeat(trans, pos);
+				pos += prepare_wbeat(tr, pos);
 				wlast.write(beat == nr_beats);
 				beat++;
 				do {
@@ -575,6 +582,33 @@ private:
 		}
 	}
 
+	void before_end_of_elaboration()
+	{
+		if (m_version == V_AXI4) {
+			//
+			// Dummy bind ports only used with AXI3
+			//
+			wid(wid_dummy);
+
+		} else if (m_version == V_AXI3) {
+			//
+			// Dummy bind ports only used with AXI4
+			//
+			awqos(awqos_dummy);
+			awregion(awregion_dummy);
+			awuser(awuser_dummy);
+			wuser(wuser_dummy);
+
+			buser(buser_dummy);
+
+			arregion(arregion_dummy);
+			arqos(arqos_dummy);
+			aruser(aruser_dummy);
+
+			ruser(ruser_dummy);
+		}
+	}
+
 	static const uint32_t DATA_BUS_BYTES = DATA_WIDTH/8;
 
 	sc_fifo<Transaction*> rdTransFifo;
@@ -584,6 +618,30 @@ private:
 
 	sc_fifo<Transaction*> wrDataFifo;
 	std::vector<Transaction*> wrResponses;
+
+	AXIVersion m_version;
+	unsigned int m_maxBurstLength;
+
+	//
+	// AXI3 dummy signals
+	//
+	sc_signal<sc_bv<ID_WIDTH> > wid_dummy;
+
+	//
+	// AXI4 dummy signals
+	//
+	sc_signal<sc_bv<4> > awqos_dummy;
+	sc_signal<sc_bv<4> > awregion_dummy;
+	sc_signal<sc_bv<AWUSER_WIDTH> > awuser_dummy;
+	sc_signal<sc_bv<WUSER_WIDTH> > wuser_dummy;
+
+	sc_signal<sc_bv<BUSER_WIDTH> > buser_dummy;
+
+	sc_signal<sc_bv<4> > arregion_dummy;
+	sc_signal<sc_bv<4> > arqos_dummy;
+	sc_signal<sc_bv<ARUSER_WIDTH> > aruser_dummy;
+
+	sc_signal<sc_bv<RUSER_WIDTH> > ruser_dummy;
 };
 
 template< int ADDR_WIDTH, int DATA_WIDTH, int ID_WIDTH, int AxLEN_WIDTH,
@@ -598,7 +656,7 @@ tlm2axi_bridge<ADDR_WIDTH,
 		ARUSER_WIDTH,
 		WUSER_WIDTH,
 		RUSER_WIDTH,
-		BUSER_WIDTH>::tlm2axi_bridge(sc_module_name name)
+		BUSER_WIDTH>::tlm2axi_bridge(sc_module_name name, AXIVersion version)
 	: sc_module(name), tgt_socket("tgt-socket"),
 	clk("clk"),
 	awvalid("awvalid"),
@@ -624,8 +682,14 @@ tlm2axi_bridge<ADDR_WIDTH,
 	rready("rready"),
 	rdata("rdata"),
 	rresp("rresp"),
+	m_version(version),
+	m_maxBurstLength(AXI4_MAX_BURSTLENGTH)
 {
 	tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport);
+
+	if (m_version == V_AXI3) {
+		m_maxBurstLength = AXI3_MAX_BURSTLENGTH;
+	}
 
 	SC_THREAD(read_address_phase);
 	SC_THREAD(write_address_phase);
@@ -648,8 +712,9 @@ int tlm2axi_bridge<ADDR_WIDTH,
 		WUSER_WIDTH,
 		RUSER_WIDTH,
 		BUSER_WIDTH>
-::prepare_wbeat(tlm::tlm_generic_payload& trans, unsigned int offset)
+::prepare_wbeat(Transaction *tr, unsigned int offset)
 {
+	tlm::tlm_generic_payload& trans = tr->GetGP();
 	sc_dt::uint64 addr = trans.get_address();
 	unsigned char *data = trans.get_data_ptr();
 	unsigned int len = trans.get_data_length();
@@ -694,6 +759,10 @@ int tlm2axi_bridge<ADDR_WIDTH,
 		memcpy(&t64, data + i, copylen);
 		data128.range(copylen * 8 - 1 + i * 8 + bitoffset,
 			i * 8 + bitoffset) = t64;
+	}
+
+	if (m_version == V_AXI3) {
+		wid.write(tr->GetAxID());
 	}
 
 	wdata.write(data128);
