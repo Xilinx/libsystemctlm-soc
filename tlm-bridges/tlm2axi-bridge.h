@@ -118,31 +118,108 @@ private:
 	class Transaction
 	{
 	public:
-		Transaction(tlm::tlm_generic_payload& gp, uint32_t AxID) :
+		Transaction(tlm::tlm_generic_payload& gp) :
 			m_gp(gp),
-			AxID(AxID)
+			m_burstType(AXI_BURST_INCR),
+			m_numBeats(0)
 		{
-			gp.get_extension(m_genattr);
+			genattr_extension *genattr;
+
+			m_gp.get_extension(genattr);
+			if (genattr) {
+				m_genattr.copy_from(*genattr);
+			}
+
+			SetupBurstType();
+
+			SetupNumBeats();
 		}
+
+		void SetupBurstType()
+		{
+			unsigned int streaming_width = m_gp.get_streaming_width();
+			unsigned int datalen = m_gp.get_data_length();
+
+			if (streaming_width >= datalen) {
+				m_burstType = AXI_BURST_INCR;
+			} else if (streaming_width == DATA_BUS_BYTES) {
+				m_burstType = AXI_BURST_FIXED;
+			} else if (streaming_width < DATA_BUS_BYTES) {
+
+				//
+				// Specify this with burst_width if streaming
+				// width is less than the data bus width
+				//
+
+				m_burstType = AXI_BURST_FIXED;
+				m_genattr.set_burst_width(streaming_width);
+
+			} else {
+				m_burstType = AXI_BURST_WRAP;
+			}
+		}
+
+		void SetupNumBeats()
+		{
+			uint64_t address = m_gp.get_address();
+			unsigned int dataLen = m_gp.get_data_length();
+			uint32_t burst_width = GetBurstWidth();
+			uint64_t alignedAddress;
+
+			alignedAddress = (address / burst_width) * burst_width;
+			dataLen += address - alignedAddress;
+
+			m_numBeats = dataLen/burst_width;
+
+			if (dataLen % burst_width) {
+				m_numBeats++;
+			}
+		}
+
+		uint8_t GetNumBeats() { return m_numBeats; }
+
+		uint32_t GetBurstWidth()
+		{
+			uint32_t burst_width = m_genattr.get_burst_width();
+
+			if (burst_width == 0) {
+				// Default to databus width
+				burst_width = DATA_BUS_BYTES;
+			}
+
+			return burst_width;
+		}
+
+		uint8_t GetBurstType() { return m_burstType; }
 
 		tlm::tlm_generic_payload& GetGP() { return m_gp; }
 
-		uint32_t GetAxID() { return AxID; }
+		uint32_t GetAxID() { return m_genattr.get_transaction_id(); }
 
 		uint64_t GetAddress() { return m_gp.get_address(); }
+
+		uint8_t GetAxProt()
+		{
+			uint8_t AxProt = 0;
+
+			if (m_genattr.get_non_secure()) {
+				AxProt |= AXI_PROT_NS;
+			}
+
+			return AxProt;
+		}
 
 		uint8_t GetAxLock()
 		{
 			uint8_t AxLock = AXI_LOCK_NORMAL;
 
-			if (m_genattr) {
-				if (m_genattr->get_exclusive()) {
-					AxLock = AXI_LOCK_EXCLUSIVE;
-				} else if (AxLOCK_WIDTH > AXI4_AxLOCK_WIDTH &&
-						m_genattr->get_locked()) {
-					AxLock = AXI_LOCK_LOCKED;
-				}
+			if (m_genattr.get_exclusive()) {
+				AxLock = AXI_LOCK_EXCLUSIVE;
+			} else if (AxLOCK_WIDTH > AXI4_AxLOCK_WIDTH &&
+					m_genattr.get_locked()) {
+				AxLock = AXI_LOCK_LOCKED;
 			}
+
 			return AxLock;
 		}
 
@@ -150,12 +227,10 @@ private:
 		{
 			uint8_t AxCache = 0;
 
-			if (m_genattr) {
-				 AxCache = m_genattr->get_bufferable() |
-						(m_genattr->get_modifiable() << 1) |
-						(m_genattr->get_read_allocate() << 2) |
-						(m_genattr->get_write_allocate() << 3);
-			}
+			 AxCache = m_genattr.get_bufferable() |
+					(m_genattr.get_modifiable() << 1) |
+					(m_genattr.get_read_allocate() << 2) |
+					(m_genattr.get_write_allocate() << 3);
 
 			return AxCache;
 		}
@@ -164,9 +239,8 @@ private:
 		{
 			uint8_t AxQoS = 0;
 
-			if (m_genattr) {
-				AxQoS = m_genattr->get_qos();
-			}
+			AxQoS = m_genattr.get_qos();
+
 			return AxQoS;
 		}
 
@@ -174,18 +248,18 @@ private:
 		{
 			uint8_t AxRegion = 0;
 
-			if (m_genattr) {
-				AxRegion = m_genattr->get_region();
-			}
+			AxRegion = m_genattr.get_region();
+
 			return AxRegion;
 		}
 
 		sc_event& DoneEvent() { return m_done; }
 	private:
 		tlm::tlm_generic_payload& m_gp;
-		genattr_extension *m_genattr;
+		genattr_extension m_genattr;
 		sc_event m_done;
-		uint32_t AxID;
+		uint8_t m_burstType;
+		uint8_t m_numBeats;
 	};
 
 	int prepare_wbeat(Transaction *tr, unsigned int offset);
@@ -224,11 +298,23 @@ private:
 		printf("\n");
 	}
 
+	bool Validate(Transaction& tr)
+	{
+		if (!ValidateBurstWidth(tr.GetBurstWidth())) {
+			return false;
+		}
+
+		if (tr.GetNumBeats() > m_maxBurstLength) {
+			return false;
+		}
+
+		return true;
+	}
+
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay)
 	{
-		genattr_extension *genattr;
-		uint32_t AxID = 0;
+		Transaction tr(trans);
 
 		// Since we're going todo waits in order to wiggle the
 		// AXI signals, we need to eliminate the accumulated
@@ -236,35 +322,28 @@ private:
 		wait(delay);
 		delay = SC_ZERO_TIME;
 
-		// Does this GP carry a transaction ID?
-		trans.get_extension(genattr);
-		if (genattr) {
-			AxID = genattr->get_transaction_id();
-		}
-
-		Transaction tr(trans, AxID);
-		// Hand it over to the singal wiggling machinery.
-		if (trans.is_read()) {
-			rdTransFifo.write(&tr);
+		if (Validate(tr)) {
+			// Hand it over to the signal wiggling machinery.
+			if (trans.is_read()) {
+				rdTransFifo.write(&tr);
+			} else {
+				wrTransFifo.write(&tr);
+			}
+			// Wait until the transaction is done.
+			wait(tr.DoneEvent());
 		} else {
-			wrTransFifo.write(&tr);
+			trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
 		}
-		// Wait until the transaction is done.
-		wait(tr.DoneEvent());
 	}
 
-	void read_address_phase(Transaction *rt,
-					uint8_t burstType,
-					unsigned int prot,
-					unsigned int nr_beats,
-					uint32_t transaction_id)
+	void read_address_phase(Transaction *rt)
 	{
 		araddr.write(rt->GetAddress());
-		arprot.write(prot);
-		arsize.write((DATA_WIDTH/8)/2);
-		arlen.write(nr_beats - 1);
-		arburst.write(burstType);
-		arid.write(transaction_id);
+		arprot.write(rt->GetAxProt());
+		arsize.write(rt->GetBurstWidth()/2);
+		arlen.write(rt->GetNumBeats() - 1);
+		arburst.write(rt->GetBurstType());
+		arid.write(rt->GetAxID());
 		arlock.write(rt->GetAxLock());
 		arcache.write(rt->GetAxCache());
 		arqos.write(rt->GetAxQoS());
@@ -279,18 +358,14 @@ private:
 		arvalid.write(false);
 	}
 
-	void write_address_phase(Transaction *wt,
-					uint8_t burstType,
-					unsigned int prot,
-					unsigned int nr_beats,
-					uint32_t transaction_id)
+	void write_address_phase(Transaction *wt)
 	{
 		awaddr.write(wt->GetAddress());
-		awprot.write(prot);
-		awsize.write((DATA_WIDTH/8)/2);
-		awlen.write(nr_beats - 1);
-		awburst.write(burstType);
-		awid.write(transaction_id);
+		awprot.write(wt->GetAxProt());
+		awsize.write(wt->GetBurstWidth()/2);
+		awlen.write(wt->GetNumBeats() - 1);
+		awburst.write(wt->GetBurstType());
+		awid.write(wt->GetAxID());
 		awlock.write(wt->GetAxLock());
 		awcache.write(wt->GetAxCache());
 		awqos.write(wt->GetAxQoS());
@@ -320,106 +395,18 @@ private:
 		return false;
 	}
 
-	uint8_t GetNumBeats(tlm::tlm_generic_payload& gp)
-	{
-		uint64_t address = gp.get_address();
-		unsigned int dataLen = gp.get_data_length();
-		uint32_t burst_width = 0;
-		genattr_extension *genattr;
-		uint64_t alignedAddress;
-		uint8_t nrBeats;
-
-		gp.get_extension(genattr);
-		if (genattr) {
-			burst_width = genattr->get_burst_width();
-		}
-
-		if (burst_width == 0) {
-			// Default to databus width
-			burst_width = DATA_BUS_BYTES;
-		}
-
-		if (!ValidateBurstWidth(burst_width)) {
-			SC_REPORT_ERROR("tlm2axi", "AXI burst width error");
-		}
-
-		alignedAddress = (address / burst_width) * burst_width;
-		dataLen += address - alignedAddress;
-
-		nrBeats = dataLen/burst_width;
-
-		if (dataLen % burst_width) {
-			nrBeats++;
-		}
-
-		if (nrBeats > m_maxBurstLength) {
-			SC_REPORT_ERROR("tlm2axi", "AXI to large burst length");
-		}
-
-		return nrBeats;
-	}
-
 	void address_phase(sc_fifo<Transaction*> &transFifo)
 	{
 		while (true) {
 			Transaction *tr = transFifo.read();
 			tlm::tlm_generic_payload& trans = tr->GetGP();
-			unsigned int datalen = trans.get_data_length();
-			unsigned int streaming_width = trans.get_streaming_width();
-			genattr_extension *genattr;
-			unsigned int prot = 0;
-			uint8_t transaction_id = 0;
-			uint8_t burstType;
-
-			/* Extensions.  */
-			trans.get_extension(genattr);
-			if (genattr) {
-				if (genattr->get_non_secure()) {
-					prot |= AXI_PROT_NS;
-				}
-				transaction_id = genattr->get_transaction_id();
-			}
-
-			//
-			// Burst type
-			//
-			if (streaming_width >= datalen) {
-				burstType = AXI_BURST_INCR;
-			} else if (streaming_width == DATA_BUS_BYTES) {
-				burstType = AXI_BURST_FIXED;
-			} else if (streaming_width < DATA_BUS_BYTES) {
-
-				//
-				// Specify this with burst_width if streaming
-				// width is less than the data bus width
-				//
-
-				burstType = AXI_BURST_FIXED;
-
-				if (genattr == nullptr) {
-					genattr = new genattr_extension();
-					trans.set_extension(genattr);
-				}
-
-				genattr->set_burst_width(streaming_width);
-			} else {
-				burstType = AXI_BURST_WRAP;
-			}
 
 			/* Send the address.  */
 			if (trans.is_read()) {
-				read_address_phase(tr,
-							burstType,
-							prot,
-							GetNumBeats(trans),
-							transaction_id);
+				read_address_phase(tr);
 				rdResponses.push_back(tr);
 			} else {
-				write_address_phase(tr,
-							burstType,
-							prot,
-							GetNumBeats(trans),
-							transaction_id);
+				write_address_phase(tr);
 				wrDataFifo.write(tr);
 			}
 		}
@@ -517,7 +504,7 @@ private:
 			tlm::tlm_generic_payload& trans = tr->GetGP();
 			unsigned int len = trans.get_data_length();
 			unsigned int beat = 1;
-			unsigned int nr_beats = GetNumBeats(trans);
+			unsigned int nr_beats = tr->GetNumBeats();
 			unsigned int pos = 0;
 
 			while (pos < len) {
