@@ -36,7 +36,8 @@
 #define D(x)
 
 template
-<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH,
+<int ADDR_WIDTH,
+	int DATA_WIDTH,
 	int ID_WIDTH = 8,
 	int AxLEN_WIDTH = 8,
 	int AxLOCK_WIDTH = 1,
@@ -54,61 +55,61 @@ public:
 	tlm2axi_bridge(sc_core::sc_module_name name);
 	SC_HAS_PROCESS(tlm2axi_bridge);
 
-	sc_in<BOOL_TYPE> clk;
+	sc_in<bool> clk;
 
 	/* Write address channel.  */
-	sc_out<BOOL_TYPE> awvalid;
-	sc_in<BOOL_TYPE> awready;
-	sc_out<ADDR_TYPE<ADDR_WIDTH> > awaddr;
-	sc_out<DATA_TYPE<3> > awprot;
-	sc_out<sc_bv<AWUSER_WIDTH> > awuser;
-	sc_out<sc_bv<4> > awregion;
-	sc_out<sc_bv<4> > awqos;
+	sc_out<bool > awvalid;
+	sc_in<bool > awready;
+	sc_out<sc_bv<ADDR_WIDTH> > awaddr;
+	sc_out<sc_bv<3> > awprot;
+	sc_out<AXISignal(AWUSER_WIDTH) > awuser;// AXI4 only
+	sc_out<sc_bv<4> > awregion; 		// AXI4 only
+	sc_out<sc_bv<4> > awqos; 		// AXI4 only
 	sc_out<sc_bv<4> > awcache;
 	sc_out<sc_bv<2> > awburst;
 	sc_out<sc_bv<3> > awsize;
-	sc_out<sc_bv<AxLEN_WIDTH> > awlen;
-	sc_out<sc_bv<ID_WIDTH> > awid;
-	sc_out<sc_bv<AxLOCK_WIDTH> > awlock;
+	sc_out<AXISignal(AxLEN_WIDTH) > awlen;
+	sc_out<AXISignal(ID_WIDTH) > awid;
+	sc_out<AXISignal(AxLOCK_WIDTH) > awlock;
 
 	/* Write data channel.  */
-	sc_out<BOOL_TYPE> wvalid;
-	sc_in<BOOL_TYPE> wready;
-	sc_out<DATA_TYPE<DATA_WIDTH> > wdata;
-	sc_out<ADDR_TYPE<DATA_WIDTH/8> > wstrb;
-	sc_out<sc_bv<WUSER_WIDTH> > wuser;
-	sc_out<bool> wlast;
+	sc_out<bool > wvalid;
+	sc_in<bool > wready;
+	sc_out<sc_bv<DATA_WIDTH> > wdata;
+	sc_out<sc_bv<DATA_WIDTH/8> > wstrb;
+	sc_out<AXISignal(WUSER_WIDTH) > wuser; 	// AXI4 only
+	sc_out<bool > wlast;
 
 	/* Write response channel.  */
-	sc_in<BOOL_TYPE> bvalid;
-	sc_out<BOOL_TYPE> bready;
-	sc_in<DATA_TYPE<2> > bresp;
-	sc_in<sc_bv<BUSER_WIDTH> > buser;
-	sc_in<sc_bv<ID_WIDTH> > bid;
+	sc_in<bool > bvalid;
+	sc_out<bool > bready;
+	sc_in<sc_bv<2> > bresp;
+	sc_in<AXISignal(BUSER_WIDTH) > buser;
+	sc_in<AXISignal(ID_WIDTH) > bid;
 
 	/* Read address channel.  */
-	sc_out<BOOL_TYPE> arvalid;
-	sc_in<BOOL_TYPE> arready;
-	sc_out<ADDR_TYPE<ADDR_WIDTH> > araddr;
-	sc_out<DATA_TYPE<3> > arprot;
-	sc_out<sc_bv<ARUSER_WIDTH> > aruser;
-	sc_out<sc_bv<4> > arregion;
-	sc_out<sc_bv<4> > arqos;
+	sc_out<bool > arvalid;
+	sc_in<bool > arready;
+	sc_out<sc_bv<ADDR_WIDTH> > araddr;
+	sc_out<sc_bv<3> > arprot;
+	sc_out<AXISignal(ARUSER_WIDTH) > aruser;	// AXI4 only
+	sc_out<sc_bv<4> > arregion; 			// AXI4 only
+	sc_out<sc_bv<4> > arqos; 			// AXI4 only
 	sc_out<sc_bv<4> > arcache;
 	sc_out<sc_bv<2> > arburst;
 	sc_out<sc_bv<3> > arsize;
-	sc_out<sc_bv<AxLEN_WIDTH> > arlen;
-	sc_out<sc_bv<ID_WIDTH> > arid;
-	sc_out<sc_bv<AxLOCK_WIDTH> > arlock;
+	sc_out<AXISignal(AxLEN_WIDTH) > arlen;
+	sc_out<AXISignal(ID_WIDTH) > arid;
+	sc_out<AXISignal(AxLOCK_WIDTH) > arlock;
 
 	/* Read data channel.  */
-	sc_in<BOOL_TYPE> rvalid;
-	sc_out<BOOL_TYPE> rready;
-	sc_in<DATA_TYPE<DATA_WIDTH> > rdata;
-	sc_in<ADDR_TYPE<RUSER_WIDTH> > rresp;
-	sc_in<sc_bv<2> > ruser;
-	sc_in<sc_bv<ID_WIDTH> > rid;
-	sc_in<bool> rlast;
+	sc_in<bool > rvalid;
+	sc_out<bool > rready;
+	sc_in<sc_bv<DATA_WIDTH> > rdata;
+	sc_in<sc_bv<2> > rresp;
+	sc_in<AXISignal(RUSER_WIDTH) > ruser; 		// AXI4 only
+	sc_in<AXISignal(ID_WIDTH) > rid;
+	sc_in<bool > rlast;
 
 private:
 
@@ -449,7 +450,7 @@ private:
 					unsigned int w;
 
 					if (tr == NULL) {
-						uint32_t rid_u32 = rid.read().to_uint64();
+						uint32_t rid_u32 = to_uint(rid);
 
 						tr = LookupAxID(rdResponses, rid_u32);
 						assert(tr);
@@ -543,7 +544,7 @@ private:
 			} while (bvalid.read() == false);
 			bready.write(false);
 
-			bid_u32 = bid.read().to_uint64();
+			bid_u32 = to_uint(bid);
 
 			tr = LookupAxID(wrResponses, bid_u32);
 			if (!tr) {
@@ -585,13 +586,10 @@ private:
 	std::vector<Transaction*> wrResponses;
 };
 
-template
-<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH,
-	int AxLEN_WIDTH, int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH, int RUSER_WIDTH, int BUSER_WIDTH>
-tlm2axi_bridge<BOOL_TYPE,
-		ADDR_TYPE,
-		ADDR_WIDTH,
-		DATA_TYPE,
+template< int ADDR_WIDTH, int DATA_WIDTH, int ID_WIDTH, int AxLEN_WIDTH,
+	int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH,
+	int RUSER_WIDTH, int BUSER_WIDTH>
+tlm2axi_bridge<ADDR_WIDTH,
 		DATA_WIDTH,
 		ID_WIDTH,
 		AxLEN_WIDTH,
@@ -637,12 +635,10 @@ tlm2axi_bridge<BOOL_TYPE,
 }
 
 template
-<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH, int ID_WIDTH,
-	int AxLEN_WIDTH, int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH, int RUSER_WIDTH, int BUSER_WIDTH>
-int tlm2axi_bridge<BOOL_TYPE,
-		ADDR_TYPE,
-		ADDR_WIDTH,
-		DATA_TYPE,
+<int ADDR_WIDTH, int DATA_WIDTH, int ID_WIDTH, int AxLEN_WIDTH,
+	int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH,
+	int RUSER_WIDTH, int BUSER_WIDTH>
+int tlm2axi_bridge<ADDR_WIDTH,
 		DATA_WIDTH,
 		ID_WIDTH,
 		AxLEN_WIDTH,
@@ -710,7 +706,7 @@ int tlm2axi_bridge<BOOL_TYPE,
 }
 
 
-typedef tlm2axi_bridge<bool, sc_bv, 32, sc_bv, 32> TLM2AXI_bridge;
+typedef tlm2axi_bridge<32, 32> TLM2AXI_bridge;
 
 #undef D
 #endif
