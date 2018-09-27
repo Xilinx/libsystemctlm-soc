@@ -719,6 +719,7 @@ int tlm2axi_bridge<ADDR_WIDTH,
 	unsigned char *data = trans.get_data_ptr();
 	unsigned int len = trans.get_data_length();
 	unsigned char *be = trans.get_byte_enable_ptr();
+	int be_len = trans.get_byte_enable_length();
 	unsigned int bitoffset;
 	uint64_t strb;
 	sc_bv<DATA_WIDTH> data128 = 0;
@@ -736,9 +737,7 @@ int tlm2axi_bridge<ADDR_WIDTH,
 
 	D(printf("WBEAT: pos=%d wlen=%d bitoffset=%d\n", offset, wlen, bitoffset));
 
-	if (be) {
-		int be_len = trans.get_byte_enable_length();
-
+	if (be && be_len) {
 		strb = 0;
 		for (i = 0; i < wlen; i++) {
 			uint8_t b = be[(i + bitoffset / 8) % be_len];
