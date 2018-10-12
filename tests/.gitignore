@@ -1,0 +1,6 @@
+.pytest_cache
+__pycache__
+.config.mk
+report.html
+report.zip
+*.vcd

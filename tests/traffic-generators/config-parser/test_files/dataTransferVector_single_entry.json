@@ -1,0 +1,95 @@
+{
+    "dataTransfers": [
+        {
+            "addr": "0x7fca0000",
+            "cmd": 1,
+            "data": [
+                "0x2",
+                "0xf2",
+                "0xfe",
+                "0xdc"
+            ],
+            "length": 4,
+            "byte_enable": [
+                "0x1",
+                "0x2",
+                "0x3",
+                "0x4"
+            ],
+            "byte_enable_length": 4,
+            "streaming_width": 5,
+            "expect": [
+                "0xff",
+                "0xfe",
+                "0xfd",
+                "0xfc"
+            ],
+            "ext": {
+                "gen_attr": {
+                    "enabled": true,
+                    "master_id": 218423972309,
+                    "secure": true,
+                    "eop": false,
+                    "burst_width": 20,
+                    "transaction_id": 16711901,
+                    "exclusive": false,
+                    "locked": false,
+                    "bufferable" : false,
+                    "modifiable" : true,
+                    "read_allocate" : true,
+                    "write_allocate" : false,
+                    "qos": 85,
+                    "region": 170
+                }
+            }
+        },
+
+        {
+            "addr": "0x800ffccdd",
+            "cmd": 0,
+            "data": [
+                "0x12",
+                "0xd2",
+                "0xfc",
+                "0x44"
+            ],
+            "length": 4,
+            "byte_enable": [
+                "0x5",
+                "0x6",
+                "0x7",
+                "0x8"
+            ],
+            "byte_enable_length": 4,
+            "streaming_width": 5,
+            "expect": [
+                "0xab",
+                "0xdc",
+                "0xef",
+                "0xa1"
+            ],
+            "ext": {
+                "gen_attr": {
+                    "enabled": true,
+                    "master_id": 69873589232,
+                    "secure": true,
+                    "eop": true,
+                    "burst_width": 100,
+                    "transaction_id": 2864434397,
+                    "exclusive": false,
+                    "locked": true,
+                    "bufferable" : true,
+                    "modifiable" : false,
+                    "read_allocate" : false,
+                    "write_allocate" : true,
+                    "qos": 136,
+                    "region": 85
+                }
+            }
+        },
+        {
+            "cmd": 0,
+            "addr": "2340"
+        }
+    ]
+}

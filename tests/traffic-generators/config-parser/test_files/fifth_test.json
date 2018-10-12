@@ -1,0 +1,96 @@
+{
+    "dataTransfers": [
+        {
+            "cmd": 1,
+            "addr": "7FCA0000",
+            "data": ["0x2", "0xF2", "0xFe", "0xDC"],
+            "length" : 4 ,
+            "byte_enable":[1, 2, 3, 4],
+            "byte_enable_length": 4,
+            "streaming_width" : 5,
+            "expect": [255, "FE", "FD", "FC", "FB"],
+            "ext": {
+                "gen_attr":{
+                    "enabled": true,
+                    "master_id" : 218423972309,
+                    "secure" : true,
+                    "eop": false
+                }
+            }
+        },
+
+        {
+            "cmd": 0,
+            "addr": "0xFC00DC00",
+            "data": ["0x1F", "0x2A", "0x3C", 255],
+            "length" : 4,
+            "byte_enable":[1, 2, 3, 4],
+            "byte_enable_length":4,
+            "streaming_width" : 5,
+            "expect": ["0x2F", "0xA", "0x04", "0x1C", "0xDF"],
+            "ext": {
+                "gen_attr":{
+                    "enabled": true,
+                    "master_id" : 318423972309,
+                    "secure" : true,
+                    "eop": "false" 
+                }
+            }
+        },
+
+	{
+            "cmd": 0,
+            "addr": "0xFC00DC00",
+            "data": ["0x1F", "0x2A", "0x3C", "0x4D"],
+            "length" : "4",
+            "byte_enable":[1, 2, 3, 4],
+            "byte_enable_length":"4",
+            "streaming_width" : "5",
+            "expect": ["0x2F", "0xA", "0x04", "0x1C", "0xDF"],
+            "ext": {
+                "gen_attr":{
+                    "enabled": "true",
+                    "master_id" : "318423972309",
+                    "secure" : "true",
+                    "eop": "false"
+                }
+            }
+        },
+	{
+            "cmd": 0,
+            "addr": "0xFC00DC00",
+            "data": ["0x1F", "0x2A", "0x3C", "0x4D"],
+            "length" : "4",
+            "byte_enable":[1, 2, 3, 4],
+            "byte_enable_length":"4",
+            "streaming_width" : "5",
+            "expect": ["0x2F", "0xA", "0x04", "0x1C", "0xDF"],
+            "ext": {
+                "gen_attr":{
+                    "enabled": "true",
+                    "master_id" : 45318423972309345664778475884734,
+                    "secure" : "true",
+                    "eop": "false"
+                }
+            }
+        },
+	{
+            "cmd": 0,
+            "addr": "0xFC00DC00",
+            "data": [220, "0x2A", "0x3C", "0x4D"],
+            "length" : 4123345455665,
+            "byte_enable":[1, 2, 3, 4],
+            "byte_enable_length":4,
+            "streaming_width" : 5,
+            "expect": ["0x2F", "0xA", "0x04", "0x1C", "0xDF"],
+            "ext": {
+                "gen_attr":{
+                    "enabled": "true",
+                    "master_id" : 45318423972309345664778475884734,
+                    "secure" : true,
+                    "eop": "false"
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "dataTransfers": [
+        {
+            "cmd": 1,
+            "addr": "7FCA0000",
+            "data": ["0x2", "0xF2", "0xFe", "0xDC"],
+            "length" : 4 ,
+            "byte_enable":[1, 2, 3, 4],
+            "byte_enable_length": 4,
+            "streaming_width" : 5,
+            "expect": [255, "FE", "FD", "FC", "FB"],
+            "ext": {
+                "gen_attr":{
+                    "enabled": true,
+                    "master_id" : 218423972309,
+                    "secure" : true,
+                    "eop": false
+                }
+            }
+        }
+    ]
+}
