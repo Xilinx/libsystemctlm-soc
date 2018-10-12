@@ -29,9 +29,13 @@
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
 #include <vector>
+#include <sstream>
 
 #include "tlm-bridges/amba.h"
+#include "tlm-modules/tlm-aligner.h"
 #include "tlm-extensions/genattr.h"
+
+#define TLM2AXI_BRIDGE_MSG "tlm2axi-bridge"
 
 #define D(x)
 
@@ -53,7 +57,103 @@ public:
 	tlm_utils::simple_target_socket<tlm2axi_bridge> tgt_socket;
 
 	tlm2axi_bridge(sc_core::sc_module_name name,
-			AXIVersion version = V_AXI4);
+			AXIVersion version = V_AXI4, bool aligner_enable=true) :
+		sc_module(name), tgt_socket("target-socket"),
+		clk("clk"),
+
+		awvalid("awvalid"),
+		awready("awready"),
+		awaddr("awaddr"),
+		awprot("awprot"),
+		awuser("awuser"),
+		awregion("awregion"),
+		awqos("awqos"),
+		awcache("awcache"),
+		awburst("awburst"),
+		awsize("awsize"),
+		awlen("awlen"),
+		awid("awid"),
+		awlock("awlock"),
+
+		wid("wid"),
+		wvalid("wvalid"),
+		wready("wready"),
+		wdata("wdata"),
+		wstrb("wstrb"),
+		wuser("wuser"),
+		wlast("wlast"),
+
+		bvalid("bvalid"),
+		bready("bready"),
+		bresp("bresp"),
+		buser("buser"),
+		bid("bid"),
+
+		arvalid("arvalid"),
+		arready("arready"),
+		araddr("araddr"),
+		arprot("arprot"),
+		aruser("aruser"),
+		arregion("arregion"),
+		arqos("arqos"),
+		arcache("arcache"),
+		arburst("arburst"),
+		arsize("arsize"),
+		arlen("arlen"),
+		arid("arid"),
+		arlock("arlock"),
+
+		rvalid("rvalid"),
+		rready("rready"),
+		rdata("rdata"),
+		rresp("rresp"),
+		ruser("ruser"),
+		rid("rid"),
+		rlast("rlast"),
+
+		m_version(version),
+		m_maxBurstLength(AXI4_MAX_BURSTLENGTH),
+		aligner(nullptr),
+		proxy_init_socket(nullptr),
+		proxy_target_socket(nullptr),
+		dummy("axi-dummy")
+	{
+		if (m_version == V_AXI3) {
+			m_maxBurstLength = AXI3_MAX_BURSTLENGTH;
+		}
+
+		if (aligner_enable) {
+			aligner = new tlm_aligner("aligner",
+						  DATA_WIDTH,
+						  m_maxBurstLength * DATA_WIDTH / 8, /* MAX AXI length.  */
+						  4 * 1024, /* AXI never allows crossing of 4K boundary.  */
+						  true); /* WRAP burst-types require natural alignment.  */
+
+			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axi_bridge>("proxy-init-socket");
+			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axi_bridge>("proxy-target-socket");
+
+			(*proxy_init_socket)(aligner->target_socket);
+			aligner->init_socket(*proxy_target_socket);
+
+			tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport_proxy);
+			proxy_target_socket->register_b_transport(this, &tlm2axi_bridge::b_transport);
+		} else {
+			tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport);
+		}
+
+		SC_THREAD(read_address_phase);
+		SC_THREAD(write_address_phase);
+		SC_THREAD(read_resp_phase);
+		SC_THREAD(write_data_phase);
+		SC_THREAD(write_resp_phase);
+	}
+
+	~tlm2axi_bridge() {
+		delete proxy_init_socket;
+		delete proxy_target_socket;
+		delete aligner;
+	}
+
 	SC_HAS_PROCESS(tlm2axi_bridge);
 
 	sc_in<bool> clk;
@@ -64,8 +164,8 @@ public:
 	sc_out<sc_bv<ADDR_WIDTH> > awaddr;
 	sc_out<sc_bv<3> > awprot;
 	sc_out<AXISignal(AWUSER_WIDTH) > awuser;// AXI4 only
-	sc_out<sc_bv<4> > awregion; 		// AXI4 only
-	sc_out<sc_bv<4> > awqos; 		// AXI4 only
+	sc_out<sc_bv<4> > awregion;		// AXI4 only
+	sc_out<sc_bv<4> > awqos;		// AXI4 only
 	sc_out<sc_bv<4> > awcache;
 	sc_out<sc_bv<2> > awburst;
 	sc_out<sc_bv<3> > awsize;
@@ -79,7 +179,7 @@ public:
 	sc_in<bool > wready;
 	sc_out<sc_bv<DATA_WIDTH> > wdata;
 	sc_out<sc_bv<DATA_WIDTH/8> > wstrb;
-	sc_out<AXISignal(WUSER_WIDTH) > wuser; 	// AXI4 only
+	sc_out<AXISignal(WUSER_WIDTH) > wuser;	// AXI4 only
 	sc_out<bool > wlast;
 
 	/* Write response channel.  */
@@ -95,8 +195,8 @@ public:
 	sc_out<sc_bv<ADDR_WIDTH> > araddr;
 	sc_out<sc_bv<3> > arprot;
 	sc_out<AXISignal(ARUSER_WIDTH) > aruser;	// AXI4 only
-	sc_out<sc_bv<4> > arregion; 			// AXI4 only
-	sc_out<sc_bv<4> > arqos; 			// AXI4 only
+	sc_out<sc_bv<4> > arregion;			// AXI4 only
+	sc_out<sc_bv<4> > arqos;			// AXI4 only
 	sc_out<sc_bv<4> > arcache;
 	sc_out<sc_bv<2> > arburst;
 	sc_out<sc_bv<3> > arsize;
@@ -109,18 +209,18 @@ public:
 	sc_out<bool > rready;
 	sc_in<sc_bv<DATA_WIDTH> > rdata;
 	sc_in<sc_bv<2> > rresp;
-	sc_in<AXISignal(RUSER_WIDTH) > ruser; 		// AXI4 only
+	sc_in<AXISignal(RUSER_WIDTH) > ruser;		// AXI4 only
 	sc_in<AXISignal(ID_WIDTH) > rid;
 	sc_in<bool > rlast;
 
 private:
-
 	class Transaction
 	{
 	public:
 		Transaction(tlm::tlm_generic_payload& gp) :
 			m_gp(gp),
 			m_burstType(AXI_BURST_INCR),
+			m_beat(1),
 			m_numBeats(0)
 		{
 			genattr_extension *genattr;
@@ -131,7 +231,6 @@ private:
 			}
 
 			SetupBurstType();
-
 			SetupNumBeats();
 		}
 
@@ -145,15 +244,16 @@ private:
 			} else if (streaming_width == DATA_BUS_BYTES) {
 				m_burstType = AXI_BURST_FIXED;
 			} else if (streaming_width < DATA_BUS_BYTES) {
-
 				//
 				// Specify this with burst_width if streaming
 				// width is less than the data bus width
 				//
-
 				m_burstType = AXI_BURST_FIXED;
-				m_genattr.set_burst_width(streaming_width);
+				if (streaming_width > 1) {
+					streaming_width &= (~0x1);
+				}
 
+				m_genattr.set_burst_width(streaming_width);
 			} else {
 				m_burstType = AXI_BURST_WRAP;
 			}
@@ -169,14 +269,10 @@ private:
 			alignedAddress = (address / burst_width) * burst_width;
 			dataLen += address - alignedAddress;
 
-			m_numBeats = dataLen/burst_width;
-
-			if (dataLen % burst_width) {
-				m_numBeats++;
-			}
+			m_numBeats = (dataLen + burst_width - 1) / burst_width;
 		}
 
-		uint8_t GetNumBeats() { return m_numBeats; }
+		uint32_t GetNumBeats() { return m_numBeats; }
 
 		uint32_t GetBurstWidth()
 		{
@@ -186,7 +282,6 @@ private:
 				// Default to databus width
 				burst_width = DATA_BUS_BYTES;
 			}
-
 			return burst_width;
 		}
 
@@ -198,6 +293,30 @@ private:
 
 		uint64_t GetAddress() { return m_gp.get_address(); }
 
+		uint8_t GetAxSize()
+		{
+			switch (GetBurstWidth()) {
+			case 128:
+				return 7;
+			case 64:
+				return 6;
+			case 32:
+				return 5;
+			case 16:
+				return 4;
+			case 8:
+				return 3;
+			case 4:
+				return 2;
+			case 2:
+				return 1;
+			case 1:
+			default:
+				return 0;
+				break;
+			}
+		}
+
 		uint8_t GetAxProt()
 		{
 			uint8_t AxProt = 0;
@@ -205,7 +324,6 @@ private:
 			if (m_genattr.get_non_secure()) {
 				AxProt |= AXI_PROT_NS;
 			}
-
 			return AxProt;
 		}
 
@@ -219,7 +337,6 @@ private:
 					m_genattr.get_locked()) {
 				AxLock = AXI_LOCK_LOCKED;
 			}
-
 			return AxLock;
 		}
 
@@ -231,7 +348,6 @@ private:
 					(m_genattr.get_modifiable() << 1) |
 					(m_genattr.get_read_allocate() << 2) |
 					(m_genattr.get_write_allocate() << 3);
-
 			return AxCache;
 		}
 
@@ -240,7 +356,6 @@ private:
 			uint8_t AxQoS = 0;
 
 			AxQoS = m_genattr.get_qos();
-
 			return AxQoS;
 		}
 
@@ -249,9 +364,12 @@ private:
 			uint8_t AxRegion = 0;
 
 			AxRegion = m_genattr.get_region();
-
 			return AxRegion;
 		}
+
+		void IncBeat() { m_beat++; }
+
+		bool IsLastBeat() { return m_beat == m_numBeats; }
 
 		sc_event& DoneEvent() { return m_done; }
 	private:
@@ -259,7 +377,8 @@ private:
 		genattr_extension m_genattr;
 		sc_event m_done;
 		uint8_t m_burstType;
-		uint8_t m_numBeats;
+		uint32_t m_beat;
+		uint32_t m_numBeats;
 	};
 
 	int prepare_wbeat(Transaction *tr, unsigned int offset);
@@ -270,7 +389,7 @@ private:
 					      uint32_t id)
 	{
 		Transaction *tr = NULL;
-		int i;
+		unsigned int i;
 
 		// Find _FIRST_ bid in vector
 		for (i = 0; i < vec.size(); i++) {
@@ -300,6 +419,20 @@ private:
 
 	bool Validate(Transaction& tr)
 	{
+		tlm::tlm_generic_payload& trans = tr.GetGP();
+
+		if (trans.get_data_length() == 0) {
+			SC_REPORT_INFO(TLM2AXI_BRIDGE_MSG,
+					"Zero-length transaction");
+			return false;
+		}
+
+		if (trans.get_streaming_width() == 0) {
+			SC_REPORT_INFO(TLM2AXI_BRIDGE_MSG,
+					"Zero-length streaming-width");
+			return false;
+		}
+
 		if (!ValidateBurstWidth(tr.GetBurstWidth())) {
 			return false;
 		}
@@ -309,6 +442,11 @@ private:
 		}
 
 		return true;
+	}
+
+	virtual void b_transport_proxy(tlm::tlm_generic_payload& trans,
+					sc_time& delay) {
+		return proxy_init_socket[0]->b_transport(trans, delay);
 	}
 
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
@@ -340,7 +478,7 @@ private:
 	{
 		araddr.write(rt->GetAddress());
 		arprot.write(rt->GetAxProt());
-		arsize.write(rt->GetBurstWidth()/2);
+		arsize.write(rt->GetAxSize());
 		arlen.write(rt->GetNumBeats() - 1);
 		arburst.write(rt->GetBurstType());
 		arid.write(rt->GetAxID());
@@ -362,7 +500,7 @@ private:
 	{
 		awaddr.write(wt->GetAddress());
 		awprot.write(wt->GetAxProt());
-		awsize.write(wt->GetBurstWidth()/2);
+		awsize.write(wt->GetAxSize());
 		awlen.write(wt->GetNumBeats() - 1);
 		awburst.write(wt->GetBurstType());
 		awid.write(wt->GetAxID());
@@ -385,7 +523,7 @@ private:
 		static const unsigned int widths[] = {
 			1, 2, 4, 8, 16, 32, 64, 128
 		};
-		int i;
+		unsigned int i;
 
 		for (i = 0; i < sizeof widths / sizeof widths[0]; i++) {
 			if (widths[i] == burst_width) {
@@ -428,12 +566,15 @@ private:
 			Transaction *tr = NULL;
 			tlm::tlm_generic_payload *trans = NULL;
 			unsigned char *data = NULL;
+			unsigned char *be = NULL;
 			unsigned int len = 0;
+			unsigned int be_len = 0;
 			uint64_t data64 = 0;
 			unsigned int bitoffset = 0;
 			unsigned int pos = 0;
+			unsigned int streaming_width = 0;
 
-			while (pos < len || tr == NULL) {
+			while (len || tr == NULL) {
 				rready.write(true);
 
 				wait(clk.posedge_event());
@@ -442,6 +583,7 @@ private:
 					sc_bv<128> data128 = 0;
 					unsigned int readlen;
 					unsigned int w;
+					uint64_t addr;
 
 					if (tr == NULL) {
 						uint32_t rid_u32 = to_uint(rid);
@@ -449,34 +591,62 @@ private:
 						tr = LookupAxID(rdResponses, rid_u32);
 
 						if (!tr) {
-							SC_REPORT_ERROR("tlm2axi-bridge",
+							SC_REPORT_ERROR(TLM2AXI_BRIDGE_MSG,
 								"Received a read response "
 								"with an unexpected "
 								"transaction ID");
 						}
 
 						trans = &tr->GetGP();
-						bitoffset = (trans->get_address() * 8) % DATA_WIDTH;
+						addr = trans->get_address();
 						data = trans->get_data_ptr();
 						len = trans->get_data_length();
+						be = trans->get_byte_enable_ptr();
+						be_len = trans->get_byte_enable_length();
+						streaming_width = trans->get_streaming_width();
 					}
 
+					addr = trans->get_address() + (pos % streaming_width);
+					bitoffset = (addr * 8) % DATA_WIDTH;
 					readlen = (DATA_WIDTH - bitoffset) / 8;
 					readlen = readlen <= len ? readlen : len;
+					// Respect the genattr burstwidh attribute
+					readlen = readlen <= tr->GetBurstWidth() ? readlen : tr->GetBurstWidth();
 
 					for (w = 0; w < readlen; w += sizeof data64) {
-						int copylen = readlen <= sizeof data64 ? readlen : sizeof data64;
+						unsigned int copylen = readlen - w;
+
+						copylen = copylen <= sizeof data64 ? copylen : sizeof data64;
+
 						data128 = rdata.read() >> (w * 8 + bitoffset);
 						data64 = data128.to_uint64();
-						memcpy(data + pos, &data64, copylen);
-						D(printf("Read dr=%d data64=%lx pos=%d\n",
-							dr, data64, pos,
-							(w * sizeof data64 * 8 + bitoffset)));
+
+						assert(copylen <= len);
+						if (be && be_len) {
+							uint64_t val = data64;
+							unsigned int i;
+
+							for (i = 0; i < copylen; i++) {
+								if (be[(pos + i)% be_len] == TLM_BYTE_ENABLED) {
+									data[pos + i] = val & 0xff;
+								}
+								val >>= 8;
+							}
+						} else {
+							memcpy(data + pos, &data64, copylen);
+						}
+
+						D(printf("Read addr=%x data64=%lx len=%d readlen=%d pos=%d w=%d sw=%d ofset=%d, copylen=%d\n",
+							addr, data64, len, readlen, pos, w, streaming_width,
+							(w * 8 + bitoffset), copylen));
 						pos += copylen;
+						len -= copylen;
 					}
 
-					bitoffset = 0;
-
+					if (rlast.read() && len) {
+						SC_REPORT_ERROR(TLM2AXI_BRIDGE_MSG,
+							"Received a premature rlast");
+					}
 				}
 			}
 			rready.write(false);
@@ -509,17 +679,18 @@ private:
 			Transaction *tr = wrDataFifo.read();
 			tlm::tlm_generic_payload& trans = tr->GetGP();
 			unsigned int len = trans.get_data_length();
-			unsigned int beat = 1;
-			unsigned int nr_beats = tr->GetNumBeats();
 			unsigned int pos = 0;
 
 			while (pos < len) {
 				pos += prepare_wbeat(tr, pos);
-				wlast.write(beat == nr_beats);
-				beat++;
+
+				wlast.write(tr->IsLastBeat());
+
 				do {
 					wait(clk.posedge_event());
 				} while (wready.read() == false);
+
+				tr->IncBeat();
 			}
 
 			wlast.write(false);
@@ -536,7 +707,6 @@ private:
 		while (true) {
 			Transaction *tr;
 			uint32_t bid_u32;
-			int i;
 
 			bready.write(true);
 			do {
@@ -575,31 +745,76 @@ private:
 		}
 	}
 
-	void before_end_of_elaboration()
+	class axi_dummy : public sc_core::sc_module
+	{
+	public:
+		// AXI4
+		sc_signal<AXISignal(ID_WIDTH) > wid;
+
+		// AXI3
+		sc_signal<sc_bv<4> > awqos;
+		sc_signal<sc_bv<4> > awregion;
+		sc_signal<AXISignal(AWUSER_WIDTH) > awuser;
+		sc_signal<AXISignal(WUSER_WIDTH) > wuser;
+		sc_signal<AXISignal(BUSER_WIDTH) > buser;
+		sc_signal<sc_bv<4> > arregion;
+		sc_signal<sc_bv<4> > arqos;
+		sc_signal<AXISignal(ARUSER_WIDTH) > aruser;
+		sc_signal<AXISignal(RUSER_WIDTH) > ruser;
+
+		axi_dummy(sc_module_name name) :
+			wid("wid"),
+			awqos("awqos"),
+			awregion("awregion"),
+			awuser("awuser"),
+			wuser("wuser"),
+			buser("buser"),
+			arregion("arregion"),
+			arqos("arqos"),
+			aruser("aruser"),
+			ruser("ruser")
+		{ }
+	};
+
+	void bind_dummy(void)
 	{
 		if (m_version == V_AXI4) {
-			//
-			// Dummy bind ports only used with AXI3
-			//
-			wid(wid_dummy);
+			wid(dummy.wid);
 
+			//
+			// Optional signals
+			//
+			if (AWUSER_WIDTH == 0) {
+				awuser(dummy.awuser);
+			}
+			if (WUSER_WIDTH == 0) {
+				wuser(dummy.wuser);
+			}
+			if (BUSER_WIDTH == 0) {
+				buser(dummy.buser);
+			}
+			if (ARUSER_WIDTH == 0) {
+				aruser(dummy.aruser);
+			}
+			if (RUSER_WIDTH == 0) {
+				ruser(dummy.ruser);
+			}
 		} else if (m_version == V_AXI3) {
-			//
-			// Dummy bind ports only used with AXI4
-			//
-			awqos(awqos_dummy);
-			awregion(awregion_dummy);
-			awuser(awuser_dummy);
-			wuser(wuser_dummy);
-
-			buser(buser_dummy);
-
-			arregion(arregion_dummy);
-			arqos(arqos_dummy);
-			aruser(aruser_dummy);
-
-			ruser(ruser_dummy);
+			awqos(dummy.awqos);
+			awregion(dummy.awregion);
+			awuser(dummy.awuser);
+			wuser(dummy.wuser);
+			buser(dummy.buser);
+			arregion(dummy.arregion);
+			arqos(dummy.arqos);
+			aruser(dummy.aruser);
+			ruser(dummy.ruser);
 		}
+	}
+
+	void before_end_of_elaboration()
+	{
+		bind_dummy();
 	}
 
 	static const uint32_t DATA_BUS_BYTES = DATA_WIDTH/8;
@@ -614,110 +829,11 @@ private:
 
 	AXIVersion m_version;
 	unsigned int m_maxBurstLength;
-
-	//
-	// AXI3 dummy signals
-	//
-	sc_signal<sc_bv<ID_WIDTH> > wid_dummy;
-
-	//
-	// AXI4 dummy signals
-	//
-	sc_signal<sc_bv<4> > awqos_dummy;
-	sc_signal<sc_bv<4> > awregion_dummy;
-	sc_signal<sc_bv<AWUSER_WIDTH> > awuser_dummy;
-	sc_signal<sc_bv<WUSER_WIDTH> > wuser_dummy;
-
-	sc_signal<sc_bv<BUSER_WIDTH> > buser_dummy;
-
-	sc_signal<sc_bv<4> > arregion_dummy;
-	sc_signal<sc_bv<4> > arqos_dummy;
-	sc_signal<sc_bv<ARUSER_WIDTH> > aruser_dummy;
-
-	sc_signal<sc_bv<RUSER_WIDTH> > ruser_dummy;
+	tlm_aligner *aligner;
+	tlm_utils::simple_initiator_socket<tlm2axi_bridge> *proxy_init_socket;
+	tlm_utils::simple_target_socket<tlm2axi_bridge> *proxy_target_socket;
+	axi_dummy dummy;
 };
-
-template< int ADDR_WIDTH, int DATA_WIDTH, int ID_WIDTH, int AxLEN_WIDTH,
-	int AxLOCK_WIDTH, int AWUSER_WIDTH, int ARUSER_WIDTH, int WUSER_WIDTH,
-	int RUSER_WIDTH, int BUSER_WIDTH>
-tlm2axi_bridge<ADDR_WIDTH,
-		DATA_WIDTH,
-		ID_WIDTH,
-		AxLEN_WIDTH,
-		AxLOCK_WIDTH,
-		AWUSER_WIDTH,
-		ARUSER_WIDTH,
-		WUSER_WIDTH,
-		RUSER_WIDTH,
-		BUSER_WIDTH>::tlm2axi_bridge(sc_module_name name, AXIVersion version)
-	: sc_module(name), tgt_socket("tgt-socket"),
-	clk("clk"),
-
-	awvalid("awvalid"),
-	awready("awready"),
-	awaddr("awaddr"),
-	awprot("awprot"),
-	awuser("awuser"),
-	awregion("awregion"),
-	awqos("awqos"),
-	awcache("awcache"),
-	awburst("awburst"),
-	awsize("awsize"),
-	awlen("awlen"),
-	awid("awid"),
-	awlock("awlock"),
-
-	wid("wid"),
-	wvalid("wvalid"),
-	wready("wready"),
-	wdata("wdata"),
-	wstrb("wstrb"),
-	wuser("wuser"),
-	wlast("wlast"),
-
-	bvalid("bvalid"),
-	bready("bready"),
-	bresp("bresp"),
-	buser("buser"),
-	bid("bid"),
-
-	arvalid("arvalid"),
-	arready("arready"),
-	araddr("araddr"),
-	arprot("arprot"),
-	aruser("aruser"),
-	arregion("arregion"),
-	arqos("arqos"),
-	arcache("arcache"),
-	arburst("arburst"),
-	arsize("arsize"),
-	arlen("arlen"),
-	arid("arid"),
-	arlock("arlock"),
-
-	rvalid("rvalid"),
-	rready("rready"),
-	rdata("rdata"),
-	rresp("rresp"),
-	ruser("ruser"),
-	rid("rid"),
-	rlast("rlast"),
-
-	m_version(version),
-	m_maxBurstLength(AXI4_MAX_BURSTLENGTH)
-{
-	tgt_socket.register_b_transport(this, &tlm2axi_bridge::b_transport);
-
-	if (m_version == V_AXI3) {
-		m_maxBurstLength = AXI3_MAX_BURSTLENGTH;
-	}
-
-	SC_THREAD(read_address_phase);
-	SC_THREAD(write_address_phase);
-	SC_THREAD(read_resp_phase);
-	SC_THREAD(write_data_phase);
-	SC_THREAD(write_resp_phase);
-}
 
 template
 <int ADDR_WIDTH, int DATA_WIDTH, int ID_WIDTH, int AxLEN_WIDTH,
@@ -736,46 +852,56 @@ int tlm2axi_bridge<ADDR_WIDTH,
 ::prepare_wbeat(Transaction *tr, unsigned int offset)
 {
 	tlm::tlm_generic_payload& trans = tr->GetGP();
+	unsigned int streaming_width = trans.get_streaming_width();
 	sc_dt::uint64 addr = trans.get_address();
 	unsigned char *data = trans.get_data_ptr();
 	unsigned int len = trans.get_data_length();
 	unsigned char *be = trans.get_byte_enable_ptr();
 	int be_len = trans.get_byte_enable_length();
 	unsigned int bitoffset;
-	uint64_t strb;
+	sc_bv<DATA_WIDTH/8> strb = 0;
 	sc_bv<DATA_WIDTH> data128 = 0;
 	uint64_t t64;
 	unsigned int i;
 	unsigned int maxlen, wlen;
 
-	addr += offset;
+	assert(streaming_width);
+	addr += (offset % streaming_width);
 	data += offset;
 	len -= offset;
 
 	bitoffset = (addr * 8) % DATA_WIDTH;
 	maxlen = (DATA_WIDTH - bitoffset) / 8;
+	if (maxlen > (streaming_width - (offset % streaming_width))) {
+		maxlen = (streaming_width - (offset % streaming_width));
+	}
 	wlen = len <= maxlen ? len : maxlen;
+	// Respect the genattr burstwidh attribute
+	wlen = wlen <= tr->GetBurstWidth() ? wlen : tr->GetBurstWidth();
 
 	D(printf("WBEAT: pos=%d wlen=%d bitoffset=%d\n", offset, wlen, bitoffset));
 
 	if (be && be_len) {
 		strb = 0;
 		for (i = 0; i < wlen; i++) {
-			uint8_t b = be[(i + bitoffset / 8) % be_len];
+			uint8_t b = be[(i + offset) % be_len];
 			if (b == TLM_BYTE_ENABLED) {
-				strb |= 1 << i;
+				strb[i] = true;
 			}
 		}
 	} else {
 		/* All lanes active.  */
-		strb = (1 << wlen) - 1;
+		for (i = 0; i < wlen; i++) {
+			strb[i] = true;
+		}
 	}
-	strb <<= bitoffset / 8;
+	strb.lrotate(bitoffset / 8);
 
 	for (i = 0; i < wlen; i += sizeof(t64)) {
-		int copylen = wlen < sizeof(t64) ? wlen : sizeof(t64);
+		unsigned int copylen = wlen - i;
 
 		t64 = 0;
+		copylen = copylen < sizeof(t64) ? copylen : sizeof(t64);
 		memcpy(&t64, data + i, copylen);
 		data128.range(copylen * 8 - 1 + i * 8 + bitoffset,
 			i * 8 + bitoffset) = t64;
@@ -786,16 +912,12 @@ int tlm2axi_bridge<ADDR_WIDTH,
 	}
 
 	wdata.write(data128);
-	D(cout << "strb " << strb << endl);
-	D(cout << "data128 " << data128 << endl);
+	D(std::cout << "strb " << strb << std::endl);
+	D(std::cout << "data128 " << data128 << std::endl);
 
 	wstrb.write(strb);
 	wvalid.write(true);
 	return wlen;
 }
-
-
-typedef tlm2axi_bridge<32, 32> TLM2AXI_bridge;
-
 #undef D
 #endif
