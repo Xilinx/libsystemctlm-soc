@@ -1,5 +1,6 @@
 .pytest_cache
 __pycache__
+.gdb_history
 .config.mk
 report.html
 report.zip

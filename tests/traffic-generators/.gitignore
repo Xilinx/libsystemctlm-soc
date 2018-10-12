@@ -1,2 +1,3 @@
 *-axi-tg-test
-rand-tg-test
+*-rand-tg-test
+config-parser-test
