@@ -46,9 +46,9 @@ enum {
 };
 
 enum {
-	AXI_LOCK_NORMAL = 1 << 0,
-	AXI_LOCK_EXCLUSIVE = 1 << 1,
-	AXI_LOCK_LOCKED = 1 << 2,
+	AXI_LOCK_NORMAL = 0,
+	AXI_LOCK_EXCLUSIVE = 1,
+	AXI_LOCK_LOCKED = 2,
 };
 
 enum {
@@ -78,6 +78,12 @@ struct __AXISignal<1>
 	typedef bool type;
 };
 
+template<>
+struct __AXISignal<0>
+{
+	typedef bool type;
+};
+
 #define AXISignal(x) typename __AXISignal<x>::type
 
 template<int N>
@@ -92,11 +98,11 @@ uint32_t to_uint(sc_in<sc_bv<N> >& port)
 	return port.read().to_uint();
 }
 
-uint32_t to_uint(sc_out<bool>& port)
+inline uint32_t to_uint(sc_out<bool>& port)
 {
 	return port.read();
 }
-uint32_t to_uint(sc_in<bool>& port)
+inline uint32_t to_uint(sc_in<bool>& port)
 {
 	return port.read();
 }
