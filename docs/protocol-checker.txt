@@ -1,0 +1,118 @@
+AXIProtocolChecker
+------------------
+The protocol checker monitors the AXI signaling and reports protocol errors
+detected on the signals. In the default mode (when no configuration of the
+protocol checker is done) it only monitors AXI responses and generates an error
+report whenever an AXI error reply is detected. If given a configuration the
+protocol checker can be configured to also perform the following checks:
+
+	* Check that signals in any channel (AR, AW, R, B, W) are stable
+	  while valid is asserted but ready is low.
+
+	* Check read transactions ordering.
+
+	* Check that wlast is generated correctly (on the last burst transfer).
+
+	* Check that the wstrb of the transaction is correct (it can allow
+	  holes in the wstrb and will then only verify that all bytes outside
+	  the wstrb are disabled).
+
+	* Check that the first data item on AXI3 interleaved data (on the
+	  write data channel) is in the order of the addresses.
+
+	* Verifies burst lengths of transactions taking burst type in
+	  consideration (the burst length must be 2, 4, 8 or 16 for wrap
+	  transactions)
+
+	* Verifies address alingment based on burst type (the start address
+	  must be aligned to the size of each transfer on wrap transactions)
+
+	* Verifies that expected handshakes signals on the data an response
+	  channels are detected after receiving awvalid and arvalid. It is
+	  considered and reported as a hangup if a given amount of clock cycles
+	 (default 200) pass before an expected signal has been detected.
+
+
+AXIPCConfig - Configuraring the protocol checker
+------------------------------------------------
+The protocol checker is configured at construction with an AXIPCConfig. Through
+the AXIPCConfig the checks desired to be performed by the protocol checker are
+setup.
+
+Error reports
+-------------
+The protocol checker reports errors using systemc's SC_REPORT_ERROR macro and
+errors can thus be caught/intercepted through systemc's error reporting API.
+
+Example 1 - Default configuration
+---------------------------------
+For only checking for AXI responses containing AXI error replies:
+...
+{
+	...
+	AXIProtocolChecker<32, 32> checker("checker");
+	...
+}
+...
+
+Example 2 - Configuring the protocol checker to perform all checks
+------------------------------------------------------------------
+The following example configures the protocol checker to perform all checks:
+
+...
+AXIPCConfig checker_config()
+{
+	AXIPCConfig cfg;
+
+	cfg.enable_all_checks();
+
+	return cfg;
+}
+...
+{
+	...
+	AXIProtocolChecker<32, 32> checker("checker", checker_config());
+	...
+}
+...
+
+Example 3 - Configuring the protocol checker to check AXI handshakes
+--------------------------------------------------------------------
+The following example configures the protocol checker to check AXI handshakes
+(while also performing the AXI response check):
+...
+AXIPCConfig checker_config()
+{
+	AXIPCConfig cfg;
+
+	cfg.check_axi_handshakes();
+
+	return cfg;
+}
+...
+{
+	...
+	AXIProtocolChecker<32, 32> checker("checker", checker_config());
+	...
+}
+...
+
+Example 4 - Howto disable a check
+--------------------------------------------------------------------
+The following example disables the AXI response check:
+...
+AXIPCConfig checker_config()
+{
+	AXIPCConfig cfg;
+
+	cfg.check_axi_responses(false);
+
+	return cfg;
+}
+...
+{
+	...
+	AXIProtocolChecker<32, 32> checker("checker", checker_config());
+	...
+}
+...
