@@ -1,0 +1,624 @@
+Table Of Contents
+1 - Quick Introduction
+2 - DataTransfer Representation
+3 - Dependencies
+4 - Introduction to API
+5 - Annotations
+6 - Examples
+7 - Limitations
+8 - Architecture
+9 - Licensing Information
+10- Tests
+
+** 1 - Quick Introduction **
+
+The Config Parser is an API that enables serialization and deserialization of C++ objects
+representing a TLM/AXI Data Transfer in JSON format. The class declaration and definition for the
+DataTransfer can be found under the traffic-generators/ subdirectory as "data-transfer.h/cc".
+You can also specify a fully instantiable C++ object from a JSON object with partial fields only.
+Fields not explicitly specified in JSON are nullified in the C++ object deserialization. For more
+information see section 2.3 Partial JSON Object specification.
+
+
+** 2 - DataTransfer Representation **
+The description below shows a side by side comparison between a DataTransfer Object in C++ format
+vs the equivalent DataTransfer Object in JSON format.
+
+*** 2.1 Single Data Transfer Object Representation
+A single DataTransfer object in C++ can be fully represented as a JSON object
+==================================================================================================
+    C++ DataTransfer Representation              |        JSON DataTransfer Representation
+==================================================================================================
+struct DataTransfer {                            | {
+                                                 |
+    uint64_t                 addr;               |    "addr" : "0xFFA00000",
+    uint32_t                 cmd;                |    "cmd" : 1
+    const unsigned char*     data;               |    "data" : [ "0x01", "0xFC"...],
+    uint32_t                 length;             |    "length" : 10,
+    const unsigned char*     byte_enable;        |    "byte_enable" : [10, ..., 20],
+    uint32_t                 byte_enable_length; |    "byte_enable_length" : 2,
+    uint32_t                 streaming_width;    |    "streaming_width" : 8
+    const unsigned char*     expect;             |    "expect" : [ "0x10, 0x3F"..., "0xDA"],
+                                                 |
+    struct {                                     |    "ext" : {
+        struct {                                 |       "gen_attr" : {
+            bool enabled;                        |          "enabled" : true,
+            uint64_t master_id;                  |          "master_id" : 5120123991219...,
+            bool secure;                         |          "secure" : false,
+            bool eop;                            |          "eop" : false,
+            uint32_t burst_width;                |          "burst_width" : 16,
+            uint32_t transaction_id;             |          "transaction_id" : "0x12F4",
+            bool exclusive;                      |          "exclusive" : true,
+            bool locked;                         |          "locked" : false,
+            bool bufferable;                     |          "bufferable" : true,
+            bool modifiable;                     |          "modifiable" : false,
+            bool read_allocate;                      |          "read_allocate" : false,
+            bool write_allocate;                      |          "write_allocate" : false,
+            uint8_t qos;                         |          "qos" : 10,
+            uint8_t region;                      |          "region" : 0x20
+        } gen_attr;                              |       }
+    } ext;                                       |    }
+};                                               | }
+==================================================================================================
+
+
+*** 2.2 Data Transfer Vector Representation
+C++ STL DataTransfer Vector side by side with its equivalent a JSON representation.
+==================================================================================================
+    C++ DataTransfer Vector Representation       |    JSON DataTransfer Vector Representation
+==================================================================================================
+std::vector<DataTransfer> DataTransferVec;       | {
+                                                 |   "dataTransfers": [
+                                                 |   {
+                                                 |      "addr" : "0xFFA00000",
+                                                 |      "cmd" : 1
+                                                 |      "data" : [ "0x01", "0xFC"...],
+                                                 |      "length" : 10,
+                                                 |      "byte_enable" : [10, ..., 20],
+                                                 |      "byte_enable_length" : 2,
+                                                 |      "streaming_width" : 8
+                                                 |      "expect" : [ "0x10, 0x3F"..., "0xDA"],
+                                                 |
+                                                 |      "ext" : {
+                                                 |        "gen_attr" : {
+                                                 |           "enabled" : true,
+                                                 |           "master_id" : 5120123991219...,
+                                                 |           "secure" : false,
+                                                 |           "eop" : false,
+                                                 |           "burst_width" : 16,
+                                                 |           "transaction_id" : "0x12F4",
+                                                 |           "exclusive" : true,
+                                                 |           "locked" : false,
+                                                 |           "bufferable" : true,
+                                                 |           "modifiable" : false,
+                                                 |           "read_allocate" : false,
+                                                 |           "write_allocate" : false,
+                                                 |           "qos" : 10,
+                                                 |           "region" : 0x20
+                                                 |         }
+                                                 |       }
+                                                 |     },
+                                                 |     {
+                                                 |       "addr" : "0xFFB00000",
+                                                 |       "cmd"  : 0
+                                                 |     }
+                                                 |   ]
+                                                 | }
+==================================================================================================
+
+*** 2.3 Partial JSON Object specification.
+You can create a fully instantiable C++ object from a small subset of a JSON specification. This
+feature is provided as means to avoid typing full JSON objects specifications. Fields omitted from
+the JSON representation are nullified in the C++ instantiation. For instance, in the example
+below, the first C++ element of the vector will have all its values set to zero except from the
+properties 'addr' which will be equal to 0xFFB00000 and 'cmd' which will be set to 1 (write).
+
+To partially define any field of the 'gen_attr' nested structure you will need to define both the
+'ext' and 'gen_attr' object in JSON. For instance, in the example below, the second C++ element of
+the vector will have all its 'gen_attr' fields nullified except 'eop' which will be set to true.
+
+==================================================================================================
+    C++ DataTransfer Vector Representation       |    JSON DataTransfer Vector Representation
+==================================================================================================
+std::vector<DataTransfer> DataTransferVec;       | {
+                                                 |   "dataTransfers": [
+                                                 |     {
+                                                 |       "addr" : "0xFFB00000",
+                                                 |       "cmd"  : 1
+                                                 |     },
+                                                 |     {
+                                                 |       "addr" : "0xFFB00000",
+                                                 |       "cmd"  : 0
+                                                 |       "ext" : {
+                                                 |        "gen_attr" : {
+                                                 |          "eop" : true
+                                                 |         }
+                                                 |       }
+                                                 |     },
+                                                 |   ]
+                                                 | }
+==================================================================================================
+
+*** 2.4 Optimized Object specification with annotations.
+
+To further avoid typing full field descriptions in JSON we have introduced annotations.
+Annotations take the format of @<annotation> ( param1 = value1, ..... param-n = value-n). Looking
+at an example below. The second C++ element of the vector will have its data field randomized with
+10 random elements (because the size parameter was set to 10). The seed for the randomization is
+the current system time. So instead of trying to type 10 random values in the data array the
+Parser will randomize the data elements automatically. For more examples and information on
+annotations please see the section ** 5 - Annotations **.
+==================================================================================================
+JSON DataTransfer Vector Representation with Annotated Fields.
+==================================================================================================
+ {
+    "dataTransfers": [
+        {
+            "addr" : "0xFFB00000",
+            "cmd"  : 1
+        },
+        {
+            "addr" : "0xFFB00000",
+            "cmd"  : 0
+            "length" : 10
+            "data" : "@Random(size = 10)"
+            "ext" : {
+                "gen_attr" : {
+                    "eop" : true
+                }
+            }
+        },
+    ]
+}
+==================================================================================================
+
+** 3 - Dependencies **
+The config parser doesn't have many dependencies, by design we are attempting to keep these to
+the very minimum. That being said we do have two dependencies on C++ 11 and RapidJSON.
+
+In C++ 11 we have the ability to use Move Constructors and STL RegEx expressions. Both of which are
+key to the config parser. Furthermore, we are utilizing the RapidJSON header only library to ensure
+we can Serialize and Deserialize between a fully instantiated C++ Object and a JSON String/File
+representation.
+
+*** 3.1 - How to enable C++ 11:
+Using GCC the flag --c++11 needs to be passed to the compiler in order to enable C++ 11 compilation.
+At the time of release of this module the version of g++ used was 5.4.0.
+
+*** 3.1 - How to enable RapidJSON:
+If you using a Ubuntu or Debian please do < sudo apt install rapidjoson-dev rapidjson-doc >
+By default the above command line will install version 0.12 of RapidJSON. The current RapidJSON
+version is 1.1.0. You can alternatively specify the version in apt install such as :
+<sudo apt install rapidjoson-dev=1.1.....> (please do a <apt-cache policy rapidjoson-dev> to
+see what other version your distro supports). Alternatively, you can  build and install in your
+system version 1.1.0 or RapidJSON which can be found at: https://github.com/Tencent/rapidjson.
+Once you clone/download the code from the git repository please, make sure you checkout tag
+v.1.1.0 and then follow the instructions here:
+https://github.com/Tencent/rapidjson/#installation. Please note that once you build the library
+you need to 'sudo make install' the RapidJSON header files will be copied at
+/usr/local/include/rapidjson/ while the documentation files will be installed at
+/usr/local/share/doc/RapidJSON/.
+
+
+** 4 - Introduction to API **
+
+The main API is declared and defined in the parserfacade.cc under the
+'traffic-generators/config-parser/' directory. The parserface.h declares a static facade C++
+object. That means you can call the static methods directly without having to first instantiate
+a C++ object of the type ParserFacade. (see more in the Examples section).
+There are two key methods for serialization an deserialization each with one variation. The are:
+
+*** 4.1 - Vector Serialization
+static bool Serialize(const DataTransferVec& dtv, const char* const json);
+
+Parameter 'const DataTransferVec& dtv':
+Upon successful completion, the function takes the elements of the DataTransfer vector dtv and
+serializes them into a JSON file.
+
+Parameter 'const char* const json':
+'json' identifies the filename and path that the serialized datatransfer vector will be written
+to. The filename must have the extension .json otherwise the call will fail.
+
+Return Value:
+On a successful completion of serialization the function will return true, otherwise false will be
+returned. When false is returned calls to getLastError() and getLastErrorDescription() can be made
+to get more information as to what went wrong.
+
+*** 4.2 - Single DataTransfer Object Serialization
+static bool Serialize(const DataTransfer& dt, const char* const json);
+
+Parameter 'const DataTransfer& dt':
+Upon successfull completion, the function takes a single const reference to a DataTranfer object
+and serializes it into a JSON file.
+
+Parameter 'const char* const json':
+'json' identifies the filename and path that the serialized datatransfer ojbect will be written
+to. The filename must have the extension .json otherwise the call will fail.
+
+Return Value:
+On a successful completion of serialization the function will return true, otherwise false will be
+returned. When false is returned calls to getLastError() and getLastErrorDescription() can be made
+to get more information as to what went wrong.
+
+*** 4.3 - DataTransfer Vector Deserialization
+static bool Deserialize(DataTransferVec& dtv, const char* const json);
+
+Parameter 'const DataTransferVec& dtv':
+Upon successfull completion, the function populates the elements of the DataTransfer vector dtv
+with the C++ instantiation of the JSON objects.
+
+Parameter 'const char* const json':
+Unlike the Serialize methods the 'json' identifies EITHER the filename and path of the JSON file
+that contains the Serialized JSON representation of the C++ vector (must end in .json), OR a JSON
+string representing the C++ DataTranferVec that needs to be deserialized.
+
+Return Value:
+On a successful completion of deserialization the function will return true, otherwise false will
+be returned. When false is returned calls to getLastError() and getLastErrorDescription() can be
+made to get more information as to what went wrong.
+
+*** 4.4 - Single DataTransfer Deserialization
+static bool Deserialize(DataTransfer& dt, const char* const json);
+
+Parameter 'const DataTransfer& dt':
+Upon successful completion, the function populates the DataTransfer parameter 'dt' with the C++
+instantiation of the JSON object.
+
+Parameter 'const char* const json':
+Unlike the Serialize methods the 'json' string identifies EITHER the filename and path of the JSON
+file that contains the Serialized JSON representation of the C++ vector (must end in .json), OR a
+JSON string representing a single C++ DataTranfer that needs to be deserialized.
+
+Return Value:
+On a successful completion of deserialization the function will return true, otherwise false will
+be returned. When false is returned calls to getLastError() and getLastErrorDescription() can be
+made to get more information as to what went wrong.
+
+*** 4.5 - Retrieving Error Codes
+static unsigned int getLastError();
+
+Return Value:
+On return from a call to getLastError() an integer error code will be returned. If 0 is returned
+the previous call to the serialize/deserialize methods completed successfully. Otherwise the value
+indicates an error. You can use the getLastErrorDescription() passing in the error code to get a
+textual description of the error.
+
+
+*** 4.6 - Retrieving The Textual Descripiton of Error Codes
+static const char* const getLastErrorDescription(unsigned int errorCode);
+
+Parameter 'unsigned int errorCode':
+The value of 'errorCode' is the value returned from a call to getLastError() method.
+
+Return Value:
+On return from a call to getLastErrorDescription() a textual description of the error code
+returned by getLastError() will be returned.
+
+** 5 - Annotations **
+
+*** 5.1 Introduction to Annotations By Example
+As mentioned in section 2.4, Annotations are used to tag any JSON key with a special meaning
+during deserialization. Currently only the "@Random()" annotation is supported. Annotations can
+be very useful when we want to fill the value of a corresponding JSON key with special data. Let's
+explain this further by a simple example. Annotations can have parameters. Parameters are key
+value pairs delimited by an '=' sign. Let's assume that the following annotation applied to the
+DataTransfer field 'data'.
+
+// JSON Snippet #01:
+{
+  "dataTransfers" : [
+    {
+      "cmd" : 1,
+      "addr" : "0xFFA00000",
+      "length" : 10;
+      "data" : "@Random( size = 10 )"
+    },
+    {
+      "cmd" : 0,
+      "addr" : "0xFFB00000",
+    }
+  ]
+}
+
+The first element of the DataTransfer Vector is specifying a DataTransfer that will Write
+("cmd" :1) 10 bytes ("length" :10) at address location 00xFFA00000 ("addr" : "00xFFA00000") the
+data specified ("data" : "@Random( size = 10 )").
+
+However, the "data" field is annotated with the annotation "@Random()". This gives special meaning
+to the "data" key field. In essence it specifies that when the value for the key "data" is
+deserialized the data should be randomized, and the size of the data will be 10 bytes.
+Furthermore because we haven't specified a "seed" the random deserialization policy will take the
+system clock value and use it as a seed. Also, given that we are dealing with byte size elements
+the value for each element will range from 0 to 255.
+
+NOTE: Annotation keywords are case sensitive, including their parameters (more on parameters below)
+
+In the end the resulting C++ deserialized object will look like the following (omitting error
+checking for readability):
+
+// Code Snippet #01:
+DataTransferVec dtv;
+Deserialize(dtv, "/my/path/to/the/json/file/theTransferVec.json");
+DataTransfer& theFirstElement = dtv[0];
+std::cout << theFirstElement << std::endl;
+
+//Code Snippet #01 Output
+cmd = WRITE
+addr = 0xFFA00000
+length = 10
+data = 0x12, 0xA7, 0xC4, 0x45, 0xB1, 0x6C, 0x03, 0x9F, 0x34, 0x8D
+..
+(continues)
+
+*** 5.2 "@Random()" Annotation
+As you may have guessed from the introduction above the @Random annotation does exactly what it
+says, it randomizes a specific field. It can be applied to arrays as well as discrete values.
+Like, Bytes (8 bit), Integers (32 bit) and Long Integers (64 bit), as well as Booleans (though
+for booleans probably less applicable in real life examples).
+
+**** 5.2.1 "@Random" Parameters
+All parameters are optional depending on what field they are applied to. We will show more
+examples below.
+
+***** 5.2.1.1 "@Random(size=10)" Parameter
+The 'size' parameter can be used only for fields that are expanding to arrays. The maximum value
+is 64 bits long, typically you will never have to use the full value range. 'size' is applicable
+to the following DataTransfer properties, 'data', 'byte_enable' and 'expect'. If you specify the
+size parameter for a non array field it will not be taken into account during deserialization. We
+recommend omitting specification for non array fields.
+
+***** 5.2.1.2 "@Random( seed=1231 )" Parameter
+The 'seed' parameter can be used for any JSON field. It is used to provide an initial seed to
+the randomization algorithm. As such, if you pass the same seed, the sequence of the random value
+or values(for an array) will always be the same. The maximum value is 64 bits long.
+If you omit the seed value then the system clock will be used as an input to the radomization
+algorithm.
+
+***** 5.2.1.3 "@Random( lBound=10, uBound = 20 )" Parameters
+The 'lBound' and 'uBound' parameter can be used for any JSON field. They specify and upper bound
+(uBound) and a lower bound(lBound) for the randomization. For instance if the lower bound is set
+to 10 and upper bound is set to 20 any random value generated will be between these two bounds.
+For arrays this is applied to each element of the array when a random value is generated. If you
+omit specification of the lower and upper bounds then the full range of the variable size will be
+used.  i.e. for an Integer this will be between 0 and 2^32.
+
+***** 5.2.1.4 "@Random( randomRange = [ 0x12, 0xF2, 0xCD, 0xA2 ])" Parameter
+The 'randomRange' parameter can be used for any JSON field. It specifies an array of byte values
+that can be selected at random. As previously mentioned this can be applied to any field, that
+being said it will be more applicable to values that have a large range rather than a small one,
+for instance, it is better to use it for an array or an Integer, or Long Integer rather than a
+Boolean field. If a seed parameter is not specified then the system clock will be used as a seed.
+Please note that the parameters lBound and uBound are ignored if specified. For arrays the size
+parameter is required, otherwise the size parameter is ignored. This parameter is best
+illustrated by example:
+
+// JSON Snippet #02 - Randomizing an Array from a Range:
+{
+  "dataTransfers" : [
+    {
+      "cmd" : 1,
+      "addr" : "0xFFA00000",
+      "length" : 4;
+      "data" : "@Random(seed = 12934, size = 4, randomRange = [0x12, 0xF2, 0xCD, 0xA2 0x6C, 0x03, 0x9F, 0x34, 0x8D])"
+    },
+    {
+      "cmd" : 0,
+      "addr" : "0xFFB00000",
+    }
+  ]
+}
+
+// Code Snippet #02:
+DataTransferVec dtv;
+Deserialize(dtv, "/my/path/to/the/json/file/randomTransferVector2.json");
+DataTransfer& theFirstElement = dtv[0];
+std::cout << theFirstElement << std::endl;
+
+//Code Snippet #02 Output
+cmd = WRITE
+addr = 0xFFA00000
+length = 4
+data = 0xCD, 0x9F, 0xF2, 0xA2
+..
+(continues)
+
+NOTE: The data values for the 'data' field are picked at random from the list of possible values
+specified in the randomRange group.
+
+
+// JSON Snippet #03 - Randomizing an Long Integer from a Range
+{
+  "dataTransfers" : [
+    {
+      "cmd" : 1,
+      "addr" : "0xFFA00000",
+      "length" : 4;
+      "data" : ["0xCD", "0x9F", "0xF2", "0xA2"],
+      "ext" : {
+        "gen_attr" : {
+          "master_id" : "@Random(seed = 20, size = 4, randomRange = [0x12, 0xF2, 0xCD, 0xA2 0x6C, 0x03, 0x9F, 0x34, 0x8D])".
+        }
+      }
+    },
+    {
+      "cmd" : 0,
+      "addr" : "00xFFB00000",
+    }
+  ]
+}
+
+// Code Snippet #03:
+DataTransferVec dtv;
+Deserialize(dtv, "/my/path/to/the/json/file/randomTransferVector2.json");
+DataTransfer& theFirstElement = dtv[0];
+std::cout << theFirstElement << std::endl;
+
+//Code Snippet #03 Output
+cmd = WRITE
+addr = 0xFFA00000
+length = 4
+data = 0xCD, 0x9F, 0xF2, 0xA2
+..
+master_id = 0xF2CD0312348D9F6C
+..
+(continues)
+
+
+NOTE: The data values for the 'master_id' field are picked at random from the list of possible values
+specified in the randomRange group.
+
+** 6 - Examples **
+
+*** 6.1 - The most simple DataTransfer JSON specification
+
+// JSON Snippet #04 - Empty DataTranfer Ojbect
+{
+  "dataTransfers" : [
+    { },
+    {
+      "addr" : "0xFFB00000",
+    }
+  ]
+}
+
+// Code Snippet #04:
+DataTransferVec dtv;
+Deserialize(dtv, "/my/path/to/the/json/file/simplestSpecification.json");
+DataTransfer& theFirstElement = dtv[0];
+std::cout << "The First Element:" << std::endl;
+std::cout << theFirstElement << std::endl;
+DataTransfer& theSecondElement = dtv[1];
+std::cout << "The Second Element" << std::endl;
+std::cout << theSecondElement << std::endl;
+
+//Code Snippet #03 Output
+
+The First Element:
+cmd = READ
+addr = 0
+length = 0
+data =
+..
+master_id = 0
+..
+(continues)
+
+The Second Element:
+cmd = READ
+addr = 0xFFB00000
+length = 0
+data =
+..
+master_id = 0
+..
+(continues)
+
+
+** 7 - Limitations **
+
+*** 7.1 Hexadecimal Values
+
+All Hexadecimal values must be represented as strings starting with '0x' followed by any
+hexadecimal digit. e.g. "addr" : "0xFFB00000", or "data" : ["0xCD", "0x9F", "0xF2", "0xA2"].
+The exception to this rule is for Annotations. Since the entire annotation is presented already as
+a string the double quotes are not required for values.
+
+*** 7.1 - Annotations Must Be Enclosed in Double Quotes.
+
+All annotations must start and finish with a double quote. e.g.
+"@Random(seed = 12934, size = 4, randomRange = [0x12, 0xF2,  0x03, 0x9F, 0x34, 0x8D])" please note
+that the hexadecimal values within an annotation do not need to be quoted with double quotes.
+
+
+*** 7.2 - Annotation Parameters Are Case Sensitive.
+
+All annotations parameters are case sensitive. For instance, lBound is not the same as LBound or
+lbound. The correct case is shown in the section Annotations.
+
+*** 7.3 - ParserFacade::Deserialize() Invokation Model
+
+All calls to the ParserFacade::Deserialize() methods expect a fully instantiated DataTransfer
+Object or a DataTransferVec Vector. Upon successful completion the ParserFacade::Deserialize will
+allocate on the heap fully instantiated DataTransfer Objects.
+
+*** 7.4 - ParserFacade::Deserialize() Resource Management
+
+Given the ParserFacade::Deserialize() Invokation Model, resources allocated on the heap must be
+managed by the caller code.
+
+*** 7.5 - ParserFacade::Serialize()/Deserialize() Threading Model.
+
+All calls to the ParserFacade methods need to complete atomically. Please note, calls to
+getErrorDescription() and getLastError() need to complete in the same Thread as the one the
+previous call to either Serialize()/Deserialize() calls were made.
+
+*** 7.6 - ParserFacade::Serialize()/Deserialize() API Depreciation Policy
+
+Please use the API provided by the ParserFacade class. We guarantee to maintain the API interface.
+Any changes/enhancements will be added to a different method call. We strongly advise against
+calls made directly to the Parser public methods, as those are subject to change. The ParserFacade
+public methods are not subject to the same changes.
+
+
+** 8 - Architecture **
+
+       +----------------+        +---------------------+
+       |  << Library >> |        |       Parser        |
+       |    RapidJSON   |        |---------------------|          +----------------+
+       |----------------|        |  + Deserialize()    |          | Deserializer   |
+       |                |        |  + Serialize()      |          |----------------|
+       |                |        |                     |          |                |
+       |                |<-----<>|                     |<>------->|                |
+       |                |        |                     |          |                |
+       |                |        |                     |          |                |
+       |                |        |                     |          |                |
+       +----------------+        |                     |          +----------------+
+                                 +---------------------+                 <*>
+                                              ^                           |   InflatorPolicies
+                                              |                           v
+ +----------------------+      +--------------+------------+      +---------------------+
+ | TLMTrafficGenerator  |      |        ParserFacade       |      |  RandomInflator     |
+ |----------------------|      |---------------------------|      |---------------------|
+ |                      |      |                           |      |   +---------------------+
+ |                      |      | + DeserializeVector()     |      |   |   StringInflator    |
+ |                      |      | + SerializeVector()       |      |   |---------------------|
+ |                      |----->| + getLastError()          |      |   |                     |
+ |                      |      | + getLastErrorDesc()      |      |   |                     |
+ |                      |      |                           |      |   |                     |
+ |                      |      |                           |      |   |                     |
+ |                      |      |                           |      +---|                     |
+ |                      |      |                           |          |                     |
+ +----------------------+      +---------------------------+          +---------------------+
+
+
+** 9 - Licensing Information **
+Please see the LICENSE file at the root of this project 
+
+
+
+** 10 - Tests **
+
+Each test contains three important steps:- setUpTest() to setting up the test, doTest() to run the
+tests and cleanUpTest() for clearing up the memory and variables.
+
+*** 10.1 - Test1: This test contains four subtests for Deserialize. All the tests are aimed at
+error handling functionalities of Deserialize() for improper json data inputs.
+
+**** 	10.1.1 - subTest1() tests for Deserialize() with an empty json object. A file with no json
+objects is passed to deserialize. Test expects Deserialize to return false as it's an invalid
+json object. JSON file used for test is at "test_files/no_object_test.json"
+
+**** 	10.1.2 - subTest2() tests Deserialize() with a json object which contains an invalid address
+field. Test expects Deserialize to return false as address is inavlid. JSON file used for test is
+at "test_files/invalid_addr_field.json".
+
+**** 	10.1.3 - subTest3() tests Deserialize a totally invalid json file. Again, Deserializer should
+return false as the json is invalid. JSON file used for test is at
+"test_files/invalid-json01.json".
+
+**** 	10.1.4 - subTest4() test for the same kind of functionalities as subTest3. JSON file used for
+test is at "test_files/invalid-json02.json".
+
+*** 2 - Test2: This test is aimed to test the address field. Address is expected to be uint. But if
+we get something like "  0xAA", deserializer will read this as 0xAA and ignore the quotes and spaces.
+*** 3 - Test3: ...
