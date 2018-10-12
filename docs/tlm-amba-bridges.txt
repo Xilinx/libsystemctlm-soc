@@ -85,4 +85,47 @@ we shouldn't according to our principle P1, so we don't.
 
 AXI-to-TLM
 ----------
-TODO
+The purpose of the AXI-to-TLM bridge is to translate AXI transactions
+into TLM Generic Payloads and thereafter propagate these to TLM targets.
+It acts as an AXI slave on the AXI side and as a TLM initiator on the
+TLM side. AXI transactions received on the AXI slave port are converted
+into TLM Generic Payloads containing AXI protocol details inside a TLM
+Generic Attributes extension. The TLM Generic Payloads are thereafter
+forwaded through the bridge's TLM initiator socket with b_transport to
+TLM targets. The TLM Generic Payload response status after performing
+the transaction is translated and propagated back to the AXI master in
+the AXI response.
+
+                             .----------.
+                             | AXI-2-TLM |   TLM target socket
+                             |  Bridge   |<-------------->
+                             '-----------'    b_transport()
+                                  /|\
+                                   | AXI Slave port
+                                   |
+  .------------.  AXI master port  ¦
+  | AXI Master |<------------------+
+  |____________|
+
+
+Timing
+------
+The generic payload transaction may be anottated with a delay at the
+TLM target. The AXI-to-TLM bridge models this delay by waiting on it
+before generating an AXI response for the AXI transaction to the AXI
+master.
+
+Multiple Outstanding transactions
+---------------------------------
+The AXI-to-TLM bridge supports multiple outstanding transactions. This
+is achieved by implementing the various phases of the transaction in
+separate threads and by using FIFOs to decouple the phases from each
+other. Every TLM transaction on the TLM side is also executed in it's
+own thread, this for being able to model individual transaction delays.
+
+Transaction Ordering
+--------------------
+The AXI-to-TLM follows the AXI transaction ordering rules. It processes
+transactions with the same transaction id or with overlapping addresses
+in order. This is achieved by only executing one TLM transaction at a
+time for transactions requiring to be kept ordered.
