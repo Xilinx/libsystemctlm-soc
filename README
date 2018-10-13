@@ -70,7 +70,7 @@ should have been generated that you can look at:
 
 gtkwave example-rtl-axi4/example-rtl-axi4.vcd
 
-Howto embedd into your project
+Howto embed into your project
 ------------------------------
 This repository contains the code and header files required to connect your
 SystemC application with Xilinx's QEMU. There are three directories.
