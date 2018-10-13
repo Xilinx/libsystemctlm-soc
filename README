@@ -9,7 +9,7 @@ transaction protocol by serializing/de-serializing QEMU transactions and
 TLM Generic Payloads.
 
 RTL needs to be converted to something that interfaces with SystemC by
-a tool such as Verilator or equivalent comercial tools.
+a tool such as Verilator or equivalent commercial tools.
 
 Dependencies
 ------------
@@ -39,7 +39,7 @@ be called as py.test instead of pytest.
 
 Configuration
 -------------
-To run the testsuites and examples, libsystemctlm-soc by default assumes that
+To run the test-suites and examples, libsystemctlm-soc by default assumes that
 the SystemC libraries are installed under /usr/local/systemc-2.3.2/.
 
 If you are using a different version or have installed the libraries on some
