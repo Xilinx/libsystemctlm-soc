@@ -113,9 +113,9 @@ public:
 
 		m_version(version),
 		m_maxBurstLength(AXI4_MAX_BURSTLENGTH),
-		aligner(nullptr),
-		proxy_init_socket(nullptr),
-		proxy_target_socket(nullptr),
+		aligner(NULL),
+		proxy_init_socket(NULL),
+		proxy_target_socket(NULL),
 		dummy("axi-dummy")
 	{
 		if (m_version == V_AXI3) {
