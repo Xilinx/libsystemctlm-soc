@@ -29,6 +29,11 @@
 class TrafficDesc : public ITrafficDesc
 {
 public:
+	TrafficDesc(const DataTransferVec& transfers) :
+		m_transfers(transfers),
+		m_it(m_transfers.begin())
+	{}
+
 	TrafficDesc(DataTransferVec&& transfers) :
 		m_transfers(transfers),
 		m_it(m_transfers.begin())
