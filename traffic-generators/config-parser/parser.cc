@@ -678,7 +678,7 @@ bool Parser::deserializeSingleObject(DataTransfer& dt, const Value& val){
         if(val["length"].IsUint()){
             dt.length = val["length"].GetUint();
             //checking and validating the length of array and user input
-            if(val["data"].Size()!= dt.length){
+            if(val.HasMember("data") && val["data"].Size()!= dt.length){
                 setLastError(E_LENGTHNOTEQUAL);
             }
         } else if(val["length"].IsString()){
