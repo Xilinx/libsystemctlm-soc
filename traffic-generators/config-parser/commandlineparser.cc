@@ -42,9 +42,10 @@ static void show_usage()
 {
 	std::cerr << "Usage: " << " <option(s)> config file names\n\t" <<"For example:- '-p -d config1.json config2.json'\n"
 		<< "Options:\n"
-		<< "\t-h,--help\tShow this help message\n"
-		<< "\t-d,--debug\tenables the debug. Will dump out error messages if any\n"
-		<< "\t-p,--parallel\tthis options does the parallel parsing"
+		<< "\t-h\t\tShow this help message\n"
+		<< "\t-d\t\tenables the debug. Will dump out error messages if any\n"
+		<< "\t-D\t\tEnables traffic debugging. Will dump out transacations\n"
+		<< "\t-p\t\tthis options does the parallel parsing"
 		<< std::endl;
 }
 
@@ -72,7 +73,7 @@ void CmdLineParser::cmd_Parse(const int argc,  char ** const argv){
 	opterr = 0;
 	// std::string::size_type n;
 	//check for option argument.
-	while ( (opt = getopt(argc, argv, "hpd")) != -1 ) {  // for each option...
+	while ( (opt = getopt(argc, argv, "hpdD")) != -1 ) {  // for each option...
 		switch ( opt ) {
 			case 'h':
         //call the function show_usage.
@@ -83,6 +84,9 @@ void CmdLineParser::cmd_Parse(const int argc,  char ** const argv){
 				break;
 			case 'd':
 				enable_debug = true;
+				break;
+			case 'D':
+				debug_traffic = true;
 				break;
 			case '?':  // unknown option...
 				cerr << "Unknown option: " << char(optopt) << "' Use '-h' for help" << endl;
@@ -137,6 +141,10 @@ bool CmdLineParser::getParallel() const{
 
 bool CmdLineParser::getDebugModeStatus() const{
 	return(enable_debug);
+}
+
+bool CmdLineParser::getDebugTraffic() const{
+	return debug_traffic;
 }
 
 std::string CmdLineParser::getPath() const{

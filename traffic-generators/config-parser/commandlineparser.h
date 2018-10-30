@@ -41,11 +41,13 @@ class CmdLineParser{
         virtual ~CmdLineParser();
         bool getParallel() const; //make them const
         bool getDebugModeStatus() const;
+        bool getDebugTraffic() const;
         const vector<string> getConfigs() const;
         string getPath() const;
       private:
         bool parallel_flag;
         bool enable_debug;
+        bool debug_traffic;
         vector<string> config_file_names;
         std::string path ;
         void cmd_Parse(const int argc,  char ** const argv);
