@@ -160,27 +160,27 @@ TrafficDesc unalignedTransfers(merge({
 
 TrafficDesc exclusiveTransfers(merge({
 	Read(0x0),
-		GenAttr(0x10, true, true, 0, 0, true),
+		GenAttr(0x10, true, true, false, 0, 0, true),
 	Write(0x0, DATA(0x10, 0x11, 0x12, 0x13)),
-		GenAttr(0x10, true, true, 0, 0, true),
+		GenAttr(0x10, true, true, false, 0, 0, true),
 
 	/* Locked transfers */
 	Read(0x0),
-		GenAttr(0x10, true, true, 0, 0, false, true),
+		GenAttr(0x10, true, true, false, 0, 0, false, true),
 	Write(0x0, DATA(0x10, 0x11, 0x12, 0x13)),
-		GenAttr(0x10, true, true, 0, 0, false, true),
+		GenAttr(0x10, true, true, false, 0, 0, false, true),
 }));
 
 TrafficDesc memAttrTransfers(merge({
 	Read(0x0),
-		GenAttr(0x10, true, true, 0, 0, false, false,
+		GenAttr(0x10, true, true, false, 0, 0, false, false,
 			false,	// bufferable
 			true,	// modifiable
 			true,	// read_allocate
 			true),	// write_allocate
 
 	Write(0x0, DATA(0x10, 0x11, 0x12, 0x13)),
-		GenAttr(0x10, true, true, 0, 0, false, false,
+		GenAttr(0x10, true, true, false, 0, 0, false, false,
 			false,	// bufferable
 			true,	// modifiable
 			true,	// read_allocate
@@ -189,14 +189,14 @@ TrafficDesc memAttrTransfers(merge({
 
 TrafficDesc qosTransfers(merge({
 	Read(0x0),
-		GenAttr(0x10, true, true, 0, 0, false, false,
+		GenAttr(0x10, true, true, false, 0, 0, false, false,
 			false,	// bufferable
 			true,	// modifiable
 			true,	// read_allocate
 			true,	// write_allocate
 			3),
 	Write(0x0, DATA(0x10, 0x11, 0x12, 0x13)),
-		GenAttr(0x10, true, true, 0, 0, false, false, 4,
+		GenAttr(0x10, true, true, false, 0, 0, false, false, 4,
 			false,	// bufferable
 			true,	// modifiable
 			true,	// read_allocate
@@ -206,14 +206,14 @@ TrafficDesc qosTransfers(merge({
 
 TrafficDesc regionTransfers(merge({
 	Read(0x0),
-		GenAttr(0x10, true, true, 0, 0, false, false,
+		GenAttr(0x10, true, true, false, 0, 0, false, false,
 			false,	// bufferable
 			true,	// modifiable
 			true,	// read_allocate
 			true,	// write_allocate
 			3, 2),
 	Write(0x0, DATA(0x10, 0x11, 0x12, 0x13)),
-		GenAttr(0x10, true, true, 0, 0, false, false,
+		GenAttr(0x10, true, true, false, 0, 0, false, false,
 			false,	// bufferable
 			true,	// modifiable
 			true,	// read_allocate

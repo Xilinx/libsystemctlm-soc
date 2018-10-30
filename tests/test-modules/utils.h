@@ -82,6 +82,7 @@ DataTransfer Expect(const unsigned char *expect, int length)
 DataTransfer GenAttr(uint64_t master_id,
 			bool secure,
 			bool eop,
+			bool wrap = false,
 			uint32_t burst_width = 0,
 			uint32_t transaction_id = 0,
 			bool exclusive = false,
@@ -99,6 +100,7 @@ DataTransfer GenAttr(uint64_t master_id,
 	t.ext.gen_attr.master_id = master_id;
 	t.ext.gen_attr.secure = secure;
 	t.ext.gen_attr.eop = eop;
+	t.ext.gen_attr.wrap = wrap;
 	t.ext.gen_attr.burst_width = burst_width;
 	t.ext.gen_attr.transaction_id = transaction_id;
 	t.ext.gen_attr.exclusive = exclusive;
