@@ -30,6 +30,7 @@ SUBDIRS += traffic-generators
 SUBDIRS += tlm-aligner
 SUBDIRS += checkers
 SUBDIRS += traffic-generators/config-parser/
+SUBDIRS += traffic-generators/cp-tg/
 
 PYTEST ?=py.test
 PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html

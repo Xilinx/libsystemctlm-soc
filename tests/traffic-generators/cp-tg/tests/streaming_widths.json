@@ -1,0 +1,203 @@
+{
+    "dataTransfers": [
+
+	{
+		"//": "Clear memory",
+
+		"cmd": "W", "addr": "0", "length" : 8, "streaming_width" : 8,
+		"data": [
+				"0x0", "0x0", "0x0", "0x0",
+				"0x0", "0x0", "0x0", "0x0"
+			]
+	},
+	{
+		"cmd": "R", "addr": "0", "length" : 8, "streaming_width" : 8,
+		"expect": [
+				"0x0", "0x0", "0x0", "0x0",
+				"0x0", "0x0", "0x0", "0x0"
+			]
+	},
+
+	{
+		"//": "2 fixed bursts at addr 0 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "0", "length" : 8, "streaming_width" : 4,
+		"data": [
+				"0x81", "0x82", "0x83", "0x84",
+				"0x71", "0x72", "0x73", "0x74"
+			]
+	},
+	{
+		"cmd": "R", "addr": "0", "length" : 8 , "streaming_width" : 4,
+		"expect": [
+				"0x71", "0x72", "0x73", "0x74",
+				"0x71", "0x72", "0x73", "0x74"
+			]
+	},
+
+	{
+		"//": "Fixed bursts on lanes 0-1 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "0", "length" : 8, "streaming_width" : 2,
+		"data": [
+				"0x81", "0x82",
+				"0x83", "0x84",
+				"0x71", "0x72",
+				"0x73", "0x74"
+			]
+	},
+	{
+		"cmd": "R", "addr": "0", "length" : 8 , "streaming_width" : 2,
+		"expect": [
+				"0x73", "0x74",
+				"0x73", "0x74",
+				"0x73", "0x74",
+				"0x73", "0x74"
+			]
+	},
+
+	{
+		"//": "Fixed bursts on lanes 2-3 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "2", "length" : 8, "streaming_width" : 2,
+		"data": [
+				"0x81", "0x82",
+				"0x83", "0x84",
+				"0x71", "0x72",
+				"0xaa", "0xbb"
+			]
+	},
+	{
+		"cmd": "R", "addr": "2", "length" : 8 , "streaming_width" : 2,
+		"expect": [
+				"0xaa", "0xbb",
+				"0xaa", "0xbb",
+				"0xaa", "0xbb",
+				"0xaa", "0xbb"
+			]
+	},
+
+	{
+		"//": "Fixed bursts on lane 0 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "0", "length" : 8, "streaming_width" : 1,
+		"data": [
+				"0x81",
+				"0x82",
+				"0x83",
+				"0x84",
+				"0x71",
+				"0x72",
+				"0x73",
+				"0x0"
+			]
+	},
+	{
+		"cmd": "R", "addr": "0", "length" : 8 , "streaming_width" : 1,
+		"expect": [
+				"0x0",
+				"0x0",
+				"0x0",
+				"0x0",
+
+				"0x0",
+				"0x0",
+				"0x0",
+				"0x0"
+			]
+	},
+
+	{
+		"//": "Fixed bursts on lane 1 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "1", "length" : 8, "streaming_width" : 1,
+		"data": [
+				"0x81",
+				"0x82",
+				"0x83",
+				"0x84",
+
+				"0x71",
+				"0x72",
+				"0x73",
+				"0x11"
+			]
+	},
+	{
+		"cmd": "R", "addr": "1", "length" : 8 , "streaming_width" : 1,
+		"expect": [
+				"0x11",
+				"0x11",
+				"0x11",
+				"0x11",
+
+				"0x11",
+				"0x11",
+				"0x11",
+				"0x11"
+			]
+	},
+
+	{
+		"//": "Fixed bursts on lane 2 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "2", "length" : 8, "streaming_width" : 1,
+		"data": [
+				"0x81",
+				"0x82",
+				"0x83",
+				"0x84",
+
+				"0x71",
+				"0x72",
+				"0x73",
+				"0x22"
+			]
+	},
+	{
+		"cmd": "R", "addr": "2", "length" : 8 , "streaming_width" : 1,
+		"expect": [
+				"0x22",
+				"0x22",
+				"0x22",
+				"0x22",
+
+				"0x22",
+				"0x22",
+				"0x22",
+				"0x22"
+			]
+	},
+
+	{
+		"//": "Fixed bursts on lane 3 on a 32 bit data bus",
+
+		"cmd": "W", "addr": "3", "length" : 8, "streaming_width" : 1,
+		"data": [
+				"0x81",
+				"0x82",
+				"0x83",
+				"0x84",
+
+				"0x71",
+				"0x72",
+				"0x73",
+				"0x33"
+			]
+	},
+	{
+		"cmd": "R", "addr": "3", "length" : 8 , "streaming_width" : 1,
+		"expect": [
+				"0x33",
+				"0x33",
+				"0x33",
+				"0x33",
+
+				"0x33",
+				"0x33",
+				"0x33",
+				"0x33"
+			]
+	}
+    ]
+}
