@@ -206,8 +206,7 @@ private:
 					}
 				}
 
-				// Temporarily always synthesize streaming_width
-				if (valid_for_axi && 0) {
+				if (valid_for_axi) {
 					gp.set_streaming_width(streaming_width);
 				} else {
 					// Chop up into multiple beats.
