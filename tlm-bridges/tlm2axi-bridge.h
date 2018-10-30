@@ -239,7 +239,10 @@ private:
 			unsigned int streaming_width = m_gp.get_streaming_width();
 			unsigned int datalen = m_gp.get_data_length();
 
-			if (streaming_width >= datalen) {
+			if (streaming_width == datalen &&
+				m_genattr.get_wrap()) {
+				m_burstType = AXI_BURST_WRAP;
+			} else if (streaming_width >= datalen) {
 				m_burstType = AXI_BURST_INCR;
 			} else if (streaming_width == DATA_BUS_BYTES) {
 				m_burstType = AXI_BURST_FIXED;
@@ -255,7 +258,8 @@ private:
 
 				m_genattr.set_burst_width(streaming_width);
 			} else {
-				m_burstType = AXI_BURST_WRAP;
+				SC_REPORT_ERROR(TLM2AXI_BRIDGE_MSG,
+						"Unsupported burst type");
 			}
 		}
 
