@@ -45,7 +45,12 @@ static void show_usage()
 		<< "\t-h\t\tShow this help message\n"
 		<< "\t-d\t\tenables the debug. Will dump out error messages if any\n"
 		<< "\t-D\t\tEnables traffic debugging. Will dump out transacations\n"
-		<< "\t-p\t\tthis options does the parallel parsing"
+		<< "\t-p\t\tthis options does the parallel parsing\n"
+		<< "\t-a\t\tEnable AXI aw channel tracing\n"
+		<< "\t-w\t\tEnable AXI w channel tracing\n"
+		<< "\t-b\t\tEnable AXI b channel tracing\n"
+		<< "\t-A\t\tEnable AXI ar channel tracing\n"
+		<< "\t-r\t\tEnable AXI rr channel tracing\n"
 		<< std::endl;
 }
 
@@ -73,7 +78,7 @@ void CmdLineParser::cmd_Parse(const int argc,  char ** const argv){
 	opterr = 0;
 	// std::string::size_type n;
 	//check for option argument.
-	while ( (opt = getopt(argc, argv, "hpdD")) != -1 ) {  // for each option...
+	while ( (opt = getopt(argc, argv, "hpdDawbAr")) != -1 ) {  // for each option...
 		switch ( opt ) {
 			case 'h':
         //call the function show_usage.
@@ -87,6 +92,21 @@ void CmdLineParser::cmd_Parse(const int argc,  char ** const argv){
 				break;
 			case 'D':
 				debug_traffic = true;
+				break;
+			case 'a':
+				m_aw = true;
+				break;
+			case 'w':
+				m_w = true;
+				break;
+			case 'b':
+				m_b = true;
+				break;
+			case 'A':
+				m_ar = true;
+				break;
+			case 'r':
+				m_rr = true;
 				break;
 			case '?':  // unknown option...
 				cerr << "Unknown option: " << char(optopt) << "' Use '-h' for help" << endl;

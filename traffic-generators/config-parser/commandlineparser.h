@@ -44,10 +44,23 @@ class CmdLineParser{
         bool getDebugTraffic() const;
         const vector<string> getConfigs() const;
         string getPath() const;
+
+        // AXI channel trace options
+        bool get_aw() const { return m_aw; }
+        bool get_w() const { return m_w; }
+        bool get_b() const { return m_b; }
+        bool get_ar() const { return m_ar; }
+        bool get_rr() const { return m_rr; }
+
       private:
         bool parallel_flag;
         bool enable_debug;
         bool debug_traffic;
+        bool m_aw;
+        bool m_w;
+        bool m_b;
+        bool m_ar;
+        bool m_rr;
         vector<string> config_file_names;
         std::string path ;
         void cmd_Parse(const int argc,  char ** const argv);
