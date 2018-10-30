@@ -222,9 +222,22 @@ private:
 							m_alignedAddress,
 							numberBytes,
 							burstLen);
+			uint8_t *data;
+
+			if (burstType == AXI_BURST_FIXED) {
+				dataLen = burstLen * DATA_BUS_BYTES;
+			} else {
+				dataLen = GetDataLen(address,
+							m_alignedAddress,
+							numberBytes,
+							burstLen);
+			}
+
+			data = new uint8_t[dataLen];
+
 			assert(numberBytes > 0);
 			assert(dataLen > 0);
-			uint8_t *data = new uint8_t[dataLen];
+
 
 			m_genattr->set_burst_width(numberBytes);
 			m_genattr->set_transaction_id(transaction_id);
@@ -240,7 +253,12 @@ private:
 			m_genattr->set_region(AxRegion);
 
 			m_gp->set_command(cmd);
-			m_gp->set_address(address);
+
+			if (burstType == AXI_BURST_FIXED) {
+				m_gp->set_address(Align(address, DATA_BUS_BYTES));
+			} else {
+				m_gp->set_address(address);
+			}
 			m_gp->set_data_length(dataLen);
 			m_gp->set_data_ptr(reinterpret_cast<unsigned char*>(data));
 
@@ -257,7 +275,7 @@ private:
 			if (burstType == AXI_BURST_INCR) {
 				m_gp->set_streaming_width(dataLen);
 			} else if (burstType == AXI_BURST_FIXED) {
-				m_gp->set_streaming_width(numberBytes);
+				m_gp->set_streaming_width(DATA_BUS_BYTES);
 			} else {
 				// Only model the case where address == Wrap_boundary
 				m_gp->set_streaming_width(numberBytes*burstLen);
@@ -347,32 +365,41 @@ private:
 
 			alignedAddress = Align(address, numberBytes);
 
-			if (m_beat == 1) {
-				lower_byte_lane = address -
-						Align(address, DATA_BUS_BYTES);
-				upper_byte_lane = alignedAddress +
-						(numberBytes-1) -
-						Align(address, DATA_BUS_BYTES);
-			} else {
-				uint64_t address = alignedAddress;
-				if (m_burstType != AXI_BURST_FIXED) {
-					address += (m_beat-1) * numberBytes;
-				}
-
-				lower_byte_lane = address -
-							Align(address, DATA_BUS_BYTES);
-				upper_byte_lane = lower_byte_lane +
-							(numberBytes-1);
-			}
-
-			// Set data
-			for (int i = 0; i < DATA_BUS_BYTES; i++) {
-				if (i >= lower_byte_lane && i <= upper_byte_lane) {
+			if (m_burstType == AXI_BURST_FIXED) {
+				// Set everything
+				for (int i = 0; i < DATA_BUS_BYTES; i++) {
 					int firstbit = i*8;
 					int lastbit = firstbit + 8-1;
 
 					data.range(lastbit, firstbit) =
 						gp_data[m_dataIdx++];
+				}
+			} else {
+				if (m_beat == 1) {
+					lower_byte_lane = address -
+							Align(address, DATA_BUS_BYTES);
+					upper_byte_lane = alignedAddress +
+							(numberBytes-1) -
+							Align(address, DATA_BUS_BYTES);
+				} else {
+					uint64_t address = alignedAddress +
+								((m_beat-1) * numberBytes);
+
+					lower_byte_lane = address -
+								Align(address, DATA_BUS_BYTES);
+					upper_byte_lane = lower_byte_lane +
+								(numberBytes-1);
+				}
+
+				// Set data
+				for (int i = 0; i < DATA_BUS_BYTES; i++) {
+					if (i >= lower_byte_lane && i <= upper_byte_lane) {
+						int firstbit = i*8;
+						int lastbit = firstbit + 8-1;
+
+						data.range(lastbit, firstbit) =
+							gp_data[m_dataIdx++];
+					}
 				}
 			}
 		}
