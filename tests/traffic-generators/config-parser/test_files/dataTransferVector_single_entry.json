@@ -30,6 +30,7 @@
                     "master_id": 218423972309,
                     "secure": true,
                     "eop": false,
+                    "wrap": true,
                     "burst_width": 20,
                     "transaction_id": 16711901,
                     "exclusive": false,

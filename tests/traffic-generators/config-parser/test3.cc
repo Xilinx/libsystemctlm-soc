@@ -108,6 +108,10 @@ bool isDtEqual(const DataTransfer& a, const DataTransfer& b){
     }
 
     if(true == result){
+        result = (a.ext.gen_attr.wrap == b.ext.gen_attr.wrap) ? true : false;
+    }
+
+    if(true == result){
         result = (a.ext.gen_attr.burst_width == b.ext.gen_attr.burst_width) ? true : false;
     }
 
@@ -189,6 +193,7 @@ bool Test3::setUpTest(){
     dt1.ext.gen_attr.master_id = 218423972309;
     dt1.ext.gen_attr.secure = true;
     dt1.ext.gen_attr.eop = false;
+    dt1.ext.gen_attr.wrap = true;
     dt1.ext.gen_attr.burst_width = 20;
     dt1.ext.gen_attr.transaction_id = 0xFF00DD;
     dt1.ext.gen_attr.exclusive = false;
@@ -213,6 +218,7 @@ bool Test3::setUpTest(){
     dt2.ext.gen_attr.master_id = 69873589232;
     dt2.ext.gen_attr.secure = true;
     dt2.ext.gen_attr.eop = true;
+    dt2.ext.gen_attr.wrap = false;
     dt2.ext.gen_attr.burst_width = 100;
     dt2.ext.gen_attr.transaction_id = 0xAABBCCDD;
     dt2.ext.gen_attr.exclusive = false;
@@ -237,6 +243,7 @@ bool Test3::setUpTest(){
     dt3.ext.gen_attr.master_id = 0;
     dt3.ext.gen_attr.secure = 0;
     dt3.ext.gen_attr.eop = 0;
+    dt3.ext.gen_attr.wrap = false;
     dt3.ext.gen_attr.burst_width = 0;
     dt3.ext.gen_attr.transaction_id = 0;
     dt3.ext.gen_attr.exclusive = 0;

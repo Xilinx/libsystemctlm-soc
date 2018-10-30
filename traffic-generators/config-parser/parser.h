@@ -112,6 +112,8 @@ class Parser{
             E_NOTJSONEXTFAIL = 59,
             E_INVDERRORCODE = 60,
             E_UNKNOWNCMD = 61,
+            E_WRAPFLDNOTFOUND = 62,
+            E_WRAPINCORRECTFORMAT = 63,
             E_ERROR_MAX
         };
 

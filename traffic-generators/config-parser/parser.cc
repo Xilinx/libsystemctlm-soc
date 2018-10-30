@@ -104,6 +104,8 @@ static const char * const ErrorCodes[] = {
     "The 'write_allocate' field of the ext.gen_attr is neither an boolean or a string",
     "The file name supplied doesn't have a .json extension",
     "Unknown 'cmd' error (allowed 'cmd' values are \"r\", \"w\", \"R\", \"W\", 0 or 1.",
+    "The 'wrap' field of the ext.gen_attr structure was not found",
+    "'wrap' parameter is not a boolean",
     "The Error Code Supplied is Invalid, likely outside the range of supported errors."
 };
 
@@ -525,6 +527,9 @@ void Parser::serializeSingleObject(const DataTransfer& dt,
                        writer.String("eop");
                        writer.Bool(dt.ext.gen_attr.eop);
 
+                       writer.String("wrap");
+                       writer.Bool(dt.ext.gen_attr.wrap);
+
                        writer.String("burst_width");
                        writer.Uint(dt.ext.gen_attr.burst_width);
 
@@ -912,6 +917,24 @@ bool Parser::deserializeSingleObject(DataTransfer& dt, const Value& val){
                         } else {
                             dt.ext.gen_attr.eop = 0;
                             setLastError(E_EOPINCORRECTFORMAT);
+                        }
+                    }
+
+                    if(false == gen_attr.HasMember("wrap")) {
+                        setLastError(E_WRAPFLDNOTFOUND);
+                        dt.ext.gen_attr.wrap = false;
+                    } else {
+                        if(gen_attr["wrap"].IsBool()){
+                            dt.ext.gen_attr.wrap =
+					gen_attr["wrap"].GetBool();
+                        } else if (gen_attr["wrap"].IsString()) {
+                            if( false == ds.deserialize(dt.ext.gen_attr.wrap,
+                                    gen_attr["wrap"].GetString())){
+                                dt.ext.gen_attr.wrap = false;
+                            }
+                        } else {
+                            dt.ext.gen_attr.wrap = false;
+                            setLastError(E_WRAPINCORRECTFORMAT);
                         }
                     }
 
