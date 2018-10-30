@@ -280,6 +280,8 @@ private:
 			} else if (burstType == AXI_BURST_FIXED) {
 				m_gp->set_streaming_width(DATA_BUS_BYTES);
 			} else {
+				m_genattr->set_wrap(true);
+
 				// Only model the case where address == Wrap_boundary
 				m_gp->set_streaming_width(numberBytes*burstLen);
 			}
