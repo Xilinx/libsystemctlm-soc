@@ -204,6 +204,7 @@ private:
 				uint8_t  numberBytes,
 				uint8_t  burstType,
 				uint32_t transaction_id,
+				uint8_t  AxProt,
 				uint8_t  AxLock,
 				uint8_t  AxCache,
 				uint8_t  AxQoS,
@@ -238,7 +239,9 @@ private:
 			assert(numberBytes > 0);
 			assert(dataLen > 0);
 
-
+			if (IsNonSecure(AxProt)) {
+				m_genattr->set_non_secure();
+			}
 			m_genattr->set_burst_width(numberBytes);
 			m_genattr->set_transaction_id(transaction_id);
 			m_genattr->set_exclusive(AxLock == AXI_LOCK_EXCLUSIVE);
@@ -472,6 +475,11 @@ private:
 			return (AxCache >> 3) & 0x1;
 		}
 
+		bool IsNonSecure(uint8_t AxProt)
+		{
+			return (AxProt & AXI_PROT_NS) == AXI_PROT_NS;
+		}
+
 	private:
 		tlm::tlm_generic_payload *m_gp;
 		genattr_extension *m_genattr;
@@ -614,6 +622,7 @@ private:
 							1 << arsize.read().to_uint(),
 							arburst.read().to_uint(),
 							to_uint(arid),
+							to_uint(arprot),
 							to_uint(arlock),
 							arcache.read().to_uint(),
 							arqos.read().to_uint(),
@@ -714,6 +723,7 @@ private:
 								1 << awsize.read().to_uint(),
 								awburst.read().to_uint(),
 								to_uint(awid),
+								to_uint(arprot),
 								to_uint(awlock),
 								awcache.read().to_uint(),
 								awqos.read().to_uint(),
