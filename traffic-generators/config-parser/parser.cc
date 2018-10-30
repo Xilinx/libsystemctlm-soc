@@ -229,7 +229,7 @@ bool Parser::Serialize(const DataTransferVec& dtv, const char* const json){
         writer.EndArray();
     writer.EndObject();
 
-    std::cout << "Parser::SerializeVector()" << std::endl;
+    //std::cout << "Parser::SerializeVector()" << std::endl;
 
     const uint64_t length = ((sb.GetSize() / sizeof(StringBuffer::Ch)) + 1);
     char* cstr = new char[length];
@@ -272,7 +272,7 @@ bool Parser::Deserialize(DataTransferVec& dtv, const char* const json){
         cstr = new char[inString.length() + 1];
         std::strcpy(cstr, inString.c_str());
 
-        std::cout << cstr << std::endl;
+        //std::cout << cstr << std::endl;
 
     } else {
         // Open the file stream for input
@@ -287,7 +287,7 @@ bool Parser::Deserialize(DataTransferVec& dtv, const char* const json){
         //Access the raw string bytes.
         cstr = new char[strData.length() + 1];
         std::strcpy(cstr, strData.c_str());
-        std::cout << cstr << std::endl;
+        //std::cout << cstr << std::endl;
     }
 
     // If we can't process the input string then bail out
@@ -426,7 +426,7 @@ bool Parser::Deserialize(DataTransfer& dt, const char* const json){
         //Access the raw string bytes.
         cstr = new char[strData.length() + 1];
         std::strcpy(cstr, strData.c_str());
-        std::cout << cstr << std::endl;
+        //std::cout << cstr << std::endl;
     }
 
     // If we can't process the input string then bail out
