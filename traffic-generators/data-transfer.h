@@ -131,11 +131,22 @@ struct DataTransfer {
 			}
 		}
 		out << " }, .length = " << std::dec << t.length << ", "
+			<< ", .streaming_width = " << std::dec << t.streaming_width << ", "
 			<< ".ext.gen_attr { "
 			<< ".enabled: " << t.ext.gen_attr.enabled << ", "
 			<< ".master_id: " << t.ext.gen_attr.master_id << ", "
 			<< ".secure: " << t.ext.gen_attr.secure << ", "
-			<< ".eop: " << t.ext.gen_attr.eop
+			<< ".eop: " << t.ext.gen_attr.eop << ", "
+			<< ".burst_width: " << t.ext.gen_attr.burst_width << ", "
+			<< ".transaction_id: " << t.ext.gen_attr.transaction_id << ", "
+			<< ".exclusive: " << t.ext.gen_attr.exclusive << ", "
+			<< ".locked: " << t.ext.gen_attr.locked << ", "
+			<< ".bufferable: " << t.ext.gen_attr.bufferable << ", "
+			<< ".modifiable: " << t.ext.gen_attr.modifiable << ", "
+			<< ".read_allocate: " << t.ext.gen_attr.read_allocate << ", "
+			<< ".write_allocate: " << t.ext.gen_attr.write_allocate << ", "
+			<< ".qos: " << static_cast<uint32_t>(t.ext.gen_attr.qos) << ", "
+			<< ".region: " << static_cast<uint32_t>(t.ext.gen_attr.region)
 			<< " }, ";
 		return out;
 	}
