@@ -103,6 +103,7 @@ static const char * const ErrorCodes[] = {
     "The 'write_allocate' field of the ext.gen_attr structure was not found",
     "The 'write_allocate' field of the ext.gen_attr is neither an boolean or a string",
     "The file name supplied doesn't have a .json extension",
+    "Unknown 'cmd' error (allowed 'cmd' values are \"r\", \"w\", \"R\", \"W\", 0 or 1.",
     "The Error Code Supplied is Invalid, likely outside the range of supported errors."
 };
 
@@ -629,8 +630,17 @@ bool Parser::deserializeSingleObject(DataTransfer& dt, const Value& val){
         setLastError(E_CMDFLDNOTFOUND);
         dt.cmd = 0;
     } else {
-        if(val["cmd"].IsUint()){
-            dt.cmd = val["cmd"].GetUint();
+        if (val["cmd"].IsString()) {
+            std::string cmd = val["cmd"].GetString();
+            if(cmd == "W" || cmd == "w"){
+              dt.cmd = DataTransfer::WRITE;
+            } else if(cmd == "R" || cmd == "r"){
+              dt.cmd = DataTransfer::READ;
+            } else {
+              setLastError(E_UNKNOWNCMD);
+            }
+        } else if(val["cmd"].IsUint()){
+              dt.cmd = val["cmd"].GetUint();
         } else {
             setLastError(E_INVALIDLENGTH);
         }

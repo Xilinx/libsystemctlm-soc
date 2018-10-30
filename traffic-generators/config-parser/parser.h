@@ -111,6 +111,7 @@ class Parser{
             E_ALLC2INCORRECTFORMAT = 58,
             E_NOTJSONEXTFAIL = 59,
             E_INVDERRORCODE = 60,
+            E_UNKNOWNCMD = 61,
             E_ERROR_MAX
         };
 
