@@ -47,6 +47,7 @@ struct DataTransfer {
 			uint64_t master_id;
 			bool secure;
 			bool eop;
+			bool wrap;
 			uint32_t burst_width;
 			uint32_t transaction_id;
 			bool exclusive;
@@ -137,6 +138,7 @@ struct DataTransfer {
 			<< ".master_id: " << t.ext.gen_attr.master_id << ", "
 			<< ".secure: " << t.ext.gen_attr.secure << ", "
 			<< ".eop: " << t.ext.gen_attr.eop << ", "
+			<< ".wrap: " << t.ext.gen_attr.wrap << ", "
 			<< ".burst_width: " << t.ext.gen_attr.burst_width << ", "
 			<< ".transaction_id: " << t.ext.gen_attr.transaction_id << ", "
 			<< ".exclusive: " << t.ext.gen_attr.exclusive << ", "

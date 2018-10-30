@@ -69,6 +69,9 @@ private:
 	// AMBA TrustZone Secure vs Non-Secure transactions.
 	bool secure;
 
+	// For specifying if this is an AMBA AXI wrapping burst.
+	bool wrap;
+
 	// AMBA width of a single burst transfer (beat) in bytes.
 	uint32_t burst_width;
 
@@ -116,6 +119,7 @@ private:
 public:
 	PROP_GETSET_GEN(secure, bool, true);
 	PROP_GETSET_GEN(master_id, uint64_t, 0);
+	PROP_GETSET_GEN(wrap, bool, false);
 	PROP_GETSET_GEN(burst_width, uint32_t, 0);
 	PROP_GETSET_GEN(transaction_id, uint32_t, 0);
 	PROP_GETSET_GEN(exclusive, bool, false);
@@ -130,6 +134,7 @@ public:
 	genattr_bus() {
 		set_secure();
 		set_master_id();
+		set_wrap();
 		set_burst_width();
 		set_transaction_id();
 		set_exclusive();
@@ -164,6 +169,7 @@ public:
 		set_eop(ext_genattr.get_eop());
 		set_master_id(ext_genattr.get_master_id());
 		set_secure(ext_genattr.get_secure());
+		set_wrap(ext_genattr.get_wrap());
 		set_burst_width(ext_genattr.get_burst_width());
 		set_transaction_id(ext_genattr.get_transaction_id());
 		set_exclusive(ext_genattr.get_exclusive());

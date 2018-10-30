@@ -79,6 +79,7 @@ public:
 			genattr->set_master_id(t.ext.gen_attr.master_id);
 			genattr->set_secure(t.ext.gen_attr.secure);
 			genattr->set_eop(t.ext.gen_attr.eop);
+			genattr->set_wrap(t.ext.gen_attr.wrap);
 			genattr->set_burst_width(t.ext.gen_attr.burst_width);
 			genattr->set_transaction_id(t.ext.gen_attr.transaction_id);
 			genattr->set_exclusive(t.ext.gen_attr.exclusive);
