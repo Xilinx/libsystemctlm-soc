@@ -1,7 +1,7 @@
 /*
  * System-C TLM-2.0 remoteport glue
  *
- * Copyright (c) 2013 Xilinx Inc
+ * Copyright (c) 2013-2018 Xilinx Inc
  * Written by Edgar E. Iglesias
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,6 +44,129 @@ extern "C" {
 using namespace sc_core;
 using namespace std;
 
+class remoteport_tlm_sync_loosely_timed : public Iremoteport_tlm_sync
+{
+public:
+	remoteport_tlm_sync_loosely_timed() {
+		reset();
+	};
+
+	virtual void account_time(int64_t rclk) {
+		int64_t lclk;
+		int64_t delta_ns;
+		sc_time delta;
+
+		lclk = map_time(m_qk.get_current_time());
+		if (lclk >= rclk) {
+			/* lclk may have rounding errors due to conversions.
+			 * To avoid deadlocks, we never allow the delta to be zero.
+			 */
+			delta_ns = 1;
+		} else {
+			delta_ns = rclk - lclk;
+		}
+
+		delta = sc_time((double) delta_ns, SC_NS);
+		assert(delta >= SC_ZERO_TIME);
+		if (delta > m_qk.get_global_quantum()) {
+			delta = m_qk.get_global_quantum();
+		}
+
+#if 0
+		cout << "account rclk=" << rclk << " current=" << m_qk.get_current_time() << " delta=" << delta << endl;
+#endif
+		inc_local_time(delta);
+	}
+
+	virtual void pre_any_cmd(remoteport_packet *pkt, bool can_sync) {
+	}
+
+	virtual void post_any_cmd(remoteport_packet *pkt, bool can_sync) {
+		/* We've just processed peer packets and it is
+		   likely running freely. Good spot for a local sync.  */
+		if (can_sync) {
+			sync();
+		}
+	}
+
+	virtual void pre_sync_cmd(int64_t rclk, bool can_sync) {
+		account_time(rclk);
+	}
+
+	virtual void post_sync_cmd(int64_t rclk, bool can_sync) {
+		/* Relaxing this sync to run in parallel with the remote
+		   speeds up simulation significantly but allows us to skew off
+		   time (in theory). The added inaccuracy is not really observable
+		   to any side of the simulation though.  */
+		if (can_sync && m_qk.need_sync()) {
+			sync();
+		}
+	}
+
+	virtual void pre_wire_cmd(int64_t rclk, bool can_sync) {
+		account_time(rclk);
+		/* Always sync here. Peer is not waiting for a response so
+		 * it's a good time to achieve parallelism. We also don't
+		 * want to miss pin wiggeling events (by having multiple
+		 * changes merged into the same time slot when using
+		 * large quantums).
+		 */
+		if (can_sync) {
+			sync();
+		}
+	}
+
+	virtual void post_wire_cmd(int64_t rclk, bool can_sync) {
+		/*
+		 * Yield to make line-updates visible immediately.
+		 * Otherwise a line-update followed by a back-to-back
+		 * transaction that inspects the state of the line
+		 * may not reflect the update.
+		 */
+		if (can_sync) {
+			wait(SC_ZERO_TIME);
+		}
+	}
+
+	virtual void pre_memory_master_cmd(int64_t rclk, bool can_sync) {
+		account_time(rclk);
+		if (can_sync && m_qk.need_sync()) {
+			m_qk.sync();
+		}
+	}
+
+	// Limited access to quantum keeper.
+	virtual sc_core::sc_time get_current_time() {
+		return m_qk.get_current_time();
+	}
+
+	virtual sc_core::sc_time get_local_time() {
+		return m_qk.get_local_time();
+	}
+
+	virtual void set_local_time(sc_core::sc_time t) {
+		m_qk.set(t);
+	}
+
+	virtual void inc_local_time(sc_core::sc_time t) {
+		m_qk.inc(t);
+	}
+
+	virtual void reset(void) {
+		m_qk.reset();
+	}
+
+	virtual void sync(void) {
+		m_qk.sync();
+	}
+private:
+	tlm_utils::tlm_quantumkeeper m_qk;
+};
+
+remoteport_tlm_sync_loosely_timed remoteport_tlm_sync_loosely_timed_obj;
+Iremoteport_tlm_sync *remoteport_tlm_sync_loosely_timed_ptr =
+	dynamic_cast<Iremoteport_tlm_sync *>(&remoteport_tlm_sync_loosely_timed_obj);
+
 remoteport_packet::remoteport_packet(void)
 {
 	u8 = NULL;
@@ -73,13 +196,20 @@ void remoteport_packet::copy(remoteport_packet &pkt)
 
 remoteport_tlm::remoteport_tlm(sc_module_name name,
 			int fd,
-			const char *sk_descr)
+			const char *sk_descr,
+			Iremoteport_tlm_sync *sync)
 	: sc_module(name),
 	  rst("rst")
 {
 	this->fd = fd;
 	this->sk_descr = sk_descr;
 	this->rp_pkt_id = 0;
+
+	this->sync = sync;
+	if (!this->sync) {
+		// Default
+		this->sync = remoteport_tlm_sync_loosely_timed_ptr;
+	}
 
 	memset(devs, 0, sizeof devs);
 	memset(&peer, 0, sizeof peer);
@@ -158,18 +288,9 @@ void remoteport_tlm_dev::response_done(unsigned int index)
 	resp[index].used = false;
 }
 
-/* Convert an sc_time into int64 nanoseconds trying to avoid rounding errors.
-   Why make this easy when you don't have to?  */
 int64_t remoteport_tlm::rp_map_time(sc_time t)
 {
-	sc_time tr, tmp;
-	double dtr;
-
-	tr = sc_get_time_resolution();
-	dtr = tr.to_seconds() * 1000 * 1000 * 1000;
-
-	tmp = t * dtr;
-	return tmp.value();
+	return sync->map_time(t);
 }
 
 void remoteport_tlm::tie_off(void)
@@ -228,35 +349,6 @@ void remoteport_tlm::rp_cmd_hello(struct rp_pkt &pkt)
 	}
 }
 
-void remoteport_tlm::account_time(int64_t rclk)
-{
-	int64_t lclk;
-	int64_t delta_ns;
-	sc_time delta;
-
-	lclk = rp_map_time(m_qk.get_current_time());
-	if (lclk >= rclk) {
-		/* lclk may have rounding errors due to conversions.
-                 * To avoid deadlocks, we never allow the delta to be zero.
-                 */
-		delta_ns = 1;
-	} else {
-		delta_ns = rclk - lclk;
-	}
-
-	delta = sc_time((double) delta_ns, SC_NS);
-	assert(delta >= SC_ZERO_TIME);
-	if (delta > m_qk.get_global_quantum()) {
-		delta = m_qk.get_global_quantum();
-	}
-
-#if 0
-	cout << "account rclk=" << rclk << " current=" << m_qk.get_current_time() << " delta=" << delta << endl;
-#endif
-	m_qk.inc(delta);
-	return;
-}
-
 void remoteport_tlm::rp_say_hello(void)
 {
 	uint32_t caps[] = {
@@ -278,23 +370,15 @@ void remoteport_tlm::rp_cmd_sync(struct rp_pkt &pkt, bool can_sync)
         int64_t clk;
 	remoteport_packet pkt_tx;
 
-	account_time(pkt.sync.timestamp);
+	sync->pre_sync_cmd(pkt.sync.timestamp, can_sync);
 
-	clk = rp_map_time(m_qk.get_current_time());
+	clk = sync->map_time(sync->get_current_time());
 	plen = rp_encode_sync_resp(pkt.hdr.id,
 				   pkt.hdr.dev, &pkt_tx.pkt->sync,
 				   clk);
 	rp_write(pkt_tx.pkt, plen);
 
-	/* Relaxing this sync to run in parallel with the remote
-	   speeds up simulation significantly but allows us to skew off
-	   time (in theory). The added inaccuracy is not really observable
-	   to any side of the simulation though.  */
-	if (can_sync && m_qk.need_sync()) {
-		m_qk.sync();
-	}
-//	cout << "sync done " << m_qk.get_current_time() << endl;
-
+	sync->post_sync_cmd(pkt.sync.timestamp, can_sync);
 }
 
 bool remoteport_tlm::rp_process(bool can_sync)
@@ -338,6 +422,7 @@ bool remoteport_tlm::rp_process(bool can_sync)
 		}
 
 //		printf("%s: cmd=%d dev=%d\n", __func__, pkt_rx.pkt->hdr.cmd, pkt_rx.pkt->hdr.dev);
+		sync->pre_any_cmd(&pkt_rx, can_sync);
 		switch (pkt_rx.pkt->hdr.cmd) {
 		case RP_CMD_hello:
 			rp_cmd_hello(*pkt_rx.pkt);
@@ -361,11 +446,7 @@ bool remoteport_tlm::rp_process(bool can_sync)
 			assert(0);
 			break;
 		}
-		/* We've just processed peer packets and it is
-		   likely running freely. Good spot for a local sync.  */
-		if (can_sync) {
-			m_qk.sync();
-		}
+		sync->post_any_cmd(&pkt_rx, can_sync);
 	}
 	return false;
 }
@@ -392,7 +473,7 @@ void remoteport_tlm::process(void)
 		}
 	}
 
-	m_qk.reset();
+	sync->reset();
 	wait(rst.negedge_event());
 
 	rp_say_hello();
@@ -400,6 +481,6 @@ void remoteport_tlm::process(void)
 	while (1) {
 		rp_process(true);
 	}
-	m_qk.sync();
+	sync->sync();
 	return;
 }

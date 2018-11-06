@@ -54,8 +54,9 @@ xilinx_emio_bank::xilinx_emio_bank(const char *name_in, const char *name_out,
     return;
 }
 
-xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr)
-	: remoteport_tlm(name, -1, sk_descr),
+xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
+				Iremoteport_tlm_sync *sync)
+	: remoteport_tlm(name, -1, sk_descr, sync),
 	  rp_axi_hpm0_fpd("rp_axi_hpm0_fpd"),
 	  rp_axi_hpm1_fpd("rp_axi_hpm1_fpd"),
 	  rp_axi_hpm_lpd("rp_axi_hpm_lpd"),

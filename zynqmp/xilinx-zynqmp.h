@@ -143,7 +143,8 @@ public:
 	 */
 	sc_vector<sc_signal<bool> > pl_resetn;
 
-	xilinx_zynqmp(sc_core::sc_module_name name, const char *sk_descr);
+	xilinx_zynqmp(sc_core::sc_module_name name, const char *sk_descr,
+			Iremoteport_tlm_sync *sync = NULL);
 	~xilinx_zynqmp(void);
 	void tie_off(void);
 };

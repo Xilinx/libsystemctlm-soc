@@ -38,8 +38,9 @@ using namespace std;
 #include "xilinx-zynq.h"
 #include <sys/types.h>
 
-xilinx_zynq::xilinx_zynq(sc_module_name name, const char *sk_descr)
-	: remoteport_tlm(name, -1, sk_descr),
+xilinx_zynq::xilinx_zynq(sc_module_name name, const char *sk_descr,
+			Iremoteport_tlm_sync *sync)
+	: remoteport_tlm(name, -1, sk_descr, sync),
 	  rp_m_axi_gp0("rp_m_axi_gp0"),
 	  rp_m_axi_gp1("rp_m_axi_gp1"),
 	  rp_s_axi_gp0("rp_s_axi_gp0"),

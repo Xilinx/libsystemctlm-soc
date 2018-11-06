@@ -1,7 +1,7 @@
 /*
  * TLM remoteport glue
  *
- * Copyright (c) 2013 Xilinx Inc
+ * Copyright (c) 2013-2018 Xilinx Inc
  * Written by Edgar E. Iglesias
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -94,6 +94,47 @@ public:
 	virtual void tie_off(void) {} ;
 };
 
+class Iremoteport_tlm_sync
+{
+public:
+	Iremoteport_tlm_sync() {};
+
+	// Convert an sc_time into int64 nanoseconds trying to avoid rounding errors.
+	// This should be good enough as a default implemetation for most synchronizers.
+	virtual int64_t map_time(sc_time t) {
+		sc_time tr, tmp;
+		double dtr;
+
+		tr = sc_get_time_resolution();
+		dtr = tr.to_seconds() * 1000 * 1000 * 1000;
+
+		tmp = t * dtr;
+		return tmp.value();
+	}
+
+	// Limited direct access to quantum keeper.
+	virtual sc_core::sc_time get_current_time() = 0;
+	virtual sc_core::sc_time get_local_time() = 0;
+
+	virtual void set_local_time(sc_core::sc_time t) = 0;
+	virtual void inc_local_time(sc_core::sc_time t) = 0;
+	virtual void sync(void) = 0;
+	virtual void reset(void) = 0;
+
+	// Account peer time through some implementation specific quantum keeper.
+	virtual void account_time(int64_t rclk) = 0;
+
+	// Optional remote-port hooks.
+	virtual void pre_any_cmd(remoteport_packet *pkt, bool can_sync) { }
+	virtual void post_any_cmd(remoteport_packet *pkt, bool can_sync) { }
+	virtual void pre_sync_cmd(int64_t rclk, bool can_sync) { }
+	virtual void post_sync_cmd(int64_t rclk, bool can_sync) { }
+	virtual void pre_wire_cmd(int64_t rclk, bool can_sync) { }
+	virtual void post_wire_cmd(int64_t rclk, bool can_sync) { }
+	virtual void pre_memory_master_cmd(int64_t rclk, bool can_sync) { }
+	virtual void post_memory_master_cmd(int64_t rclk, bool can_sync) { }
+};
+
 #define RP_MAX_DEVS 512
 
 class remoteport_tlm
@@ -105,7 +146,8 @@ public:
 	SC_HAS_PROCESS(remoteport_tlm);
         remoteport_tlm(sc_core::sc_module_name name,
 			int fd,
-			const char *sk_descr);
+			const char *sk_descr,
+			Iremoteport_tlm_sync *sync = NULL);
 
 	void register_dev(unsigned int dev_id, remoteport_tlm_dev *dev);
 	virtual void tie_off(void);
@@ -113,6 +155,7 @@ public:
 	/* Public to devs.  */
 	struct rp_peer_state peer;
 	uint32_t rp_pkt_id;
+	Iremoteport_tlm_sync *sync;
 
 	bool rp_process(bool sync);
 	ssize_t rp_read(void *rbuf, size_t count);
@@ -122,8 +165,6 @@ public:
 	// Returns true if the current SC_THREAD is the remote-port
 	// thread for this adaptor.
 	bool current_process_is_adaptor(void);
-
-	tlm_utils::tlm_quantumkeeper m_qk;
 
 private:
 	remoteport_tlm_dev *devs[RP_MAX_DEVS];
@@ -139,3 +180,6 @@ private:
 	void rp_cmd_sync(struct rp_pkt &pkt, bool can_sync);
 	void process(void);
 };
+
+// Pre-defined sync objects.
+extern Iremoteport_tlm_sync *remoteport_tlm_sync_loosely_timed_ptr;

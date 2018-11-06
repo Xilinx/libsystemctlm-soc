@@ -98,5 +98,6 @@ public:
 	/* FPGA out resets.  */
 	sc_vector<sc_signal<bool> > ps2pl_rst;
 
-	xilinx_zynq(sc_core::sc_module_name name, const char *sk_descr);
+	xilinx_zynq(sc_core::sc_module_name name, const char *sk_descr,
+			Iremoteport_tlm_sync *sync = NULL);
 };

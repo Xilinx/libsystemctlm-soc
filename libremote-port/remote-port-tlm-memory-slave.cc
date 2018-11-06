@@ -1,7 +1,7 @@
 /*
  * System-C TLM-2.0 remoteport memory mapped master port.
  *
- * Copyright (c) 2016 Xilinx Inc
+ * Copyright (c) 2016-2018 Xilinx Inc
  * Written by Edgar E. Iglesias
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -105,7 +105,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	}
 
 	pkt_tx.alloc(sizeof pkt_tx.pkt->busaccess + len);
-	in.clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
+	in.clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
 
 	in.cmd = cmd == tlm::TLM_READ_COMMAND ? RP_CMD_read : RP_CMD_write;
 	in.id = adaptor->rp_pkt_id++;

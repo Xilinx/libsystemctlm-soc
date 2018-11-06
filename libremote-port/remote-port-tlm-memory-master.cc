@@ -1,7 +1,7 @@
 /*
  * System-C TLM-2.0 remoteport memory mapped master port.
  *
- * Copyright (c) 2016 Xilinx Inc
+ * Copyright (c) 2016-2018 Xilinx Inc
  * Written by Edgar E. Iglesias
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -56,12 +56,8 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	sc_time delay;
 	genattr_extension *genattr;
 
-	adaptor->account_time(pkt.sync.timestamp);
-	if (can_sync && adaptor->m_qk.need_sync()) {
-		adaptor->m_qk.sync();
-	}
-
-	delay = adaptor->m_qk.get_local_time();
+	adaptor->sync->pre_memory_master_cmd(pkt.sync.timestamp, can_sync);
+	delay = adaptor->sync->get_local_time();
 	assert(pkt.busaccess.width == 0);
 
 	tr.set_command(cmd);
@@ -84,7 +80,7 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 		/* Handle errors.  */
 		printf("bus error\n");
 	}
-	adaptor->m_qk.set(delay);
+	adaptor->sync->set_local_time(delay);
 
 	tr.release_extension(genattr);
 	return delay;
@@ -116,6 +112,7 @@ void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
 				   &pkt_tx.pkt->busaccess_ext_base,
 				   &in);
 	adaptor->rp_write(pkt_tx.pkt, plen);
+	adaptor->sync->post_memory_master_cmd(pkt.sync.timestamp, can_sync);
 }
 
 void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
@@ -139,6 +136,7 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 				   &in);
 	adaptor->rp_write(pkt_tx.pkt, plen);
 	assert(plen <= sizeof pkt_tx.pkt->busaccess_ext_base);
+	adaptor->sync->post_memory_master_cmd(pkt.sync.timestamp, can_sync);
 }
 
 void remoteport_tlm_memory_master::tie_off(void)

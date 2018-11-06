@@ -1,7 +1,7 @@
 /*
  * System-C TLM-2.0 remoteport wires.
  *
- * Copyright (c) 2016 Xilinx Inc
+ * Copyright (c) 2016-2018 Xilinx Inc
  * Written by Edgar E. Iglesias
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -77,31 +77,14 @@ void remoteport_tlm_wires::cmd_interrupt(struct rp_pkt &pkt, bool can_sync)
 {
 	struct rp_pkt lpkt = pkt;
 
-	adaptor->account_time(pkt.sync.timestamp);
-	/* Always sync here. Peer is not waiting for a response so
-	 * it's a good time to achieve parallelism. We also don't
-	 * want to miss pin wiggeling events (by having multiple
-	 * changes merged into the same time slot when using
-	 * large quantums).
-	 */
-	if (can_sync) {
-		adaptor->m_qk.sync();
-	}
+	adaptor->sync->pre_wire_cmd(pkt.sync.timestamp, can_sync);
 
 	assert(lpkt.hdr.dev == dev_id);
 //	printf("wires_out[%d]=%d\n", lpkt.interrupt.line,lpkt.interrupt.val);
 	assert(lpkt.interrupt.line < cfg.nr_wires_out);
 	wires_out[lpkt.interrupt.line].write(lpkt.interrupt.val);
 
-	/*
-	 * Yield to make line-updates visible immediately.
-	 * Otherwise a line-update followed by a back-to-back
-	 * transaction that inspects the state of the line
-	 * may not reflect the update.
-	 */
-	if (can_sync) {
-		wait(SC_ZERO_TIME);
-	}
+	adaptor->sync->post_wire_cmd(pkt.sync.timestamp, can_sync);
 }
 
 void remoteport_tlm_wires::wire_update(void)
@@ -113,7 +96,7 @@ void remoteport_tlm_wires::wire_update(void)
 
 	pkt_tx.alloc(sizeof pkt_tx.pkt->interrupt);
 
-        clk = adaptor->rp_map_time(adaptor->m_qk.get_current_time());
+        clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
         for (i = 0; i < cfg.nr_wires_in; i++) {
                 if (wires_in[i].event()) {
                         bool val = wires_in[i].read();
