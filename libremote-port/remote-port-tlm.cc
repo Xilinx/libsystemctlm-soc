@@ -44,10 +44,10 @@ extern "C" {
 using namespace sc_core;
 using namespace std;
 
-class remoteport_tlm_sync_loosely_timed : public Iremoteport_tlm_sync
+class remoteport_tlm_sync_untimed : public Iremoteport_tlm_sync
 {
 public:
-	remoteport_tlm_sync_loosely_timed() {
+	remoteport_tlm_sync_untimed() {
 		reset();
 	};
 
@@ -77,6 +77,68 @@ public:
 #endif
 		inc_local_time(delta);
 	}
+
+	virtual void pre_any_cmd(remoteport_packet *pkt, bool can_sync) {
+		time_start = get_current_time();
+	}
+
+	virtual void pre_sync_cmd(int64_t rclk, bool can_sync) {
+		account_time(rclk);
+	}
+
+	virtual void post_any_cmd(remoteport_packet *pkt, bool can_sync) {
+		sc_time time_end = get_current_time();
+
+		// We need to advance time with something to avoid dead-locks.
+		// For an RTL only co-sim environment, we want a low value since
+		// this increment is pointless. But for a TLM target that consumes
+		// no time in b_transport, we need to advance time with something.
+		if (time_start == time_end) {
+			inc_local_time(sc_time(1, SC_NS));
+		}
+
+		if (can_sync) {
+			sync();
+		}
+	}
+
+	// Limited access to quantum keeper.
+	virtual sc_core::sc_time get_current_time() {
+		return m_qk.get_current_time();
+	}
+
+	virtual sc_core::sc_time get_local_time() {
+		return m_qk.get_local_time();
+	}
+
+	virtual void set_local_time(sc_core::sc_time t) {
+		m_qk.set(t);
+	}
+
+	virtual void inc_local_time(sc_core::sc_time t) {
+		m_qk.inc(t);
+	}
+
+	virtual void reset(void) {
+		m_qk.reset();
+	}
+
+	virtual void sync(void) {
+		m_qk.sync();
+	}
+
+protected:
+	tlm_utils::tlm_quantumkeeper m_qk;
+private:
+	sc_time time_start;
+};
+
+class remoteport_tlm_sync_loosely_timed : public remoteport_tlm_sync_untimed
+{
+public:
+	remoteport_tlm_sync_loosely_timed() {
+		reset();
+	};
 
 	virtual void pre_any_cmd(remoteport_packet *pkt, bool can_sync) {
 	}
@@ -134,38 +196,15 @@ public:
 			m_qk.sync();
 		}
 	}
-
-	// Limited access to quantum keeper.
-	virtual sc_core::sc_time get_current_time() {
-		return m_qk.get_current_time();
-	}
-
-	virtual sc_core::sc_time get_local_time() {
-		return m_qk.get_local_time();
-	}
-
-	virtual void set_local_time(sc_core::sc_time t) {
-		m_qk.set(t);
-	}
-
-	virtual void inc_local_time(sc_core::sc_time t) {
-		m_qk.inc(t);
-	}
-
-	virtual void reset(void) {
-		m_qk.reset();
-	}
-
-	virtual void sync(void) {
-		m_qk.sync();
-	}
-private:
-	tlm_utils::tlm_quantumkeeper m_qk;
 };
 
 remoteport_tlm_sync_loosely_timed remoteport_tlm_sync_loosely_timed_obj;
+remoteport_tlm_sync_untimed remoteport_tlm_sync_untimed_obj;
+
 Iremoteport_tlm_sync *remoteport_tlm_sync_loosely_timed_ptr =
 	dynamic_cast<Iremoteport_tlm_sync *>(&remoteport_tlm_sync_loosely_timed_obj);
+Iremoteport_tlm_sync *remoteport_tlm_sync_untimed_ptr =
+	dynamic_cast<Iremoteport_tlm_sync *>(&remoteport_tlm_sync_untimed_obj);
 
 remoteport_packet::remoteport_packet(void)
 {

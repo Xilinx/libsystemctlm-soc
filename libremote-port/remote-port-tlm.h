@@ -183,3 +183,4 @@ private:
 
 // Pre-defined sync objects.
 extern Iremoteport_tlm_sync *remoteport_tlm_sync_loosely_timed_ptr;
+extern Iremoteport_tlm_sync *remoteport_tlm_sync_untimed_ptr;
