@@ -75,7 +75,13 @@ public:
 #if 0
 		cout << "account rclk=" << rclk << " current=" << m_qk.get_current_time() << " delta=" << delta << endl;
 #endif
-		inc_local_time(delta);
+
+		// Never allow the local time to go beyond the global quantum, cap it.
+		if (get_local_time() + delta >= m_qk.get_global_quantum()) {
+			set_local_time(m_qk.get_global_quantum());
+		} else {
+			inc_local_time(delta);
+		}
 	}
 
 	virtual void pre_any_cmd(remoteport_packet *pkt, bool can_sync) {
