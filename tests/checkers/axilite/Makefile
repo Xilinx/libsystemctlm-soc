@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2018 Xilinx Inc.
 # Written by Francisco Iglesias,
-#            Edgar E. Iglesias
+#            Edgar E. Iglesias.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,42 +21,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-include ../.config.mk
+-include ../../../.config.mk
+include ../../Rules.mk
 
-SUBDIRS_EXAMPLES += example-rtl-axi4
+CPPFLAGS += -I ../../../ -I ../../ -I ../ -I .
+CXXFLAGS += -O3 -g
 
-SUBDIRS += $(SUBDIRS_EXAMPLES)
-SUBDIRS += tlm-modules
-SUBDIRS += traffic-generators/config-parser/
-SUBDIRS += traffic-generators/axi/
-SUBDIRS += traffic-generators/axi/cp-tg/
-SUBDIRS += traffic-generators/axilite/
-SUBDIRS += checkers/axi
-SUBDIRS += checkers/axilite
+TARGETS += pc-axilite-handshake-test
+TARGETS += pc-axilite-stable-signals-test
+TARGETS += pc-axilite-responses-test
 
-PYTEST ?=py.test
-PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html
+################################################################################
 
-all: $(SUBDIRS)
+all: $(TARGETS)
 
-.PHONY: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) -C $@
+## Dep generation ##
+-include $(wildcard *-test.d)
 
-examples: $(SUBDIRS_EXAMPLES)
+.PRECIOUS: %-test.o
+%-test.o: %-test.cc
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-.PHONY: examples-run
-examples-run: examples
-	$(PYTEST) -s -m 'examples' $(PYTEST_ARGS)
+%-test: %-test.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-check: $(SUBDIRS)
-	$(PYTEST) $(PYTEST_ARGS)
-
-check-report: $(SUBDIRS)
-	$(PYTEST) $(PYTEST_HTML_ARGS) $(PYTEST_ARGS)
-	zip report.zip report.html `find . -name \*vcd`
-
-$(SUBDIRS:%=%-clean):
-	$(MAKE) -C $(@:-clean=) clean
-
-clean: $(SUBDIRS:%=%-clean)
+clean:
+	$(RM) $(TARGETS:%=%.o)
+	$(RM) $(TARGETS:%=%.d)
+	$(RM) $(TARGETS)
