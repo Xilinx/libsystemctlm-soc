@@ -38,8 +38,7 @@
 
 #define D(x)
 
-template
-<class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH>
+template <int ADDR_WIDTH, int DATA_WIDTH>
 class tlm2axilite_bridge
 : public sc_core::sc_module,
 	public tlm_aligner::IValidator
@@ -49,36 +48,36 @@ public:
 
 	SC_HAS_PROCESS(tlm2axilite_bridge);
 
-	sc_in<BOOL_TYPE> clk;
+	sc_in<bool> clk;
 
 	/* Write address channel.  */
-	sc_out<BOOL_TYPE> awvalid;
-	sc_in<BOOL_TYPE> awready;
-	sc_out<ADDR_TYPE<ADDR_WIDTH> > awaddr;
-	sc_out<DATA_TYPE<3> > awprot;
+	sc_out<bool> awvalid;
+	sc_in<bool> awready;
+	sc_out<sc_bv<ADDR_WIDTH> > awaddr;
+	sc_out<sc_bv<3> > awprot;
 
 	/* Write data channel.  */
-	sc_out<BOOL_TYPE> wvalid;
-	sc_in<BOOL_TYPE> wready;
-	sc_out<DATA_TYPE<DATA_WIDTH> > wdata;
-	sc_out<ADDR_TYPE<DATA_WIDTH/8> > wstrb;
+	sc_out<bool> wvalid;
+	sc_in<bool> wready;
+	sc_out<sc_bv<DATA_WIDTH> > wdata;
+	sc_out<sc_bv<DATA_WIDTH/8> > wstrb;
 
 	/* Write response channel.  */
-	sc_in<BOOL_TYPE> bvalid;
-	sc_out<BOOL_TYPE> bready;
-	sc_in<DATA_TYPE<2> > bresp;
+	sc_in<bool> bvalid;
+	sc_out<bool> bready;
+	sc_in<sc_bv<2> > bresp;
 
 	/* Read address channel.  */
-	sc_out<BOOL_TYPE> arvalid;
-	sc_in<BOOL_TYPE> arready;
-	sc_out<ADDR_TYPE<ADDR_WIDTH> > araddr;
-	sc_out<DATA_TYPE<3> > arprot;
+	sc_out<bool> arvalid;
+	sc_in<bool> arready;
+	sc_out<sc_bv<ADDR_WIDTH> > araddr;
+	sc_out<sc_bv<3> > arprot;
 
 	/* Read data channel.  */
-	sc_in<BOOL_TYPE> rvalid;
-	sc_out<BOOL_TYPE> rready;
-	sc_in<DATA_TYPE<DATA_WIDTH> > rdata;
-	sc_in<ADDR_TYPE<2> > rresp;
+	sc_in<bool> rvalid;
+	sc_out<bool> rready;
+	sc_in<sc_bv<DATA_WIDTH> > rdata;
+	sc_in<sc_bv<2> > rresp;
 
 	tlm2axilite_bridge(sc_core::sc_module_name name,
 				bool aligner_enable=true) :
