@@ -31,6 +31,7 @@ SUBDIRS += traffic-generators/config-parser/
 SUBDIRS += traffic-generators/axi/
 SUBDIRS += traffic-generators/axi/cp-tg/
 SUBDIRS += traffic-generators/axilite/
+SUBDIRS += traffic-generators/axilite/cp-tg/
 SUBDIRS += checkers/axi
 SUBDIRS += checkers/axilite
 
