@@ -129,3 +129,102 @@ The AXI-to-TLM follows the AXI transaction ordering rules. It processes
 transactions with the same transaction id or with overlapping addresses
 in order. This is achieved by only executing one TLM transaction at a
 time for transactions requiring to be kept ordered.
+
+TLM to AXI4Lite
+---------------
+The TLM to AXI4Lite bridge is the AXI4Lite equivalent of the TLM to AXI
+bridge and implements translation of TLM Generic Payloads into AXI4Lite
+transactions and signaling. TLM initiators can through b_transport issue
+generic payloads into the bridge which are translated to AXI4Lite
+signaling and transactions and forwarded to AXI4Lite slaves. The AXI4Lite
+responses to these transactions are translated back into the generic
+payloads as TLM response statuses. Generic payloads that are to large to
+be placed into one AXI4Lite transaction are divided into several AXI4Lite
+transactions. The responses to these transactions are then merged and
+translated into one TLM response status propagated back in the generic
+payload. If the generic payload contains an attached TLM Generic
+Attributes extensions the TLM to AXI4Lite bridge also translates
+compatible attributes (as for example access permissions) into the
+AXI4Lite transaction and signaling.
+
+                     .---------------.
+  TLM target socket | TLM-2-AXI4Lite |
+  <---------------->|  Bridge        |
+     b_transport()  '----------------'
+                         /|\
+                          | AXI4Lite Master port
+                          |
+                          |      AXI4Lite Slave port .----------------.
+                           `------------------------>| AXI4Lite Slave |
+                                                     |________________|
+
+Timing
+------
+If the generic payload transaction is already anottated with a delay when
+entering the TLM to AXI4Lite bridge, the anottated delay will be waited
+for and set to zero before starting the AXI4Lite signal wiggling for the
+translated transaction.
+
+Multiple Outstanding transactions
+---------------------------------
+Similar to the TLM to AXI bridge, the TLM to AXI4Lite bridge is internally
+structured in a pipeline where the different phases of AXI4Lite
+transactions are decoupled. And as in the case of the TLM to AXI bridge
+the TLM to AXI4Lite bridge's slave port's b_transport() can be called by
+multiple threads simultaneously. A multithreaded TLM initiator is able to
+generate multiple outstanding transactions and also fill all the pipeline
+stages by calling b_transport simultanously from several threads.
+
+AXI4Lite to TLM
+---------------
+The AXI4Lite to TLM bridge translates AXI4Lite transactions into TLM
+Generic Payloads. It acts as an AXI4Lite slave on the AXI4Lite side and as
+a TLM initiator on the TLM side. AXI4Lite transactions received on the
+AXI4Lite slave port are translated into TLM Generic Payloads that are
+thereafter forwaded to TLM targets through the bridge's TLM initiator
+socket with b_transport.  Translated AXI4Lite protocol details (as access
+permissions) are placed in a TLM Generic Attributes extension attached to
+the generic payloads. After performing the TLM transaction the AXI4Lite to
+TLM bridge translates the generic payload's response status into the
+AXI4Lite response that is propagated back to the AXI4Lite master.
+
+                             .----------------.
+                             | AXI4Lite-2-TLM |   TLM target socket
+                             |  Bridge        |<-------------->
+                             '----------------'    b_transport()
+                                  /|\
+                                   | AXI4Lite Slave port
+                                   |
+  .-----------------.              ¦
+  | AXI4Lite Master |<-------------+
+  |_________________| AXI4Lite master port
+
+
+Timing
+------
+The generic payload transaction may be anottated with a delay at the TLM
+target. The AXI4Lite to TLM bridge models this delay by waiting on it
+before generating an AXI4Lite response for the AXI4Lite transaction to the
+master.
+
+Multiple Outstanding transactions
+---------------------------------
+The AXI4Lite to TLM bridge is internally structured in a pipeline similar
+to the AXI to TLM bridge. This pipeline decouples the different phases of
+an AXI4Lite transaction and by doing this the bridge is able to support
+multiple outstanding transactions on the AXI4Lite side (holding
+transactions in a fifo when necessary). On the TLM side transactions are
+issued in the order the corresponding AXI4Lite transactions where
+received, one at a time in one of bridge's pipelining stages (due to the
+reason that AXI4Lite does not support transactions IDs). If a TLM target
+annotates the generic payload with a delay, the delay is modeled by
+waiting for it in the bridge before wiggling of the AXI4Lite response
+signals to the master starts.
+
+Transaction Ordering
+--------------------
+Since the AXI4Lite protocol does not support transaction IDs all
+transactions are expected to be excuted in order. The AXI4Lite to TLM
+bridge achieves this by issuing translated TLM transactions and AXI4Lite
+responses in the order the corresponding AXI4Lite transactions where
+received.
