@@ -47,7 +47,8 @@ SC_MODULE(TLMTrafficGenerator)
 
 	SC_HAS_PROCESS(TLMTrafficGenerator);
 	TLMTrafficGenerator(sc_core::sc_module_name name, int numThreads = 1) :
-		m_debug(false)
+		m_debug(false),
+		m_startDelay(SC_ZERO_TIME)
 	{
 		int i;
 
@@ -71,6 +72,11 @@ SC_MODULE(TLMTrafficGenerator)
 			m_tData[threadId].SetCallback(c);
 			m_tData[threadId].Proceed();
 		}
+	}
+
+	void setStartDelay(sc_time startDelay)
+	{
+		m_startDelay = startDelay;
 	}
 
 	template<typename T>
@@ -154,6 +160,8 @@ private:
 
 	void run()
 	{
+		wait(m_startDelay);
+
 		for (auto& td : m_tData) {
 			sc_spawn(sc_bind(&TLMTrafficGenerator::process,
 					this,
@@ -313,6 +321,7 @@ private:
 
 	std::vector<ThreadData> m_tData;
 	bool m_debug;
+	sc_time m_startDelay;
 };
 
 #endif /* TG_TLM_H_ */
