@@ -8,12 +8,15 @@ testnames_axi = ['./traffic-generators/axi/{0}'.format(i) for i in tg_axi_testna
 config_parser_test = ["./traffic-generators/config-parser/config-parser-test",
 "tp=./traffic-generators/config-parser/test_files/", "-p"]
 
-testnames_axi.append('./tlm-aligner/tlm-aligner-test')
 pc_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/checkers/axi/"), '*-test')
 pc_axi_tests = ['./checkers/axi/{0}'.format(i) for i in pc_axi_testnames]
 
 cp_tg_axi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 				"/traffic-generators/axi/cp-tg/"), '*-tg-test')
+
+tlm_modules_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/tlm-modules/"), '*-test')
+tests_tlm_modules = ['./tlm-modules/{0}'.format(i) for i in tlm_modules_tests]
 
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
@@ -34,3 +37,8 @@ def test_cp_tg_axi(filename):
 					"/traffic-generators/axi/cp-tg")
 	assert(subprocess.call([dir_path + "/" + filename,
 				dir_path + "/tests/*"]) == 0)
+
+@pytest.mark.parametrize("filename", tests_tlm_modules)
+def test_tlm_modules_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)

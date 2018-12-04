@@ -40,6 +40,7 @@ all: $(TARGETS)
 ## Dep generation ##
 -include $(ALL_OBJS:.o=.d)
 
+.PRECIOUS: $(OBJS_COMMON)
 tlm-aligner-test: $(TLM_ALIGNER_TEST_OBJS) $(OBJS_COMMON)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
