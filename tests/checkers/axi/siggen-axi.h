@@ -223,6 +223,20 @@ public:
 		SC_THREAD(run);
 	}
 
+	static std::string& GetMessageType()
+	{
+		static std::string msg_type;
+
+		return msg_type;
+	}
+
+	static void SetMessageType(std::string msg_type)
+	{
+		std::string& m_msg_type = GetMessageType();
+
+		m_msg_type = msg_type;
+	}
+
 	static bool& Error()
 	{
 		static bool error = false;
@@ -232,10 +246,10 @@ public:
 
 	static void error_handler(const sc_report& rep, const sc_actions& ac)
 	{
+		std::string& m_msg_type = GetMessageType();
 		std::string msg_type(rep.get_msg_type());
-		std::string read_tx_order(RD_TX_ERROR);
 
-		if (read_tx_order == msg_type) {
+		if (m_msg_type == msg_type) {
 			Error() = true;
 		} else {
 			sc_report_handler::default_handler(rep, ac);

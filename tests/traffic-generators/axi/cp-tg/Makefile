@@ -21,22 +21,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
--include ../../../.config.mk
-include ../../Rules.mk
+-include ../../../../.config.mk
+include ../../../Rules.mk
 
-CPPFLAGS += -I ../../ -I ../ -I . -I ../../../
+CPPFLAGS += -I . -I ../../../ -I ../../../../
 CXXFLAGS += -g
 
-CPPFLAGS += -I ../../../tlm-bridges/
-CPPFLAGS += -I ../../../traffic-generators/
-CPPFLAGS += -I ../../../traffic-generators/config-parser/
+CPPFLAGS += -I ../../../../tlm-bridges/
+CPPFLAGS += -I ../../../../traffic-generators/
+CPPFLAGS += -I ../../../../traffic-generators/config-parser/
 
-GEN_FLAGS=../gen-axi-tg-test-cflags.py
+GEN_FLAGS=../../gen-axi-tg-test-cflags.py
 
-CP_SRCS=$(wildcard ../../../traffic-generators/config-parser/*.cc)
+CP_SRCS=$(wildcard ../../../../traffic-generators/config-parser/*.cc)
 CP_OBJS=$(patsubst %.cc, %.o, $(CP_SRCS))
 
-OBJS_COMMON += ../../test-modules/memory.o
+OBJS_COMMON += ../../../test-modules/memory.o
 OBJS_COMMON += $(addprefix .obj_dir/, $(notdir $(CP_OBJS)))
 
 ALL_OBJS += $(OBJS_COMMON)
@@ -56,10 +56,10 @@ all: $(TARGETS)
 .obj_dir:
 	mkdir .obj_dir
 
-.obj_dir/%.o: ../../../traffic-generators/config-parser/%.cc .obj_dir
+.obj_dir/%.o: ../../../../traffic-generators/config-parser/%.cc .obj_dir
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-.PRECIOUS: %-tg-test.o
+.PRECIOUS: %-tg-test.o ../../../test-modules/memory.o
 axi4-aw32-dw32-idw8-cp-tg-test.o: axi-cp-tg-test.cc
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(shell $(GEN_FLAGS) $@) -c -o $@ $<
 

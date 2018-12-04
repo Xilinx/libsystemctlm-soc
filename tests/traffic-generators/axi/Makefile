@@ -21,15 +21,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
--include ../../.config.mk
-include ../Rules.mk
+-include ../../../.config.mk
+include ../../Rules.mk
 
-CPPFLAGS += -I ../../ -I ../ -I .
+CPPFLAGS += -I ../../../ -I ../../ -I .
 CXXFLAGS += -O3 -g
 
-GEN_FLAGS=./gen-axi-tg-test-cflags.py
+GEN_FLAGS=../gen-axi-tg-test-cflags.py
 
-OBJS_COMMON += ../test-modules/memory.o
+OBJS_COMMON += ../../test-modules/memory.o
 RAND_TG_TEST_OBJS += rand-tg-test.o
 ALL_OBJS += $(OBJS_COMMON) $(RAND_TG_TEST_OBJS)
 
@@ -92,7 +92,7 @@ all: $(TARGETS)
 -include $(wildcard *-axi-tg-test.d)
 -include $(wildcard *-rand-tg-test.d)
 
-.PRECIOUS: %-axi-tg-test.o
+.PRECIOUS: %-axi-tg-test.o $(OBJS_COMMON)
 %-axi-tg-test.o: axi-tg-test.cc
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(shell $(GEN_FLAGS) $@) -c -o $@ $<
 

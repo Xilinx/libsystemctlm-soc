@@ -26,11 +26,11 @@ include ../.config.mk
 SUBDIRS_EXAMPLES += example-rtl-axi4
 
 SUBDIRS += $(SUBDIRS_EXAMPLES)
-SUBDIRS += traffic-generators
 SUBDIRS += tlm-aligner
-SUBDIRS += checkers
 SUBDIRS += traffic-generators/config-parser/
-SUBDIRS += traffic-generators/cp-tg/
+SUBDIRS += traffic-generators/axi/
+SUBDIRS += traffic-generators/axi/cp-tg/
+SUBDIRS += checkers/axi
 
 PYTEST ?=py.test
 PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html

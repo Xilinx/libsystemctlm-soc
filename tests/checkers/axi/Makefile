@@ -21,13 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
--include ../../.config.mk
-include ../Rules.mk
+-include ../../../.config.mk
+include ../../Rules.mk
 
-CPPFLAGS += -I ../../ -I ../ -I .
+CPPFLAGS += -I ../../../ -I ../../ -I .
 CXXFLAGS += -O3 -g
 
-TARGETS += axi-pc-rd-order-test
+TARGETS += pc-axi-rd-order-test
 
 ################################################################################
 

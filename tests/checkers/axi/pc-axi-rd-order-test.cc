@@ -44,7 +44,7 @@ using namespace std;
 #include "test-modules/memory.h"
 #include "test-modules/signals-axi.h"
 #include "test-modules/utils.h"
-#include "signalgenerator.h"
+#include "siggen-axi.h"
 
 using namespace utils;
 
@@ -179,6 +179,8 @@ int sc_main(int argc, char *argv[])
 	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> siggen("sig-gen", version);
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);
+
+	siggen.SetMessageType(RD_TX_ERROR);
 
 	// Connect clk
 	checker.clk(clk);
