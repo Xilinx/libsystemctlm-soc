@@ -384,6 +384,20 @@ private:
 
 		bool IsLastBeat() { return m_beat == m_numBeats; }
 
+		bool IsExclusive() { return m_genattr.get_exclusive(); }
+		void SetExclusiveHandled()
+		{
+			genattr_extension *genattr;
+
+			m_gp.get_extension(genattr);
+
+			assert(genattr);
+
+			if (genattr) {
+				genattr->set_exclusive_handled(true);
+			}
+		}
+
 		sc_event& DoneEvent() { return m_done; }
 	private:
 		tlm::tlm_generic_payload& m_gp;
@@ -758,8 +772,11 @@ private:
 			//
 			if (resetn.read() == true) {
 				switch (rresp.read().to_uint64()) {
-				case AXI_OKAY:
 				case AXI_EXOKAY:
+					assert(tr->IsExclusive());
+					tr->SetExclusiveHandled();
+					// Fallthrough to set response
+				case AXI_OKAY:
 					trans->set_response_status(tlm::TLM_OK_RESPONSE);
 					break;
 				case AXI_DECERR:
@@ -867,8 +884,11 @@ private:
 
 			// Set TLM response
 			switch (bresp.read().to_uint64()) {
-			case AXI_OKAY:
 			case AXI_EXOKAY:
+				assert(tr->IsExclusive());
+				tr->SetExclusiveHandled();
+				// Fallthrough to set response
+			case AXI_OKAY:
 				trans.set_response_status(tlm::TLM_OK_RESPONSE);
 				break;
 			case AXI_DECERR:

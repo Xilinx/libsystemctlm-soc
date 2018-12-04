@@ -433,6 +433,11 @@ private:
 				return m_genattr->get_exclusive();
 		}
 
+		bool ExclusiveHandled()
+		{
+				return m_genattr->get_exclusive_handled();
+		}
+
 		bool IsLastBeat() { return m_beat == m_burstLen; }
 		bool Done() { return m_beat > m_burstLen; }
 
@@ -731,7 +736,7 @@ private:
 				break;
 			default:
 			case tlm::TLM_OK_RESPONSE:
-				if (rt->IsExclusive()) {
+				if (rt->IsExclusive() && rt->ExclusiveHandled()) {
 					rresp.write(AXI_EXOKAY);
 				} else {
 					rresp.write(AXI_OKAY);
@@ -922,7 +927,7 @@ private:
 				break;
 			default:
 			case tlm::TLM_OK_RESPONSE:
-				if (wt->IsExclusive()) {
+				if (wt->IsExclusive() && wt->ExclusiveHandled()) {
 					bresp.write(AXI_EXOKAY);
 				} else {
 					bresp.write(AXI_OKAY);

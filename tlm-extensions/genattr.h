@@ -116,6 +116,10 @@ private:
 	// system address map.
 	uint8_t region;
 
+	// For AMBA AXI this is set by a target slave if the transaction is
+	// exclusive and was processed as an exclusive transaction.
+	bool exclusive_handled;
+
 public:
 	PROP_GETSET_GEN(secure, bool, true);
 	PROP_GETSET_GEN(master_id, uint64_t, 0);
@@ -130,6 +134,7 @@ public:
 	PROP_GETSET_GEN(write_allocate, bool, false);
 	PROP_GETSET_GEN(qos, uint8_t, 0);
 	PROP_GETSET_GEN(region, uint8_t, 0);
+	PROP_GETSET_GEN(exclusive_handled, bool, false);
 
 	genattr_bus() {
 		set_secure();
@@ -145,6 +150,7 @@ public:
 		set_write_allocate();
 		set_qos();
 		set_region();
+		set_exclusive_handled();
 	}
 
 	// Compatibility layer for older versions and other frameworks.
@@ -180,6 +186,7 @@ public:
 		set_write_allocate(ext_genattr.get_write_allocate());
 		set_qos(ext_genattr.get_qos());
 		set_region(ext_genattr.get_region());
+		set_exclusive_handled(ext_genattr.get_exclusive_handled());
 	}
 
 	tlm::tlm_extension_base *clone(void) const
