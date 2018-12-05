@@ -1074,152 +1074,27 @@ public:
 	}
 
 private:
-	class HandshakeMonitor
+	template<typename PC>
+	class IAxLen
 	{
 	public:
-		HandshakeMonitor(std::string name,
-				sc_in<bool >& valid,
-				sc_in<bool >& ready,
-				uint64_t max_clks) :
-			m_name(name),
-			m_valid(valid),
-			m_ready(ready),
-			m_valid_wait(0),
-			m_ready_wait(0),
-			m_max_clks(max_clks)
+		IAxLen(PC& pc) :
+			m_pc(pc)
 		{}
 
-		bool run(bool inc_valid = false)
-		{
-			if (!m_valid.read()) {
-
-				if (inc_valid) {
-					// Waiting for valid and not for ready
-					inc_valid_w();
-				}
-
-				if (m_ready_wait) {
-					std::ostringstream msg;
-
-					msg << m_name << "valid toggled without"
-						<< " waiting for " << m_name
-						<< "ready!";
-
-					SC_REPORT_ERROR(AXI_HANDSHAKE_ERROR,
-							msg.str().c_str());
-				}
-
-			} else if (!m_ready.read()) {
-				// Valid == true, now waiting for ready only
-				inc_ready_w();
-			} else {
-				// Valid == true, ready == true
-				m_valid_wait = 0;
-				m_ready_wait = 0;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		void inc_valid_w()
-		{
-			m_valid_wait++;
-			if (m_valid_wait == m_max_clks) {
-				std::ostringstream msg;
-
-				msg << m_name << "valid hangup detected!";
-
-				SC_REPORT_ERROR(AXI_HANDSHAKE_ERROR,
-						msg.str().c_str());
-			}
-		}
-
-		void inc_ready_w()
-		{
-			m_ready_wait++;
-			if (m_ready_wait == m_max_clks) {
-				std::ostringstream msg;
-
-				msg << m_name << "ready hangup detected!";
-
-				SC_REPORT_ERROR(AXI_HANDSHAKE_ERROR,
-						msg.str().c_str());
-			}
-		}
-
+		uint32_t get_arlen() { return to_uint(m_pc.arlen); }
+		uint32_t get_awlen() { return to_uint(m_pc.awlen); }
+		bool get_wlast() { return m_pc.wlast.read(); }
 	private:
-		std::string m_name;
-
-		sc_in<bool >& m_valid;
-		sc_in<bool >& m_ready;
-
-		uint32_t m_valid_wait;
-		uint32_t m_ready_wait;
-		uint64_t m_max_clks;
+		PC& m_pc;
 	};
 
 	void axi_handshakes_check()
 	{
-		uint64_t max_clks = m_cfg.get_max_clks();
-		HandshakeMonitor ar_channel("ar", arvalid, arready, max_clks);
-		HandshakeMonitor rr_channel("r", rvalid, rready, max_clks);
-		HandshakeMonitor aw_channel("aw", awvalid, awready, max_clks);
-		HandshakeMonitor w_channel("w", wvalid, wready, max_clks);
-		HandshakeMonitor b_channel("b", bvalid, bready, max_clks);
-		int m_rt = 0;
-		int m_wd = 0;
-		int m_b = 0;
+		axi_handshakes_checker checker;
+		IAxLen<typename T::PCType> axlen(m_pc);
 
-		while (true) {
-			bool inc_rvalid = m_rt > 0;
-			bool inc_wvalid = m_wd > 0;
-			bool inc_bvalid = m_b > 0;
-
-			wait(clk.posedge_event());
-
-			//
-			// ar and rr channels
-			//
-			if (ar_channel.run()) {
-				//
-				// ar signals received, now expect num_beats rr
-				// handshakes
-				//
-				m_rt += to_uint(arlen) + 1;
-			}
-			if (rr_channel.run(inc_rvalid)) {
-				//
-				// rr signals received
-				//
-				m_rt--;
-			}
-
-			//
-			// aw, w and b channels
-			//
-			if (aw_channel.run()) {
-				//
-				// aw signals received, now expect num_beats wd
-				// handshakes
-				//
-				m_wd += to_uint(awlen) + 1;
-			}
-			if (w_channel.run(inc_wvalid)) {
-				m_wd--;
-				//
-				// All beats for one transaction done, now
-				// expect bvalid
-				//
-				if (wlast.read()) {
-					m_b++;
-				}
-			}
-			if (b_channel.run(inc_bvalid)) {
-				m_b--;
-			}
-		}
+		checker.run(m_pc, m_cfg, axlen);
 	}
 };
 
