@@ -32,17 +32,39 @@ protocol checker can be configured to also perform the following checks:
 	  considered and reported as a hangup if a given amount of clock cycles
 	 (default 200) pass before an expected signal has been detected.
 
-
 AXIPCConfig - Configuraring the protocol checker
 ------------------------------------------------
 The protocol checker is configured at construction with an AXIPCConfig. Through
 the AXIPCConfig the checks desired to be performed by the protocol checker are
 setup.
 
+AXILiteProtocolChecker
+----------------------
+The AXI4Lite protocol checker monitors AXI4Lite signaling and reports protocol
+errors detected on the signals. In the default mode (when no configuration of
+the protocol checker is done) it only monitors responses and generates an error
+report whenever an AXI4Lite error reply is detected. If given a configuration
+the protocol checker can be configured to also perform the following checks:
+
+	* Check that signals in any channel (AR, AW, R, B, W) are stable
+	  while valid is asserted but ready is low.
+
+	* Verifies that expected handshakes signals on the data an response
+	  channels are detected after receiving awvalid and arvalid. It is
+	  considered and reported as a hangup if a given amount of clock cycles
+	 (default 200) pass before an expected signal has been detected.
+
+AXILitePCConfig - Configuraring the protocol checker
+------------------------------------------------
+Similar to the AXI protocol checker the AXI4Lite protocol checker is configured
+at construction with an AXILitePCConfig. Through the AXILitePCConfig the checks
+desired to be performed by the protocol checker are setup.
+
 Error reports
 -------------
-The protocol checker reports errors using systemc's SC_REPORT_ERROR macro and
-errors can thus be caught/intercepted through systemc's error reporting API.
+The AXI and AXI4Lite protocol checkers report errors using systemc's
+SC_REPORT_ERROR macro and errors can thus be caught/intercepted through
+systemc's error reporting API.
 
 Example 1 - Default configuration
 ---------------------------------
@@ -113,6 +135,27 @@ AXIPCConfig checker_config()
 {
 	...
 	AXIProtocolChecker<32, 32> checker("checker", checker_config());
+	...
+}
+...
+
+Example 5 - Configuring the AXI4Lite protocol checker to perform all checks
+---------------------------------------------------------------------------
+The following example configures the protocol checker to perform all checks:
+
+...
+AXILitePCConfig checker_config()
+{
+	AXILitePCConfig cfg;
+
+	cfg.enable_all_checks();
+
+	return cfg;
+}
+...
+{
+	...
+	AXILiteProtocolChecker<32, 32> checker("checker", checker_config());
 	...
 }
 ...
