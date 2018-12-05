@@ -18,6 +18,10 @@ tlm_modules_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/tlm-modules/"), '*-test')
 tests_tlm_modules = ['./tlm-modules/{0}'.format(i) for i in tlm_modules_tests]
 
+tg_axilite_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/traffic-generators/axilite/"), '*-tg-test')
+tests_tg_axilite = ['./traffic-generators/axilite/{0}'.format(i) for i in tg_axilite_tests]
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -40,5 +44,10 @@ def test_cp_tg_axi(filename):
 
 @pytest.mark.parametrize("filename", tests_tlm_modules)
 def test_tlm_modules_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.parametrize("filename", tests_tg_axilite)
+def test_tg_axilite_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)

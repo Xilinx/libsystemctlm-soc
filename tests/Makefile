@@ -30,6 +30,7 @@ SUBDIRS += tlm-modules
 SUBDIRS += traffic-generators/config-parser/
 SUBDIRS += traffic-generators/axi/
 SUBDIRS += traffic-generators/axi/cp-tg/
+SUBDIRS += traffic-generators/axilite/
 SUBDIRS += checkers/axi
 
 PYTEST ?=py.test
