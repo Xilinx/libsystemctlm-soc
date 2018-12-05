@@ -41,7 +41,8 @@
 template <int ADDR_WIDTH, int DATA_WIDTH>
 class tlm2axilite_bridge
 : public sc_core::sc_module,
-	public tlm_aligner::IValidator
+	public tlm_aligner::IValidator,
+	public axi_common
 {
 public:
 	tlm_utils::simple_target_socket<tlm2axilite_bridge> tgt_socket;
@@ -49,6 +50,7 @@ public:
 	SC_HAS_PROCESS(tlm2axilite_bridge);
 
 	sc_in<bool> clk;
+	sc_in<bool> resetn;
 
 	/* Write address channel.  */
 	sc_out<bool> awvalid;
@@ -81,8 +83,12 @@ public:
 
 	tlm2axilite_bridge(sc_core::sc_module_name name,
 				bool aligner_enable=true) :
-		sc_module(name), tgt_socket("tgt-socket"),
+		sc_module(name),
+		axi_common(this),
+		tgt_socket("tgt-socket"),
+
 		clk("clk"),
+		resetn("resetn"),
 
 		awvalid("awvalid"),
 		awready("awready"),
@@ -137,6 +143,8 @@ public:
 		SC_THREAD(read_resp_phase);
 		SC_THREAD(write_data_phase);
 		SC_THREAD(write_resp_phase);
+
+		SC_THREAD(reset);
 	}
 
 	~tlm2axilite_bridge() {
@@ -247,10 +255,10 @@ private:
 		// Since we're going todo waits in order to wiggle the
 		// AXI signals, we need to eliminate the accumulated
 		// TLM delay.
-		wait(delay);
+		wait(delay, resetn.negedge_event());
 		delay = SC_ZERO_TIME;
 
-		if (Validate(tr)) {
+		if (resetn.read() && Validate(tr)) {
 			// Hand it over to the signal wiggling machinery.
 			if (trans.is_read()) {
 				rdTransFifo.write(&tr);
@@ -259,35 +267,43 @@ private:
 			}
 			// Wait until the transaction is done.
 			wait(tr.DoneEvent());
+		} else {
+			trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
 		}
 	}
 
-	void read_address_phase(Transaction *rt)
+	bool read_address_phase(Transaction *rt)
 	{
+		if (reset_asserted()) {
+			arvalid.write(false);
+			return false;
+		}
+
 		araddr.write(rt->GetAddress());
 		arprot.write(rt->GetAxProt());
 
 		arvalid.write(true);
 
-		do {
-			wait(clk.posedge_event());
-		} while (arready.read() == false);
+		wait_abort_on_reset(arready);
 
 		arvalid.write(false);
+
+		return resetn.read();
 	}
 
-	void write_address_phase(Transaction *wt)
+	bool write_address_phase(Transaction *wt)
 	{
+		if (reset_asserted()) {
+			awvalid.write(false);
+			return false;
+		}
+
 		awaddr.write(wt->GetAddress());
 		awprot.write(wt->GetAxProt());
 
 		awvalid.write(true);
 
-		do {
-			wait(clk.posedge_event());
-		} while (awready.read() == false);
-
-		awvalid.write(false);
+		return true;
 	}
 
 	void address_phase(sc_fifo<Transaction*> &transFifo)
@@ -296,13 +312,28 @@ private:
 			Transaction *tr = transFifo.read();
 			tlm::tlm_generic_payload& trans = tr->GetGP();
 
-			/* Send the address.  */
+			/* Send the address and pass on the transaction to the
+			 * next pipeline step if reset was not asserted.
+			 */
 			if (trans.is_read()) {
-				read_address_phase(tr);
-				rdResponses.write(tr);
+				if (read_address_phase(tr)) {
+					rdResponses.write(tr);
+				}
 			} else {
-				write_address_phase(tr);
-				wrDataFifo.write(tr);
+				if (write_address_phase(tr)) {
+					wrDataFifo.write(tr);
+					tr = NULL;
+					wait_abort_on_reset(awready);
+				}
+				awvalid.write(false);
+			}
+
+			/* Abort transaction if reset is asserted. */
+			if (reset_asserted()) {
+				if (tr) {
+					abort(tr);
+				}
+				wait_for_reset_release();
 			}
 		}
 	}
@@ -334,7 +365,11 @@ private:
 			while (len || tr == NULL) {
 				rready.write(true);
 
-				wait(clk.posedge_event());
+				wait(clk.posedge_event() | resetn.negedge_event());
+
+				if (reset_asserted()) {
+					break;
+				}
 
 				if (rvalid.read()) {
 					sc_bv<128> data128 = 0;
@@ -390,26 +425,34 @@ private:
 			}
 			rready.write(false);
 
-			// Set response
-			switch (rresp.read().to_uint64()) {
-			case AXI_OKAY:
-				trans->set_response_status(tlm::TLM_OK_RESPONSE);
-				break;
-			case AXI_DECERR:
-				D(printf("DECERR\n"));
-				trans->set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
-				break;
-			case AXI_SLVERR:
-				D(printf("SLVERR\n"));
-				trans->set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
-				break;
-			default:
-				SC_REPORT_ERROR(TLM2AXILITE_BRIDGE_MSG,
-					"Unexpected read response detected");
-				break;
-			}
+			//
+			// Translate the response and notify if not in reset.
+			//
+			if (resetn.read() == true) {
+				// Set response
+				switch (rresp.read().to_uint64()) {
+				case AXI_OKAY:
+					trans->set_response_status(tlm::TLM_OK_RESPONSE);
+					break;
+				case AXI_DECERR:
+					D(printf("DECERR\n"));
+					trans->set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+					break;
+				case AXI_SLVERR:
+					D(printf("SLVERR\n"));
+					trans->set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+					break;
+				default:
+					SC_REPORT_ERROR(TLM2AXILITE_BRIDGE_MSG,
+						"Unexpected read response detected");
+					break;
+				}
 
-			tr->DoneEvent().notify();
+				tr->DoneEvent().notify();
+			} else {
+				assert(tr == NULL);
+				wait_for_reset_release();
+			}
 		}
 	}
 
@@ -422,13 +465,19 @@ private:
 
 			prepare_wbeat(tr);
 
-			do {
-				wait(clk.posedge_event());
-			} while (wready.read() == false);
+			wait_abort_on_reset(wready);
 
 			wvalid.write(false);
 
-			wrResponses.write(tr);
+			//
+			// Pass the transaction to the next pipeline step if
+			// not in reset.
+			//
+			if (resetn.read() == true) {
+				wrResponses.write(tr);
+			} else {
+				wait_for_reset_release();
+			}
 		}
 	}
 
@@ -440,10 +489,14 @@ private:
 			Transaction *tr;
 
 			bready.write(true);
-			do {
-				wait(clk.posedge_event());
-			} while (bvalid.read() == false);
+
+			wait_abort_on_reset(bvalid);
 			bready.write(false);
+
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				continue;
+			}
 
 			tr = wrResponses.read();
 
@@ -531,6 +584,26 @@ private:
 		wstrb.write(strb);
 		wvalid.write(true);
 		return wlen;
+	}
+
+	void reset()
+	{
+		while(true) {
+
+			wait(resetn.negedge_event());
+
+			//
+			// Reset got asserted, abort all transactions
+			//
+
+			tlm2axi_clear_fifo(rdTransFifo);
+			tlm2axi_clear_fifo(wrTransFifo);
+
+			tlm2axi_clear_fifo(rdResponses);
+
+			tlm2axi_clear_fifo(wrDataFifo);
+			tlm2axi_clear_fifo(wrResponses);
+		}
 	}
 
 	sc_fifo<Transaction*> rdTransFifo;
