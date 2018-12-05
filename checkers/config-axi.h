@@ -165,7 +165,7 @@ public:
 	// considered and reported as a hangup if max_clks clock cycles pass
 	// before an expected signal has been detected.
 	//
-	void check_axi_handshakes(bool en = true, uint64_t max_clks = 0)
+	void check_axi_handshakes(bool en = true, uint64_t max_clks = 200)
 	{
 		m_check_handshakes = en;
 		m_max_clks = max_clks;
