@@ -597,13 +597,7 @@ private:
 
 		awvalid.write(true);
 
-		// Wait for awready but exit if reset is asserted
-		wait_abort_on_reset(awready);
-
-		awvalid.write(false);
-
-		// Return false if reset was asserted while waiting for awready
-		return resetn.read();
+		return true;
 	}
 
 	bool ValidateBurstWidth(uint32_t burst_width)
@@ -638,12 +632,17 @@ private:
 			} else {
 				if (write_address_phase(tr)) {
 					wrDataFifo.write(tr);
+					tr = NULL;
+					wait_abort_on_reset(awready);
 				}
+				awvalid.write(false);
 			}
 
 			/* Abort transaction if reset is asserted. */
 			if (reset_asserted()) {
-				abort(tr);
+				if (tr) {
+					abort(tr);
+				}
 				wait_for_reset_release();
 			}
 		}
