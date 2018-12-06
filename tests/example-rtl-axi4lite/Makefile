@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2018 Xilinx Inc.
 # Written by Francisco Iglesias,
-#            Edgar E. Iglesias
+#            Edgar E. Iglesias.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,44 +21,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-include ../.config.mk
+-include ../../.config.mk
+include ../Rules.mk
 
-SUBDIRS_EXAMPLES += example-rtl-axi4
-SUBDIRS_EXAMPLES += example-rtl-axi4lite
+VFLAGS=-Wno-fatal --pins-bv 2
 
-SUBDIRS += $(SUBDIRS_EXAMPLES)
-SUBDIRS += tlm-modules
-SUBDIRS += traffic-generators/config-parser/
-SUBDIRS += traffic-generators/axi/
-SUBDIRS += traffic-generators/axi/cp-tg/
-SUBDIRS += traffic-generators/axilite/
-SUBDIRS += traffic-generators/axilite/cp-tg/
-SUBDIRS += checkers/axi
-SUBDIRS += checkers/axilite
+CPPFLAGS += -I $(VOBJ_DIR)
+CPPFLAGS += -I $(VERILATOR_ROOT)/include
 
-PYTEST ?=py.test
-PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html
+CPPFLAGS += -I ../../ -I ../ -I .
+CXXFLAGS += -Wall -O3 -g
 
-all: $(SUBDIRS)
+AXILITE_DEV_V += axilite_dev.v
+AXILITE_DEV_H += $(VOBJ_DIR)/Vaxilite_dev.h
+AXILITE_DEV_LIB += $(VOBJ_DIR)/Vaxilite_dev__ALL.a
+EXAMPLE_RTL_AXI4LITE_OBJS += example-rtl-axi4lite.o $(VERILATED_O)
+ALL_OBJS += $(EXAMPLE_RTL_AXI4LITE_OBJS)
 
-.PHONY: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) -C $@
+TARGETS += example-rtl-axi4lite
 
-examples: $(SUBDIRS_EXAMPLES)
+################################################################################
 
-.PHONY: examples-run
-examples-run: examples
-	$(PYTEST) -s -m 'examples' $(PYTEST_ARGS)
+all: $(TARGETS)
 
-check: $(SUBDIRS)
-	$(PYTEST) $(PYTEST_ARGS)
+## Dep generation ##
+-include $(ALL_OBJS:.o=.d)
 
-check-report: $(SUBDIRS)
-	$(PYTEST) $(PYTEST_HTML_ARGS) $(PYTEST_ARGS)
-	zip report.zip report.html `find . -name \*vcd`
+$(EXAMPLE_RTL_AXI4LITE_OBJS): $(AXILITE_DEV_H)
 
-$(SUBDIRS:%=%-clean):
-	$(MAKE) -C $(@:-clean=) clean
+example-rtl-axi4lite: $(EXAMPLE_RTL_AXI4LITE_OBJS) $(AXILITE_DEV_LIB)
+	$(LINK.cc) $^ $(LDLIBS) -o $@
 
-clean: $(SUBDIRS:%=%-clean)
+clean:
+	$(RM) $(ALL_OBJS) $(ALL_OBJS:.o=.d)
+	$(RM) $(TARGETS:=.vcd)
+	$(RM) -r $(VOBJ_DIR)
+	$(RM) $(TARGETS)
