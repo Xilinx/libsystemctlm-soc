@@ -25,6 +25,7 @@ include ../.config.mk
 
 SUBDIRS_EXAMPLES += example-rtl-axi4
 SUBDIRS_EXAMPLES += example-rtl-axi4lite
+SUBDIRS_EXAMPLES += example-rtl-mixed
 
 SUBDIRS += $(SUBDIRS_EXAMPLES)
 SUBDIRS += tlm-modules

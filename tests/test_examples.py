@@ -5,7 +5,8 @@ import fnmatch
 import subprocess
 
 testnames = ['./example-rtl-axi4/example-rtl-axi4',
-	     './example-rtl-axi4lite/example-rtl-axi4lite']
+	     './example-rtl-axi4lite/example-rtl-axi4lite',
+	     './example-rtl-mixed/example-rtl-mixed']
 
 @pytest.mark.checker
 @pytest.mark.tg
