@@ -133,6 +133,7 @@ class name : public sc_core::sc_module
 		m_cfg(pc->Cfg()),			\
 		m_pc(*pc)
 
+#define CHECKER_AXI_ERROR "AXI Protocol Checker Error"
 #define AXI_HANDSHAKE_ERROR "axi_handshakes"
 
 class axi_handshakes_checker
@@ -289,5 +290,43 @@ private:
 		uint64_t m_max_clks;
 	};
 };
+
+template<typename SAMPLE_TYPE>
+class monitor_xchannel_stable
+{
+public:
+	template<typename PC>
+	void run(PC& pc, sc_in<bool > &valid, sc_in<bool > &ready)
+	{
+		while (true) {
+			SAMPLE_TYPE saved_ch, tmp_ch;
+
+			// Wait for rvalid and sample the rdata bus.
+			wait(valid.posedge_event());
+			saved_ch.sample_from(pc);
+
+			// Verify that data resp signals remain stable while master
+			// is unable to receive data.
+			while (ready == false) {
+				wait(pc.clk.posedge_event());
+
+				tmp_ch.sample_from(pc);
+				if (!saved_ch.cmp_eq_stable_valid_cycle_signals(tmp_ch)) {
+					char msg[256];
+
+					snprintf(msg, sizeof(msg), "%s valid/ready cycle unstable signals violation",
+						tmp_ch.get_name());
+					SC_REPORT_ERROR(CHECKER_AXI_ERROR, msg);
+				}
+			}
+		}
+	}
+};
+
+#define GEN_STABLE_MON(ch)									\
+	void monitor_ ## ch ## channel_stable(void) {						\
+		monitor_xchannel_stable<sample_ ## ch ##channel> mon;				\
+		mon.run(m_pc, ch ## valid, ch ## ready);					\
+	}
 
 #endif /* CHECKER_UTILS_H__ */

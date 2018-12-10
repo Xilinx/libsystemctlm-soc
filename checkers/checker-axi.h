@@ -36,7 +36,6 @@
 #include <sstream>
 #include <vector>
 
-#define CHECKER_AXI_ERROR "AXI Protocol Checker Error"
 #define RD_TX_ERROR "rd_tx"
 #define WR_TX_ERROR "wr_tx"
 #define ADDR_ALINGMENT_ERROR "addr_alignment"
@@ -255,38 +254,6 @@ private:
 
 		const char *get_name(void) { return "rchannel"; }
 	};
-
-	template<typename SAMPLE_TYPE>
-	void monitor_xchannel_stable(sc_in<bool > &valid, sc_in<bool > &ready)
-	{
-		while (true) {
-			SAMPLE_TYPE saved_ch, tmp_ch;
-
-			// Wait for rvalid and sample the rdata bus.
-			wait(valid.posedge_event());
-			saved_ch.sample_from(m_pc);
-
-			// Verify that data resp signals remain stable while master
-			// is unable to receive data.
-			while (ready == false) {
-				tmp_ch.sample_from(m_pc);
-				if (!saved_ch.cmp_eq_stable_valid_cycle_signals(tmp_ch)) {
-					char msg[256];
-
-					snprintf(msg, sizeof(msg), "%s valid/ready cycle unstable signals violation",
-						tmp_ch.get_name());
-					SC_REPORT_ERROR(CHECKER_AXI_ERROR, msg);
-				}
-
-				wait(clk.posedge_event());
-			}
-		}
-	}
-
-#define GEN_STABLE_MON(ch)									\
-	void monitor_ ## ch ## channel_stable(void) {						\
-		monitor_xchannel_stable<sample_ ## ch ##channel>(ch ## valid, ch ## ready);	\
-	}
 
 	GEN_STABLE_MON(aw)
 	GEN_STABLE_MON(ar)
