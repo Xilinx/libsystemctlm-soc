@@ -30,11 +30,14 @@ CXXFLAGS += -Wall -O3 -g
 OBJS_COMMON += ../test-modules/memory.o
 TLM_ALIGNER_TEST_OBJS += tlm-aligner-test.o
 TLM_EXMON_TEST_OBJS += tlm-exmon-test.o
+TLM_WRAP_EXPANDER_TEST_OBJS += tlm-wrap-expander-test.o
 ALL_OBJS += $(OBJS_COMMON) $(TLM_ALIGNER_TEST_OBJS)
 ALL_OBJS += $(TLM_EXMON_TEST_OBJS)
+ALL_OBJS += $(TLM_WRAP_EXPANDER_TEST_OBJS)
 
 TARGETS += tlm-aligner-test
 TARGETS += tlm-exmon-test
+TARGETS += tlm-wrap-expander-test
 
 ################################################################################
 
@@ -48,6 +51,9 @@ tlm-aligner-test: $(TLM_ALIGNER_TEST_OBJS) $(OBJS_COMMON)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 tlm-exmon-test: $(TLM_EXMON_TEST_OBJS) $(OBJS_COMMON)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+tlm-wrap-expander-test: $(TLM_WRAP_EXPANDER_TEST_OBJS) $(OBJS_COMMON)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:
