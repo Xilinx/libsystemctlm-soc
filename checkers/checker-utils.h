@@ -27,6 +27,7 @@
 
 #include <tlm-bridges/amba.h>
 #include "config-axi.h"
+#include "config-axilite.h"
 
 #define AXI_CHECKER(name)	\
 template<typename T>		\
@@ -134,6 +135,63 @@ class name : public sc_core::sc_module, public axi_common
 		ruser(pc->ruser),			\
 		rid(pc->rid),				\
 		rlast(pc->rlast),			\
+		m_cfg(pc->Cfg()),			\
+		m_pc(*pc)
+
+#define AXILITE_CHECKER(name)	\
+template<typename T>		\
+class name : public sc_core::sc_module, public axi_common
+
+#define AXILITE_CHECKER_CTOR(name)			\
+	sc_in<bool >& clk;				\
+	sc_in<bool >& resetn;				\
+	sc_in<bool >& awvalid;				\
+	sc_in<bool >& awready;				\
+	sc_in<sc_bv<T::ADDR_W> >& awaddr;		\
+	sc_in<sc_bv<3> >& awprot;			\
+	sc_in<bool >& wvalid;				\
+	sc_in<bool >& wready;				\
+	sc_in<sc_bv<T::DATA_W> >& wdata;		\
+	sc_in<sc_bv<T::DATA_W/8> >& wstrb;		\
+	sc_in<bool >& bvalid;				\
+	sc_in<bool >& bready;				\
+	sc_in<sc_bv<2> >& bresp;			\
+	sc_in<bool >& arvalid;				\
+	sc_in<bool >& arready;				\
+	sc_in<sc_bv<T::ADDR_W> >& araddr;		\
+	sc_in<sc_bv<3> >& arprot;			\
+	sc_in<bool >& rvalid;				\
+	sc_in<bool >& rready;				\
+	sc_in<sc_bv<T::DATA_W> >& rdata;		\
+	sc_in<sc_bv<2> >& rresp;			\
+	__AXILitePCConfig& m_cfg;			\
+	T& m_pc;					\
+							\
+	SC_HAS_PROCESS(name);				\
+	name(sc_core::sc_module_name name, T *pc) :	\
+		sc_module(name),			\
+		axi_common(pc),				\
+		clk(pc->clk),				\
+		resetn(pc->resetn),			\
+		awvalid(pc->awvalid),			\
+		awready(pc->awready),			\
+		awaddr(pc->awaddr),			\
+		awprot(pc->awprot),			\
+		wvalid(pc->wvalid),			\
+		wready(pc->wready),			\
+		wdata(pc->wdata),			\
+		wstrb(pc->wstrb),			\
+		bvalid(pc->bvalid),			\
+		bready(pc->bready),			\
+		bresp(pc->bresp),			\
+		arvalid(pc->arvalid),			\
+		arready(pc->arready),			\
+		araddr(pc->araddr),			\
+		arprot(pc->arprot),			\
+		rvalid(pc->rvalid),			\
+		rready(pc->rready),			\
+		rdata(pc->rdata),			\
+		rresp(pc->rresp),			\
 		m_cfg(pc->Cfg()),			\
 		m_pc(*pc)
 
