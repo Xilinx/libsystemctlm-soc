@@ -30,10 +30,11 @@
 
 #define AXI_CHECKER(name)	\
 template<typename T>		\
-class name : public sc_core::sc_module
+class name : public sc_core::sc_module, public axi_common
 
 #define AXI_CHECKER_CTOR(name)				\
 	sc_in<bool >& clk;				\
+	sc_in<bool >& resetn;				\
 	sc_in<bool >& awvalid;				\
 	sc_in<bool >& awready;				\
 	sc_in<sc_bv<T::ADDR_W> >& awaddr;		\
@@ -84,7 +85,10 @@ class name : public sc_core::sc_module
 							\
 	SC_HAS_PROCESS(name);				\
 	name(sc_core::sc_module_name name, T *pc) :	\
+		sc_module(name),			\
+		axi_common(pc),				\
 		clk(pc->clk),				\
+		resetn(pc->resetn),			\
 		awvalid(pc->awvalid),			\
 		awready(pc->awready),			\
 		awaddr(pc->awaddr),			\
@@ -136,9 +140,14 @@ class name : public sc_core::sc_module
 #define CHECKER_AXI_ERROR "AXI Protocol Checker Error"
 #define AXI_HANDSHAKE_ERROR "axi_handshakes"
 
-class axi_handshakes_checker
+class axi_handshakes_checker : public axi_common
 {
 public:
+	template<typename T>
+	axi_handshakes_checker(T *mod) :
+		axi_common(mod)
+	{}
+
 	template<typename PC, typename PCCFG, typename IAXLEN>
 	void run(PC& p, PCCFG& cfg, IAXLEN& axlen)
 	{
@@ -149,6 +158,7 @@ public:
 		HandshakeMonitor w_channel("w", p.wvalid, p.wready, m_max_clks);
 		HandshakeMonitor b_channel("b", p.bvalid, p.bready, m_max_clks);
 		sc_in<bool >& clk = p.clk;
+		sc_in<bool >& resetn = p.resetn;
 		uint32_t m_rt = 0;
 		uint32_t m_wd = 0;
 		uint32_t m_b = 0;
@@ -158,7 +168,20 @@ public:
 			bool inc_wvalid = m_wd > 0;
 			bool inc_bvalid = m_b > 0;
 
-			wait(clk.posedge_event());
+			wait(clk.posedge_event() | resetn.negedge_event());
+			if (reset_asserted()) {
+				ar_channel.restart();
+				rr_channel.restart();
+				aw_channel.restart();
+				w_channel.restart();
+				b_channel.restart();
+				m_rt = 0;
+				m_wd = 0;
+				m_b = 0;
+
+				wait_for_reset_release();
+				continue;
+			}
 
 			//
 			// ar and rr channels
@@ -244,8 +267,7 @@ private:
 				inc_ready_w();
 			} else {
 				// Valid == true, ready == true
-				m_valid_wait = 0;
-				m_ready_wait = 0;
+				restart();
 
 				return true;
 			}
@@ -279,6 +301,12 @@ private:
 			}
 		}
 
+		void restart()
+		{
+			m_valid_wait = 0;
+			m_ready_wait = 0;
+		}
+
 	private:
 		std::string m_name;
 
@@ -292,23 +320,40 @@ private:
 };
 
 template<typename SAMPLE_TYPE>
-class monitor_xchannel_stable
+class monitor_xchannel_stable : public axi_common
 {
 public:
+	template<typename T>
+	monitor_xchannel_stable(T *mod) :
+		axi_common(mod)
+	{}
+
 	template<typename PC>
 	void run(PC& pc, sc_in<bool > &valid, sc_in<bool > &ready)
 	{
+		sc_in<bool >& clk = pc.clk;
+		sc_in<bool >& resetn = pc.resetn;
+
 		while (true) {
 			SAMPLE_TYPE saved_ch, tmp_ch;
 
 			// Wait for rvalid and sample the rdata bus.
-			wait(valid.posedge_event());
+			wait(valid.posedge_event() | resetn.negedge_event());
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				continue;
+			}
+
 			saved_ch.sample_from(pc);
 
 			// Verify that data resp signals remain stable while master
 			// is unable to receive data.
 			while (ready == false) {
-				wait(pc.clk.posedge_event());
+				wait(clk.posedge_event() | resetn.negedge_event());
+				if (reset_asserted()) {
+					wait_for_reset_release();
+					break;
+				}
 
 				tmp_ch.sample_from(pc);
 				if (!saved_ch.cmp_eq_stable_valid_cycle_signals(tmp_ch)) {
@@ -325,7 +370,7 @@ public:
 
 #define GEN_STABLE_MON(ch)									\
 	void monitor_ ## ch ## channel_stable(void) {						\
-		monitor_xchannel_stable<sample_ ## ch ##channel> mon;				\
+		monitor_xchannel_stable<sample_ ## ch ##channel> mon(this);			\
 		mon.run(m_pc, ch ## valid, ch ## ready);					\
 	}
 

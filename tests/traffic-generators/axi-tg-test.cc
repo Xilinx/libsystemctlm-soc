@@ -359,6 +359,7 @@ int sc_main(int argc, char *argv[])
 
 	TLMTrafficGenerator gen("gen", 5);
 	sc_clock clk("clk", sc_time(20, SC_US));
+	sc_signal<bool> resetn("resetn", true);
 	memory mem("mem", sc_time(10, SC_NS), SZ_1K);
 
 	gen.enableDebug();
@@ -367,6 +368,11 @@ int sc_main(int argc, char *argv[])
 	tlm2axi_bridge.clk(clk);
 	axi2tlm_bridge.clk(clk);
 	checker.clk(clk);
+
+	// Connect reset
+	tlm2axi_bridge.resetn(resetn);
+	axi2tlm_bridge.resetn(resetn);
+	checker.resetn(resetn);
 
 	// Connect signals
 	signals.connect(tlm2axi_bridge);

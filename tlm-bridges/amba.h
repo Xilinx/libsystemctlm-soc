@@ -107,4 +107,62 @@ inline uint32_t to_uint(sc_in<bool>& port)
 	return port.read();
 }
 
+class axi_common
+{
+public:
+	template<typename T>
+	axi_common(T *mod) :
+		clk(mod->clk),
+		resetn(mod->resetn)
+	{}
+
+	void wait_for_reset_release()
+	{
+		do {
+			wait(clk.posedge_event());
+		} while (resetn.read() == false);
+	}
+
+	bool reset_asserted() { return resetn.read() == false; }
+
+	void wait_abort_on_reset(sc_in<bool>& sig)
+	{
+		do {
+			wait(clk.posedge_event() | resetn.negedge_event());
+		} while (sig.read() == false && resetn.read() == true);
+	}
+
+	template<typename T>
+	void tlm2axi_clear_fifo(sc_fifo<T*>& fifo)
+	{
+		while (fifo.num_available() > 0) {
+			T *tr = fifo.read();
+
+			abort(tr);
+		}
+	}
+
+	template<typename T>
+	void axi2tlm_clear_fifo(sc_fifo<T*>& fifo)
+	{
+		while (fifo.num_available() > 0) {
+			T *tr = fifo.read();
+			delete tr;
+		}
+	}
+
+	template<typename T>
+	void abort(T *tr)
+	{
+		tlm::tlm_generic_payload& trans = tr->GetGP();
+
+		trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+		tr->DoneEvent().notify();
+	}
+
+private:
+	sc_in<bool>& clk;
+	sc_in<bool>& resetn;
+};
+
 #endif

@@ -52,15 +52,20 @@ template
 	int BUSER_WIDTH = 2>
 class tlm2axi_bridge
 : public sc_core::sc_module,
-	public tlm_aligner::IValidator
+	public tlm_aligner::IValidator,
+	public axi_common
 {
 public:
 	tlm_utils::simple_target_socket<tlm2axi_bridge> tgt_socket;
 
 	tlm2axi_bridge(sc_core::sc_module_name name,
 			AXIVersion version = V_AXI4, bool aligner_enable=true) :
-		sc_module(name), tgt_socket("target-socket"),
+		sc_module(name),
+		axi_common(this),
+		tgt_socket("target-socket"),
+
 		clk("clk"),
+		resetn("resetn"),
 
 		awvalid("awvalid"),
 		awready("awready"),
@@ -147,6 +152,8 @@ public:
 		SC_THREAD(read_resp_phase);
 		SC_THREAD(write_data_phase);
 		SC_THREAD(write_resp_phase);
+
+		SC_THREAD(reset);
 	}
 
 	~tlm2axi_bridge() {
@@ -158,6 +165,7 @@ public:
 	SC_HAS_PROCESS(tlm2axi_bridge);
 
 	sc_in<bool> clk;
+	sc_in<bool> resetn;
 
 	/* Write address channel.  */
 	sc_out<bool > awvalid;
@@ -522,10 +530,11 @@ private:
 		// Since we're going todo waits in order to wiggle the
 		// AXI signals, we need to eliminate the accumulated
 		// TLM delay.
-		wait(delay);
+		wait(delay, resetn.negedge_event());
 		delay = SC_ZERO_TIME;
 
-		if (Validate(tr)) {
+		// Abort if reset got asserted.
+		if (resetn.read() && Validate(tr)) {
 			// Hand it over to the signal wiggling machinery.
 			if (trans.is_read()) {
 				rdTransFifo.write(&tr);
@@ -539,8 +548,13 @@ private:
 		}
 	}
 
-	void read_address_phase(Transaction *rt)
+	bool read_address_phase(Transaction *rt)
 	{
+		if (reset_asserted()) {
+			arvalid.write(false);
+			return false;
+		}
+
 		araddr.write(rt->GetAddress());
 		arprot.write(rt->GetAxProt());
 		arsize.write(rt->GetAxSize());
@@ -554,15 +568,22 @@ private:
 
 		arvalid.write(true);
 
-		do {
-			wait(clk.posedge_event());
-		} while (arready.read() == false);
+		// Wait for arready but exit if reset is asserted
+		wait_abort_on_reset(arready);
 
 		arvalid.write(false);
+
+		// Return false if reset was asserted while waiting for arready
+		return resetn.read();
 	}
 
-	void write_address_phase(Transaction *wt)
+	bool write_address_phase(Transaction *wt)
 	{
+		if (reset_asserted()) {
+			awvalid.write(false);
+			return false;
+		}
+
 		awaddr.write(wt->GetAddress());
 		awprot.write(wt->GetAxProt());
 		awsize.write(wt->GetAxSize());
@@ -576,11 +597,13 @@ private:
 
 		awvalid.write(true);
 
-		do {
-			wait(clk.posedge_event());
-		} while (awready.read() == false);
+		// Wait for awready but exit if reset is asserted
+		wait_abort_on_reset(awready);
 
 		awvalid.write(false);
+
+		// Return false if reset was asserted while waiting for awready
+		return resetn.read();
 	}
 
 	bool ValidateBurstWidth(uint32_t burst_width)
@@ -604,13 +627,24 @@ private:
 			Transaction *tr = transFifo.read();
 			tlm::tlm_generic_payload& trans = tr->GetGP();
 
-			/* Send the address.  */
+			/* Send the address and pass on the transaction to the
+			 * next pipeline step if reset was not asserted.
+			 */
 			if (trans.is_read()) {
-				read_address_phase(tr);
-				rdResponses.push_back(tr);
+				if (read_address_phase(tr)) {
+					rdResponses.push_back(tr);
+				}
+
 			} else {
-				write_address_phase(tr);
-				wrDataFifo.write(tr);
+				if (write_address_phase(tr)) {
+					wrDataFifo.write(tr);
+				}
+			}
+
+			/* Abort transaction if reset is asserted. */
+			if (reset_asserted()) {
+				abort(tr);
+				wait_for_reset_release();
 			}
 		}
 	}
@@ -642,7 +676,11 @@ private:
 			while (len || tr == NULL) {
 				rready.write(true);
 
-				wait(clk.posedge_event());
+				wait(clk.posedge_event() | resetn.negedge_event());
+
+				if (reset_asserted()) {
+					break;
+				}
 
 				if (rvalid.read()) {
 					sc_bv<128> data128 = 0;
@@ -716,23 +754,35 @@ private:
 			}
 			rready.write(false);
 
-			// Set response
-			switch (rresp.read().to_uint64()) {
-			case AXI_OKAY:
-			case AXI_EXOKAY:
-				trans->set_response_status(tlm::TLM_OK_RESPONSE);
-				break;
-			case AXI_DECERR:
-				D(printf("DECERR\n"));
-				trans->set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
-				break;
-			case AXI_SLVERR:
-				D(printf("SLVERR\n"));
-				trans->set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
-				break;
-			}
+			//
+			// Translate the response and notify if not in reset.
+			//
+			if (resetn.read() == true) {
+				switch (rresp.read().to_uint64()) {
+				case AXI_OKAY:
+				case AXI_EXOKAY:
+					trans->set_response_status(tlm::TLM_OK_RESPONSE);
+					break;
+				case AXI_DECERR:
+					D(printf("DECERR\n"));
+					trans->set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+					break;
+				case AXI_SLVERR:
+					D(printf("SLVERR\n"));
+					trans->set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+					break;
+				}
 
-			tr->DoneEvent().notify();
+				tr->DoneEvent().notify();
+			} else {
+				//
+				// Reset is asserted, abort the transaction.
+				//
+				if (tr) {
+					abort(tr);
+				}
+				wait_for_reset_release();
+			}
 		}
 	}
 
@@ -746,22 +796,40 @@ private:
 			unsigned int len = trans.get_data_length();
 			unsigned int pos = 0;
 
-			while (pos < len) {
-				pos += prepare_wbeat(tr, pos);
+			//
+			// Start the data transfer if not in reset.
+			//
+			if (resetn.read() == true) {
+				while (pos < len) {
+					pos += prepare_wbeat(tr, pos);
 
-				wlast.write(tr->IsLastBeat());
+					wlast.write(tr->IsLastBeat());
 
-				do {
-					wait(clk.posedge_event());
-				} while (wready.read() == false);
+					/* Wait for wready but abort if reset is asserted. */
+					wait_abort_on_reset(wready);
 
-				tr->IncBeat();
+					if (reset_asserted()) {
+						break;
+					}
+
+					tr->IncBeat();
+				}
 			}
 
 			wlast.write(false);
 			wvalid.write(false);
 
-			wrResponses.push_back(tr);
+			//
+			// Pass the transaction to the next pipeline step if
+			// not in reset.
+			//
+			if (resetn.read() == true) {
+				wrResponses.push_back(tr);
+			} else {
+				// In reset
+				abort(tr);
+				wait_for_reset_release();
+			}
 		}
 	}
 
@@ -774,10 +842,18 @@ private:
 			uint32_t bid_u32;
 
 			bready.write(true);
-			do {
-				wait(clk.posedge_event());
-			} while (bvalid.read() == false);
+
+			/* Wait for bvalid but abort if reset is asserted. */
+			wait_abort_on_reset(bvalid);
 			bready.write(false);
+
+			/* Reset is asserted. */
+			if (reset_asserted()) {
+				wait_for_reset_release();
+
+				/* Restart. */
+				continue;
+			}
 
 			bid_u32 = to_uint(bid);
 
@@ -807,6 +883,34 @@ private:
 			}
 
 			tr->DoneEvent().notify();
+		}
+	}
+
+	void reset()
+	{
+		while(true) {
+
+			wait(resetn.negedge_event());
+
+			//
+			// Reset got asserted, abort all transactions
+			//
+
+			tlm2axi_clear_fifo(rdTransFifo);
+
+			for (unsigned int i = 0; i < rdResponses.size(); i++) {
+				abort(rdResponses[i]);
+			}
+			rdResponses.clear();
+
+			tlm2axi_clear_fifo(wrTransFifo);
+
+			tlm2axi_clear_fifo(wrDataFifo);
+
+			for (unsigned int i = 0; i < wrResponses.size(); i++) {
+				abort(wrResponses[i]);
+			}
+			wrResponses.clear();
 		}
 	}
 

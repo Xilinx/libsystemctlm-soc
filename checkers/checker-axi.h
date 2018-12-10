@@ -374,6 +374,16 @@ private:
 		return NULL;
 	}
 
+	void ClearList(std::list<Transaction*>& l)
+	{
+		for (typename std::list<Transaction*>::iterator it = l.begin();
+			it != l.end(); it++) {
+			Transaction *t = (*it);
+			delete t;
+		}
+		l.clear();
+	}
+
 	Transaction *SampleARSignals()
 	{
 		return new Transaction(araddr.read().to_uint64(),
@@ -403,7 +413,13 @@ private:
 	void rd_check(void)
 	{
 		while (true) {
-			wait(clk.posedge_event());
+			wait(clk.posedge_event() | resetn.negedge_event());
+
+			if (reset_asserted()) {
+				ClearList(m_rtList);
+				wait_for_reset_release();
+				continue;
+			}
 
 			if (arvalid.read() && arready.read()) {
 				if (m_rtList.size() < m_cfg.max_depth()) {
@@ -762,10 +778,27 @@ private:
 		return resp == AXI_OKAY;
 	}
 
+	void ClearList(std::list<Transaction*>& l)
+	{
+		for (typename std::list<Transaction*>::iterator it = l.begin();
+			it != l.end(); it++) {
+			Transaction *t = (*it);
+			delete t;
+		}
+		l.clear();
+	}
+
 	void wr_check()
 	{
 		while (true) {
-			wait(clk.posedge_event());
+			wait(clk.posedge_event() | resetn.negedge_event());
+
+			if (reset_asserted()) {
+				ClearList(m_wtList);
+				ClearList(m_respList);
+				wait_for_reset_release();
+				continue;
+			}
 
 			if (awvalid.read() && awready.read()) {
 				if (m_wtList.size() < m_cfg.max_depth()) {
@@ -1015,7 +1048,12 @@ private:
 	void addr_alignment_check()
 	{
 		while (true) {
-			wait(clk.posedge_event());
+			wait(clk.posedge_event() | resetn.negedge_event());
+
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				continue;
+			}
 
 			if (arvalid.read() && arready.read()) {
 				check_rd_tx();
@@ -1058,7 +1096,7 @@ private:
 
 	void axi_handshakes_check()
 	{
-		axi_handshakes_checker checker;
+		axi_handshakes_checker checker(this);
 		IAxLen<typename T::PCType> axlen(m_pc);
 
 		checker.run(m_pc, m_cfg, axlen);

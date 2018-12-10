@@ -50,7 +50,9 @@ template
 	int WUSER_WIDTH = 2,
 	int RUSER_WIDTH = 2,
 	int BUSER_WIDTH = 2>
-class axi2tlm_bridge : public sc_core::sc_module
+class axi2tlm_bridge :
+	public sc_core::sc_module,
+	public axi_common
 {
 public:
 	tlm_utils::simple_initiator_socket<axi2tlm_bridge> socket;
@@ -58,6 +60,7 @@ public:
 	SC_HAS_PROCESS(axi2tlm_bridge);
 
 	sc_in<bool> clk;
+	sc_in<bool> resetn;
 
 	/* Write address channel.  */
 	sc_in<bool> awvalid;
@@ -117,8 +120,10 @@ public:
 	axi2tlm_bridge(sc_core::sc_module_name name,
 			AXIVersion version = V_AXI4) :
 		sc_module(name),
+		axi_common(this),
 
 		clk("clk"),
+		resetn("resetn"),
 
 		awvalid("awvalid"),
 		awready("awready"),
@@ -191,6 +196,8 @@ public:
 		SC_THREAD(write_address_phase);
 		SC_THREAD(write_data_phase);
 		SC_THREAD(write_resp_phase);
+
+		SC_THREAD(reset);
 	}
 
 private:
@@ -217,7 +224,9 @@ private:
 			m_alignedAddress(Align(address, numberBytes)),
 			m_beat(1),
 			m_dataIdx(0),
-			m_delay(SC_ZERO_TIME)
+			m_delay(SC_ZERO_TIME),
+			m_abortScheduled(false),
+			m_TLMOngoing(false)
 		{
 			uint32_t dataLen = GetDataLen(address,
 							m_alignedAddress,
@@ -482,6 +491,15 @@ private:
 			return (AxProt & AXI_PROT_NS) == AXI_PROT_NS;
 		}
 
+		void SetAbortScheduled() { m_abortScheduled = true; }
+		bool AbortScheduled() { return m_abortScheduled; }
+
+		void SetTLMOngoing(bool TLMOngoing = true)
+		{
+			m_TLMOngoing = TLMOngoing;
+		}
+		bool TLMOngoing() { return m_TLMOngoing; }
+
 	private:
 		tlm::tlm_generic_payload *m_gp;
 		genattr_extension *m_genattr;
@@ -491,6 +509,9 @@ private:
 		uint32_t m_beat;
 		uint32_t  m_dataIdx;
 		sc_time  m_delay;
+
+		bool m_abortScheduled;
+		bool m_TLMOngoing;
 	};
 
 	Transaction *GetFirstWithID(std::list<Transaction*> *list,
@@ -577,20 +598,56 @@ private:
 			sc_time delay(SC_ZERO_TIME);
 			tlm::tlm_generic_payload *m_gp = tr->GetTLMGenericPayload();
 
+			tr->SetTLMOngoing();
+
 			//
 			// Issue transactions with overlapping addresses in order [1]
 			//
-			while (OverlappingAddress(list, tr)) {
-				wait(clk.posedge_event());
+			while (OverlappingAddress(list, tr) && resetn.read()) {
+				wait(clk.posedge_event() | resetn.negedge_event());
 			}
 
+			if (reset_asserted()) {
+				break;
+			}
+
+			// Run the TLM transaction.
 			socket->b_transport(*m_gp, delay);
 
-			wait(delay);
+			//
+			// Exit if reset is asserted, if abort was scheduled
+			// run the loop once more in case another transaction
+			// has been added.
+			//
+			if (reset_asserted()) {
+				break;
+			} else if (tr->AbortScheduled()) {
+				list->remove(tr);
+				delete tr;
+				continue;
+			}
+
+			//
+			// Wait for annotated delay but abort if reset is
+			// asserted.
+			//
+			wait(delay, resetn.negedge_event());
+
+			if (reset_asserted()) {
+				break;
+			}
 
 			list->remove(tr);
 
 			fifo->write(tr);
+
+			tr->SetTLMOngoing(false);
+		}
+
+		if (reset_asserted() && tr) {
+			list->remove(tr);
+			delete tr;
+			wait_for_reset_release();
 		}
 	}
 
@@ -611,7 +668,12 @@ private:
 				arready.write(false);
 			}
 
-			wait(clk.posedge_event());
+			wait(clk.posedge_event() | resetn.negedge_event());
+
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				continue;
+			}
 
 			if (arvalid.read() && arready.read()) {
 				bool procesingTransId;
@@ -690,11 +752,14 @@ private:
 
 				rlast.write(rt->IsLastBeat());
 
-				// Wait for rready
-				do {
-					wait(clk.posedge_event());
-				} while (rready.read() == false);
+				// Wait for rready but abort if reset is asserted
+				wait_abort_on_reset(rready);
+
 				rvalid.write(false);
+
+				if (reset_asserted()) {
+					break;
+				}
 
 				rt->IncBeat();
 			}
@@ -702,7 +767,16 @@ private:
 			rlast.write(false);
 
 			delete rt;
-			m_numReadTransactions--;
+
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				//
+				// m_numReadTransactions will be set to zero in
+				// the reset thread
+				//
+			} else {
+				m_numReadTransactions--;
+			}
 		}
 	}
 
@@ -715,7 +789,12 @@ private:
 				awready.write(false);
 			}
 
-			wait(clk.posedge_event());
+			wait(clk.posedge_event() | resetn.negedge_event());
+
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				continue;
+			}
 
 			if (awvalid.read() && awready.read()) {
 				// Sample write address and control lines
@@ -754,11 +833,15 @@ private:
 				wait(m_awEvent);
 			}
 
-			// Wait for wvalid
 			wready.write(true);
-			do {
-				wait(clk.posedge_event());
-			} while (wvalid.read() == false);
+
+			// Wait for wvalid but abort if reset is asserted
+			wait_abort_on_reset(wvalid);
+
+			if (reset_asserted()) {
+				wait_for_reset_release();
+				continue;
+			}
 
 			if (m_version == V_AXI4) {
 				wt = wrDataList.front();
@@ -850,13 +933,69 @@ private:
 			bid.write(wt->GetTransactionID());
 
 			bvalid.write(true);
-			do {
-				wait(clk.posedge_event());
-			} while (bready.read() == false);
+
+			// Wait for bready but abort if reset is asserted
+			wait_abort_on_reset(bready);
+
 			bvalid.write(false);
 
 			delete wt;
-			m_numWriteTransactions--;
+
+			if (reset_asserted()) {
+				//
+				// m_numWriteTransactions is set to zero in the
+				// reset thread
+				//
+				wait_for_reset_release();
+			} else {
+				m_numWriteTransactions--;
+			}
+		}
+	}
+
+	void TLMListClear(std::list<Transaction*>& l)
+	{
+		// Schedule abort on transactions that are ongoing and abort
+		// all others
+		for (typename std::list<Transaction*>::iterator it = l.begin();
+			it != l.end();) {
+			Transaction *t = (*it);
+
+			if (t->TLMOngoing()) {
+				t->SetAbortScheduled();
+				it++;
+			} else {
+				it = l.erase(it);
+				delete t;
+			}
+		}
+	}
+
+	void reset()
+	{
+		while(true) {
+			wait(resetn.negedge_event());
+
+			//
+			// Reset got asserted, abort all transactions
+			//
+
+			axi2tlm_clear_fifo(rdDataFifo);
+
+			axi2tlm_clear_fifo(wrRespFifo);
+
+			for (typename std::list<Transaction*>::iterator it = wrDataList.begin();
+				it != wrDataList.end(); it++) {
+				Transaction *t = (*it);
+				delete t;
+			}
+			wrDataList.clear();
+
+			TLMListClear(rtList);
+			TLMListClear(wtList);
+
+			m_numReadTransactions = 0;
+			m_numWriteTransactions = 0;
 		}
 	}
 

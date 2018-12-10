@@ -41,6 +41,7 @@ class trace_axi : public sc_core::sc_module
 {
 public:
 	sc_in<bool > clk;
+	sc_in<bool > resetn;
 
 	/* Write address channel.  */
 	sc_in<bool > awvalid;
@@ -103,6 +104,7 @@ public:
 		sc_module(name),
 
 		clk("clk"),
+		resetn("resetn"),
 
 		awvalid("awvalid"),
 		awready("awready"),

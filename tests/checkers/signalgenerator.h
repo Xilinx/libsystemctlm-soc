@@ -102,6 +102,7 @@ public:
 			BUSER_WIDTH> SigGenT;
 
 	sc_in<bool> clk;
+	sc_in<bool> resetn;
 
 	/* Write address channel.  */
 	sc_out<bool> awvalid;
@@ -164,6 +165,7 @@ public:
 		sc_module(name),
 
 		clk("clk"),
+		resetn("resetn"),
 
 		awvalid("awvalid"),
 		awready("awready"),

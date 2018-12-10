@@ -91,13 +91,16 @@ SC_MODULE(Top)
 		dut("dut")
 	{
 		// Configure the Traffic generator.
+		tg.setStartDelay(sc_time(10, SC_US));
 		tg.enableDebug();
 		tg.addTransfers(transactions);
 		tg.socket.bind(bridge.tgt_socket);
 
 		// Wire up the clock and reset signals.
 		bridge.clk(clk);
+		bridge.resetn(rst_n);
 		checker.clk(clk);
+		checker.resetn(rst_n);
 		dut.s00_axi_aclk(clk);
 		dut.s00_axi_aresetn(rst_n);
 

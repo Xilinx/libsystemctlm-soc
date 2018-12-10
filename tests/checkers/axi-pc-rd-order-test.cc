@@ -178,10 +178,15 @@ int sc_main(int argc, char *argv[])
 	AXISignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> signals("axi-signals", version);
 	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> siggen("sig-gen", version);
 	sc_clock clk("clk", sc_time(20, SC_US));
+	sc_signal<bool> resetn("resetn", true);
 
 	// Connect clk
 	checker.clk(clk);
 	siggen.clk(clk);
+
+	// Connect reset
+	checker.resetn(resetn);
+	siggen.resetn(resetn);
 
 	// Connect signals
 	signals.connect(checker);

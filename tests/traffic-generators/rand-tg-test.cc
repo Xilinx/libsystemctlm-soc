@@ -87,6 +87,7 @@ int sc_main(int argc, char *argv[])
 	memory mem("mem", sc_time(10, SC_NS), RAM_SIZE);
 	memory ref_mem("ref-mem", sc_time(10, SC_NS), RAM_SIZE);
 	sc_clock clk("clk", sc_time(20, SC_US));
+	sc_signal<bool> resetn("resetn", true);
 	TLMTrafficGenerator gen("gen");
 	AXISignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 		AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
@@ -105,6 +106,12 @@ int sc_main(int argc, char *argv[])
 	axi2tlm_bridge.clk(clk);
 	checker(clk);
 	trace.clk(clk);
+
+	// Connect reset
+	tlm2axi_bridge.resetn(resetn);
+	axi2tlm_bridge.resetn(resetn);
+	checker.resetn(resetn);
+	trace.resetn(resetn);
 
 	// Connect signals
 	signals.connect(tlm2axi_bridge);
