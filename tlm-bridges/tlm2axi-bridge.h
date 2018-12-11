@@ -51,7 +51,8 @@ template
 	int RUSER_WIDTH = 2,
 	int BUSER_WIDTH = 2>
 class tlm2axi_bridge
-: public sc_core::sc_module
+: public sc_core::sc_module,
+	public tlm_aligner::IValidator
 {
 public:
 	tlm_utils::simple_target_socket<tlm2axi_bridge> tgt_socket;
@@ -386,6 +387,66 @@ private:
 	};
 
 	int prepare_wbeat(Transaction *tr, unsigned int offset);
+
+	bool validate(uint64_t t_addr,
+			unsigned int t_len,
+			unsigned int streaming_width)
+	{
+		bool valid_for_axi = true;
+		unsigned int bus_width_bytes = MIN(DATA_WIDTH / 8, streaming_width);
+		unsigned int num_beats;
+
+		num_beats = (t_len + bus_width_bytes - 1) / bus_width_bytes;
+
+		switch (num_beats) {
+		case 1: /* Not a burst.  */
+		case 2:
+		case 4:
+		case 8:
+		case 16:
+			break;
+		default:
+			valid_for_axi = false;
+		}
+		switch (bus_width_bytes) {
+		case 1:
+		case 2:
+		case 4:
+		case 8:
+		case 16:
+		case 32:
+		case 64:
+		case 128:
+			break;
+		default:
+			valid_for_axi = false;
+		}
+
+		if (streaming_width > bus_width_bytes) {
+			uint64_t wrapping_addr;
+
+			switch (streaming_width) {
+			case 2:
+			case 4:
+			case 8:
+			case 16:
+			case 32:
+			case 64:
+			case 128:
+				break;
+			default:
+				valid_for_axi = false;
+			}
+
+			/* Compute wrapping address.  Next pos aligned to t_len.*/
+			wrapping_addr = t_addr + t_len / t_len;
+			if (wrapping_addr - t_addr != streaming_width) {
+				valid_for_axi = false;
+			}
+		}
+
+		return valid_for_axi;
+	}
 
 	// Lookup a transaction in a vector. If found, return
 	// the pointer and remove it.

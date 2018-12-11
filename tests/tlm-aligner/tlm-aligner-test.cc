@@ -41,6 +41,8 @@ using namespace std;
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
 
+#include "tlm-bridges/tlm2axi-bridge.h"
+
 #include "tlm-modules/tlm-aligner.h"
 #include "tlm-modules/tlm-splitter.h"
 #include "traffic-generators/tg-tlm.h"
@@ -48,6 +50,7 @@ using namespace std;
 #include "traffic-generators/traffic-desc.h"
 #include "test-modules/memory.h"
 #include "test-modules/utils.h"
+#include "test-modules/signals-axi.h"
 
 using namespace utils;
 
@@ -68,7 +71,11 @@ public:
 		rand_xfers(0, ram_size - 1024, UINT64_MAX, 1, ram_size, ram_size, 1000),
 		splitter("splitter", true),
 		tg("tg", 1),
-		aligner("aligner", 64, 32, 4 * 1024, true),
+		bridge("tlm2axi-bridge"),
+		signals("signals-axi"),
+		clk("clk"),
+		rst_n("rst_n", true),
+		aligner("aligner", 64, 32, 4 * 1024, true, &bridge),
 		ram("ram", sc_time(1, SC_NS), ram_size),
 		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size)
 	{
@@ -86,6 +93,12 @@ public:
 
 		aligner.init_socket.bind(target_socket);
 		init_socket.bind(ram.socket);
+
+		// Dummy connections on the bridge
+		dummy_socket(bridge.tgt_socket);
+		bridge.clk(clk);
+		bridge.resetn(rst_n);
+		signals.connect(bridge);
 	}
 
 private:
@@ -96,6 +109,16 @@ private:
 	tlm_utils::simple_target_socket<Dut> target_socket;
 	tlm_splitter<2> splitter;
 	TLMTrafficGenerator tg;
+
+	// Run with the TLM to AXI bridge's validate function
+	tlm2axi_bridge<32, 32> bridge;
+
+	// Dummy connections for the bridge
+	tlm_utils::simple_initiator_socket<Dut> dummy_socket;
+	AXISignals<32, 32> signals;
+	sc_signal<bool> clk;
+	sc_signal<bool> rst_n;
+
 	tlm_aligner aligner;
 	memory ram;
 

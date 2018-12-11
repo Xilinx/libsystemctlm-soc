@@ -39,6 +39,14 @@
 class tlm_aligner : public sc_core::sc_module
 {
 public:
+	class IValidator
+	{
+	public:
+		virtual bool validate(uint64_t t_addr,
+					unsigned int t_len,
+					unsigned int streaming_width) = 0;
+	};
+
 	tlm_utils::simple_initiator_socket<tlm_aligner> init_socket;
 	tlm_utils::simple_target_socket<tlm_aligner> target_socket;
 
@@ -46,11 +54,13 @@ public:
 			uint32_t bus_width,
 			uint64_t max_len = 256 * 1024,
 			uint64_t max_address_boundary = 4 * 1024,
-			bool do_natural_alignment = false) :
+			bool do_natural_alignment = false,
+			IValidator *validator = NULL) :
 		bus_width(bus_width),
 		max_len(max_len),
 		max_address_boundary(max_address_boundary),
-		do_natural_alignment(do_natural_alignment)
+		do_natural_alignment(do_natural_alignment),
+		m_validator(validator)
 	{
 		target_socket.register_b_transport(this, &tlm_aligner::b_transport);
 	}
@@ -66,6 +76,7 @@ private:
 	// 4K addressing boundary in AXI.
 	uint64_t max_address_boundary;
 	bool do_natural_alignment;
+	IValidator *m_validator;
 
 	uint64_t compute_natural_alignment(uint64_t addr)
 	{
@@ -151,64 +162,12 @@ private:
 				t_len = MIN(t_len, streaming_width - (pos % streaming_width));
 				gp.set_streaming_width(t_len);
 			} else if (streaming_width != len) {
-				bool valid_for_axi = true;
-				unsigned int bus_width_bytes = MIN(bus_width / 8, streaming_width);
-				unsigned int num_beats;
-
-				num_beats = (t_len + bus_width_bytes - 1) / bus_width_bytes;
-
-				D(printf("beats %d t_len=%d bwidth=%d swidth=%d\n", num_beats, t_len,
-					bus_width_bytes, streaming_width));
-				switch (num_beats) {
-				case 1: /* Not a burst.  */
-				case 2:
-				case 4:
-				case 8:
-				case 16:
-					break;
-				default:
-					valid_for_axi = false;
-				}
-				switch (bus_width_bytes) {
-				case 1:
-				case 2:
-				case 4:
-				case 8:
-				case 16:
-				case 32:
-				case 64:
-				case 128:
-					break;
-				default:
-					valid_for_axi = false;
-				}
-
-				if (streaming_width > bus_width_bytes) {
-					uint64_t wrapping_addr;
-
-					switch (streaming_width) {
-					case 2:
-					case 4:
-					case 8:
-					case 16:
-					case 32:
-					case 64:
-					case 128:
-						break;
-					default:
-						valid_for_axi = false;
-					}
-
-					/* Compute wrapping address.  Next pos aligned to t_len.*/
-					wrapping_addr = t_addr + t_len / t_len;
-					if (wrapping_addr - t_addr != streaming_width) {
-						valid_for_axi = false;
-					}
-				}
-
-				if (valid_for_axi) {
+				if (m_validator &&
+					m_validator->validate(t_addr, t_len, streaming_width)) {
 					gp.set_streaming_width(streaming_width);
 				} else {
+					unsigned int bus_width_bytes = MIN(bus_width / 8, streaming_width);
+
 					// Chop up into multiple beats.
 					t_len = MIN(t_len, bus_width_bytes);
 					gp.set_streaming_width(t_len);
