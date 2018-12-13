@@ -226,7 +226,7 @@ public:
 			bool inc_wvalid = m_wd > 0;
 			bool inc_bvalid = m_b > 0;
 
-			wait(clk.posedge_event() | resetn.negedge_event());
+			sc_core::wait(clk.posedge_event() | resetn.negedge_event());
 			if (reset_asserted()) {
 				ar_channel.restart();
 				rr_channel.restart();
@@ -396,7 +396,7 @@ public:
 			SAMPLE_TYPE saved_ch, tmp_ch;
 
 			// Wait for rvalid and sample the rdata bus.
-			wait(valid.posedge_event() | resetn.negedge_event());
+			sc_core::wait(valid.posedge_event() | resetn.negedge_event());
 			if (reset_asserted()) {
 				wait_for_reset_release();
 				continue;
@@ -407,7 +407,7 @@ public:
 			// Verify that data resp signals remain stable while master
 			// is unable to receive data.
 			while (ready == false) {
-				wait(clk.posedge_event() | resetn.negedge_event());
+				sc_core::wait(clk.posedge_event() | resetn.negedge_event());
 				if (reset_asserted()) {
 					wait_for_reset_release();
 					break;

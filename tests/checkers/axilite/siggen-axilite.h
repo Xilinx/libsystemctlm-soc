@@ -200,6 +200,9 @@ public:							\
 	sc_out<sc_bv<2> >& rresp;			\
 	T *m_s;						\
 							\
+	template<typename EVENT>			\
+	void wait(EVENT& e) { sc_core::wait(e); }	\
+							\
 	name(T *s) :					\
 		clk(s->clk),				\
 		awvalid(s->awvalid),			\

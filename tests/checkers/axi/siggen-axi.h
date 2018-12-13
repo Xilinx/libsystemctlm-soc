@@ -378,6 +378,9 @@ public:							\
 	sc_out<bool>& rlast;				\
 	T *m_s;						\
 							\
+	template<typename EVENT>			\
+	void wait(EVENT& e) { sc_core::wait(e); }	\
+							\
 	name(T *s) :					\
 		clk(s->clk),				\
 		awvalid(s->awvalid),			\

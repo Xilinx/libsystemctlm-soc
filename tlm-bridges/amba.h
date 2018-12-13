@@ -119,7 +119,7 @@ public:
 	void wait_for_reset_release()
 	{
 		do {
-			wait(clk.posedge_event());
+			sc_core::wait(clk.posedge_event());
 		} while (resetn.read() == false);
 	}
 
@@ -128,7 +128,7 @@ public:
 	void wait_abort_on_reset(sc_in<bool>& sig)
 	{
 		do {
-			wait(clk.posedge_event() | resetn.negedge_event());
+			sc_core::wait(clk.posedge_event() | resetn.negedge_event());
 		} while (sig.read() == false && resetn.read() == true);
 	}
 
