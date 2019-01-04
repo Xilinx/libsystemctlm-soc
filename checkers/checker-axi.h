@@ -1103,4 +1103,23 @@ private:
 	}
 };
 
+AXI_CHECKER(check_axi_reset)
+{
+public:
+	AXI_CHECKER_CTOR(check_axi_reset)
+	{
+		if (m_cfg.en_reset_check()) {
+			SC_THREAD(axi_reset_check);
+		}
+	}
+
+private:
+	void axi_reset_check()
+	{
+		axi_reset_checker checker(this);
+
+		checker.run();
+	}
+};
+
 #endif

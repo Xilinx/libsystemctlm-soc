@@ -30,6 +30,7 @@ CXXFLAGS += -O3 -g
 TARGETS += pc-axilite-handshake-test
 TARGETS += pc-axilite-stable-signals-test
 TARGETS += pc-axilite-responses-test
+TARGETS += pc-axilite-reset-test
 
 ################################################################################
 

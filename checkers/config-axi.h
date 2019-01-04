@@ -41,6 +41,7 @@ public:
 		m_valid_axlen(false),
 		m_addr_align(false),
 		m_check_handshakes(false),
+		m_reset_check(false),
 		m_max_clks(200),
 		m_en_disp_all(false),
 		m_max_depth(64),
@@ -62,6 +63,9 @@ public:
 	bool en_addr_align_check() { return m_addr_align; }
 
 	bool en_handshakes_check() { return m_check_handshakes; }
+
+	bool en_reset_check() { return m_reset_check; }
+
 	uint64_t get_max_clks() { return m_max_clks; }
 
 	enum { MAX_AxSIZE = 7 }; // 1 << MAX_AxSIZE = 128 bytes
@@ -89,6 +93,8 @@ protected:
 	bool m_addr_align;
 
 	bool m_check_handshakes;
+	bool m_reset_check;
+
 	uint64_t m_max_clks;
 
 	// Dump configuration
@@ -172,6 +178,15 @@ public:
 	}
 
 	//
+	// Verify that arvalid, rvalid, awvalid, wvalid and bvalid are
+	// deasserted the first cycle after reset has been released.
+	//
+	void check_axi_reset(bool en = true)
+	{
+		m_reset_check = en;
+	}
+
+	//
 	// Enables all checks.
 	//
 	void enable_all_checks()
@@ -186,6 +201,7 @@ public:
 		m_valid_axlen = true;
 		m_addr_align = true;
 		m_check_handshakes = true;
+		m_reset_check = true;
 	}
 
 	//

@@ -104,7 +104,8 @@ public:
 		m_cfg(*reinterpret_cast<__AXILitePCConfig*>(&cfg)),
 		m_checker_axilite_stable("checker-axilite-stable", this),
 		m_check_axilite_responses("check-axilite-responses", this),
-		m_check_axilite_handshakes("check-axilite-handshakes", this)
+		m_check_axilite_handshakes("check-axilite-reset", this),
+		m_check_axilite_reset("check-axilite-reset", this)
 	{}
 
 	__AXILitePCConfig& Cfg() { return m_cfg; }
@@ -116,6 +117,7 @@ private:
 	checker_axilite_stable<PCType> m_checker_axilite_stable;
 	check_axilite_responses<PCType> m_check_axilite_responses;
 	check_axilite_handshakes<PCType> m_check_axilite_handshakes;
+	check_axilite_reset<PCType> m_check_axilite_reset;
 };
 
 #endif /* PC_AXILITE_H__ */

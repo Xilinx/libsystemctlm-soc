@@ -30,6 +30,7 @@ CXXFLAGS += -O3 -g
 TARGETS += pc-axi-rd-order-test
 TARGETS += pc-axi-handshake-test
 TARGETS += pc-axi-stable-signals-test
+TARGETS += pc-axi-reset-test
 
 ################################################################################
 

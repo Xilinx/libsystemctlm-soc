@@ -185,7 +185,8 @@ public:
 		m_check_rd_tx("check-rd-tx", this),
 		m_check_wr_tx("check-wr-tx", this),
 		m_check_addr_alignment("check-addr-alignment", this),
-		m_check_axi_handshakes("check-axi-handshakes", this)
+		m_check_axi_handshakes("check-axi-handshakes", this),
+		m_check_axi_reset("check-axi-reset", this)
 	{}
 
 	AXIVersion GetVersion() { return m_cfg.get_axi_version(); }
@@ -273,6 +274,7 @@ private:
 	check_wr_tx<PCType> m_check_wr_tx;
 	check_addr_alignment<PCType> m_check_addr_alignment;
 	check_axi_handshakes<PCType> m_check_axi_handshakes;
+	check_axi_reset<PCType> m_check_axi_reset;
 };
 
 #endif /* PC_AXI_H__ */

@@ -197,6 +197,7 @@ class name : public sc_core::sc_module, public axi_common
 
 #define CHECKER_AXI_ERROR "AXI Protocol Checker Error"
 #define AXI_HANDSHAKE_ERROR "axi_handshakes"
+#define AXI_RESET_ERROR "axi_reset"
 
 class axi_handshakes_checker : public axi_common
 {
@@ -431,5 +432,58 @@ public:
 		monitor_xchannel_stable<sample_ ## ch ##channel> mon(this);			\
 		mon.run(m_pc, ch ## valid, ch ## ready);					\
 	}
+
+
+class axi_reset_checker : public axi_common
+{
+public:
+	template<typename T>
+	axi_reset_checker(T *mod) :
+		axi_common(mod),
+		resetn(mod->resetn),
+		arvalid(mod->arvalid),
+		rvalid(mod->rvalid),
+		awvalid(mod->awvalid),
+		wvalid(mod->wvalid),
+		bvalid(mod->bvalid)
+	{}
+
+	void run()
+	{
+		while (true) {
+
+			sc_core::wait(resetn.negedge_event());
+
+			wait_for_reset_release();
+
+			check_valid(arvalid, "ar");
+			check_valid(rvalid, "r");
+
+			check_valid(awvalid, "aw");
+			check_valid(wvalid, "w");
+			check_valid(bvalid, "b");
+		}
+	}
+
+private:
+	void check_valid(sc_in<bool>& valid, std::string prefix)
+	{
+		if (valid.read() != false) {
+			std::ostringstream msg;
+
+			msg << prefix <<
+				"valid asserted after at reset release!";
+
+			SC_REPORT_ERROR(AXI_RESET_ERROR, msg.str().c_str());
+		}
+	}
+
+	sc_in<bool >& resetn;
+	sc_in<bool >& arvalid;
+	sc_in<bool >& rvalid;
+	sc_in<bool >& awvalid;
+	sc_in<bool >& wvalid;
+	sc_in<bool >& bvalid;
+};
 
 #endif /* CHECKER_UTILS_H__ */

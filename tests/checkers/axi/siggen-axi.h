@@ -102,7 +102,7 @@ public:
 			BUSER_WIDTH> SigGenT;
 
 	sc_in<bool> clk;
-	sc_in<bool> resetn;
+	sc_out<bool> resetn;
 
 	/* Write address channel.  */
 	sc_out<bool> awvalid;
@@ -331,6 +331,7 @@ class name
 #define SIGGEN_TESTSUITE_CTOR(name)			\
 public:							\
 	sc_in<bool>& clk;				\
+	sc_out<bool>& resetn;				\
 	sc_out<bool>& awvalid;				\
 	sc_out<bool>& awready;				\
 	sc_out<sc_bv<T::ADDR_W> >& awaddr;		\
@@ -383,6 +384,7 @@ public:							\
 							\
 	name(T *s) :					\
 		clk(s->clk),				\
+		resetn(s->resetn),			\
 		awvalid(s->awvalid),			\
 		awready(s->awready),			\
 		awaddr(s->awaddr),			\

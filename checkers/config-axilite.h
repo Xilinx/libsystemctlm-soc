@@ -34,6 +34,7 @@ public:
 		m_mon_data_resp(false),
 		m_resp_check(true),
 		m_check_handshakes(false),
+		m_reset_check(false),
 		m_max_clks(200),
 		m_max_depth(64)
 	{}
@@ -41,6 +42,7 @@ public:
 	bool en_stable_data_resp_check() { return m_mon_data_resp; }
 
 	bool en_resp_check() { return m_resp_check; }
+	bool en_reset_check() { return m_reset_check; }
 
 	bool en_handshakes_check() { return m_check_handshakes; }
 	uint64_t get_max_clks() { return m_max_clks; }
@@ -52,6 +54,8 @@ protected:
 	bool m_resp_check;
 
 	bool m_check_handshakes;
+	bool m_reset_check;
+
 	uint64_t m_max_clks;
 
 	uint32_t m_max_depth;
@@ -91,12 +95,22 @@ public:
 	}
 
 	//
+	// Verify that arvalid, rvalid, awvalid, wvalid and bvalid are
+	// deasserted the first cycle after reset has been released.
+	//
+	void check_axi_reset(bool en = true)
+	{
+		m_reset_check = en;
+	}
+
+	//
 	// Enables all checks.
 	//
 	void enable_all_checks()
 	{
 		m_mon_data_resp = true;
 		m_check_handshakes = true;
+		m_reset_check = true;
 	}
 
 	//

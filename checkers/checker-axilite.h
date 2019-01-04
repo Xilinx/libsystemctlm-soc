@@ -260,4 +260,23 @@ private:
 	}
 };
 
+AXILITE_CHECKER(check_axilite_reset)
+{
+public:
+	AXILITE_CHECKER_CTOR(check_axilite_reset)
+	{
+		if (m_cfg.en_reset_check()) {
+			SC_THREAD(axi_reset_check);
+		}
+	}
+
+private:
+	void axi_reset_check()
+	{
+		axi_reset_checker checker(this);
+
+		checker.run();
+	}
+};
+
 #endif

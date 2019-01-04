@@ -32,6 +32,9 @@ protocol checker can be configured to also perform the following checks:
 	  considered and reported as a hangup if a given amount of clock cycles
 	 (default 200) pass before an expected signal has been detected.
 
+	* Verifies that arvalid, rvalid, awvalid, wvalid and bvalid are
+	  deasserted the first cycle after reset has been released.
+
 AXIPCConfig - Configuraring the protocol checker
 ------------------------------------------------
 The protocol checker is configured at construction with an AXIPCConfig. Through
@@ -53,6 +56,9 @@ the protocol checker can be configured to also perform the following checks:
 	  channels are detected after receiving awvalid and arvalid. It is
 	  considered and reported as a hangup if a given amount of clock cycles
 	 (default 200) pass before an expected signal has been detected.
+
+	* Verifies that arvalid, rvalid, awvalid, wvalid and bvalid are
+	  deasserted the first cycle after reset has been released.
 
 AXILitePCConfig - Configuraring the protocol checker
 ------------------------------------------------
