@@ -76,6 +76,8 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	  rp_emio0("emio0", 32, 64),
 	  rp_emio1("emio1", 32, 64),
 	  rp_emio2("emio2", 32, 64),
+	  rp_user_master("rp_net_master", 10),
+	  rp_user_slave("rp_net_slave", 10),
 	  proxy_in("proxy-in", 9),
 	  proxy_out("proxy-out", 9),
 	  pl2ps_irq("pl2ps_irq", 16),
@@ -124,6 +126,11 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	s_axi_hpm_fpd[1] = &rp_axi_hpm1_fpd.sk;
 	s_axi_hpm_lpd = &rp_axi_hpm_lpd.sk;
 	s_lpd_reserved = &rp_lpd_reserved.sk;
+
+	for (i = 0; i < rp_user_master.size(); i++) {
+		user_master[i] = &rp_user_master[i].sk;
+		user_slave[i] = &rp_user_slave[i].sk;
+	}
 
 	// Connect our Master ID injecting proxies.
 	for (i = 0; i < proxy_in.size(); i++) {
@@ -196,6 +203,11 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	register_dev(16, &rp_emio0);
 	register_dev(17, &rp_emio1);
 	register_dev(18, &rp_emio2);
+
+	for (i = 0; i < rp_user_master.size(); i++) {
+		register_dev(256 + i, &rp_user_master[i]);
+		register_dev(256 + 10 + i, &rp_user_slave[i]);
+	}
 }
 
 void xilinx_zynqmp::tie_off(void)

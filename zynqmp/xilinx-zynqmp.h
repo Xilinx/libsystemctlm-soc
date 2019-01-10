@@ -74,6 +74,9 @@ private:
 	remoteport_tlm_wires rp_emio1;
 	remoteport_tlm_wires rp_emio2;
 
+	sc_vector<remoteport_tlm_memory_master > rp_user_master;
+	sc_vector<remoteport_tlm_memory_slave > rp_user_slave;
+
 	/*
 	 * In order to get Master-IDs right, we need to proxy all
 	 * transactions and inject generic attributes with Master IDs.
@@ -142,6 +145,12 @@ public:
 	 * See the TRM, Chapter 27 GPIO, page 761.
 	 */
 	sc_vector<sc_signal<bool> > pl_resetn;
+
+	/*
+	 * User-defined ports.
+	 */
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *user_master[10];
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *user_slave[10];
 
 	xilinx_zynqmp(sc_core::sc_module_name name, const char *sk_descr,
 			Iremoteport_tlm_sync *sync = NULL);
