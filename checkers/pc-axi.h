@@ -25,6 +25,7 @@
 #ifndef PC_AXI_H__
 #define PC_AXI_H__
 
+#include <sstream>
 #include <tlm-bridges/amba.h>
 #include "checker-axi.h"
 
