@@ -32,12 +32,14 @@ CPPFLAGS += -I ../../../../traffic-generators/
 CPPFLAGS += -I ../../../../traffic-generators/config-parser/
 
 GEN_FLAGS=../../gen-axi-tg-test-cflags.py
+OBJ_DIR = .obj_dir
+OBJ_DIR_CREATED = $(OBJ_DIR)/.created
 
 CP_SRCS=$(wildcard ../../../../traffic-generators/config-parser/*.cc)
 CP_OBJS=$(patsubst %.cc, %.o, $(CP_SRCS))
 
 OBJS_COMMON += ../../../test-modules/memory.o
-OBJS_COMMON += $(addprefix .obj_dir/, $(notdir $(CP_OBJS)))
+OBJS_COMMON += $(addprefix $(OBJ_DIR)/, $(notdir $(CP_OBJS)))
 
 ALL_OBJS += $(OBJS_COMMON)
 
@@ -53,10 +55,11 @@ all: $(TARGETS)
 -include $(wildcard *-axi-tg-test.d)
 -include $(wildcard *-rand-tg-test.d)
 
-.obj_dir:
-	mkdir .obj_dir
+$(OBJ_DIR_CREATED):
+	mkdir -p $(dir $@)
+	touch $@
 
-.obj_dir/%.o: ../../../../traffic-generators/config-parser/%.cc .obj_dir
+$(OBJ_DIR)/%.o: ../../../../traffic-generators/config-parser/%.cc $(OBJ_DIR_CREATED)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 .PRECIOUS: %-tg-test.o ../../../test-modules/memory.o
@@ -71,4 +74,4 @@ clean:
 	$(RM) $(wildcard *-tg-test.o) $(wildcard *-tg-test.d)
 	$(RM) $(wildcard *-tg-test) $(wildcard *-tg-test.vcd)
 	$(RM) $(TARGETS)
-	$(RM) -r .obj_dir
+	$(RM) -r $(OBJ_DIR)
