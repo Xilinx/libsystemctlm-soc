@@ -44,6 +44,9 @@ DEPS=$(patsubst %.o,%.d,$(OBJS))
 
 all: $(APP)
 
+## Dep generation ##
+-include $(ALL_OBJS:.o=.d)
+
 $(APP): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) $(OBJS) -o $(APP)
 
