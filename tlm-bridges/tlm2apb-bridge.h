@@ -89,9 +89,6 @@ void tlm2apb_bridge
 		return;
 	}
 
-	/* FIXME: This truncation should be done somewhere else.  */
-	addr >>= 2;
-
 	/* Setup phase. Prepare all ctrl signals except enable.  */
 	psel = BOOL_TYPE(1);
 	paddr = addr;
