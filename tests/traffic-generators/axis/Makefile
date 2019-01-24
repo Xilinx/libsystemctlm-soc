@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2018 Xilinx Inc.
 # Written by Francisco Iglesias,
-#            Edgar E. Iglesias
+#            Edgar E. Iglesias.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,46 +21,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-include ../.config.mk
+-include ../../../.config.mk
+include ../../Rules.mk
 
-SUBDIRS_EXAMPLES += example-rtl-axi4
-SUBDIRS_EXAMPLES += example-rtl-axi4lite
-SUBDIRS_EXAMPLES += example-rtl-mixed
+CPPFLAGS += -I ../../../ -I ../../ -I .
+CXXFLAGS += -g
 
-SUBDIRS += $(SUBDIRS_EXAMPLES)
-SUBDIRS += tlm-modules
-SUBDIRS += traffic-generators/config-parser/
-SUBDIRS += traffic-generators/axi/
-SUBDIRS += traffic-generators/axi/cp-tg/
-SUBDIRS += traffic-generators/axilite/
-SUBDIRS += traffic-generators/axilite/cp-tg/
-SUBDIRS += traffic-generators/axis/
-SUBDIRS += checkers/axi
-SUBDIRS += checkers/axilite
+GEN_FLAGS=../gen-axi-tg-test-cflags.py
 
-PYTEST ?=py.test
-PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html
+OBJS_COMMON += ../../test-modules/memory.o
+ALL_OBJS += $(OBJS_COMMON) $(RAND_TG_TEST_OBJS)
 
-all: $(SUBDIRS)
+TARGETS += axis-w64-tg-test
 
-.PHONY: $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) -C $@
+################################################################################
 
-examples: $(SUBDIRS_EXAMPLES)
+all: $(TARGETS)
 
-.PHONY: examples-run
-examples-run: examples
-	$(PYTEST) -s -m 'examples' $(PYTEST_ARGS)
+## Dep generation ##
+-include $(ALL_OBJS:.o=.d)
+-include $(wildcard *-al-tg-test.d)
+-include $(wildcard *-rand-tg-test.d)
 
-check: $(SUBDIRS)
-	$(PYTEST) $(PYTEST_ARGS)
+.PRECIOUS: %-al-tg-test.o $(OBJS_COMMON)
+axis-%-tg-test.o: axis-tg-test.cc
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(shell $(GEN_FLAGS) $@) -c -o $@ $<
 
-check-report: $(SUBDIRS)
-	$(PYTEST) $(PYTEST_HTML_ARGS) $(PYTEST_ARGS)
-	zip report.zip report.html `find . -name \*vcd`
+axis-%-tg-test: axis-%-tg-test.o $(OBJS_COMMON)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-$(SUBDIRS:%=%-clean):
-	$(MAKE) -C $(@:-clean=) clean
-
-clean: $(SUBDIRS:%=%-clean)
+clean:
+	$(RM) $(ALL_OBJS) $(ALL_OBJS:.o=.d)
+	$(RM) $(wildcard *-tg-test.o) $(wildcard *-tg-test.d)
+	$(RM) $(wildcard *-tg-test) $(wildcard *-tg-test.vcd)
+	$(RM) $(TARGETS)
