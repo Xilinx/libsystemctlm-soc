@@ -458,7 +458,12 @@ bool remoteport_tlm::rp_process(bool can_sync)
 			pkt_rx.data_offset = sizeof pkt_rx.pkt->hdr + dlen;
 
 			ri = dev->response_lookup(pkt_rx.pkt->hdr.id);
-			assert(ri != ~0U);
+			if (ri == ~0U) {
+				printf("unhandled response: id=%d dev=%d\n",
+					pkt_rx.pkt->hdr.id,
+					pkt_rx.pkt->hdr.dev);
+				assert(ri != ~0U);
+			}
 
 			pkt_rx.copy(dev->resp[ri].pkt);
 			dev->resp[ri].valid = true;
