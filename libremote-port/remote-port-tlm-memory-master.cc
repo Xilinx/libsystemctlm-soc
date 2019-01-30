@@ -70,6 +70,7 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 
 	// Extensions
 	genattr = new(genattr_extension);
+	genattr->set_posted(pkt.hdr.flags & RP_PKT_FLAGS_posted);
 	genattr->set_eop(pkt.busaccess.attributes & RP_BUS_ATTR_EOP);
 	genattr->set_secure(pkt.busaccess.attributes & RP_BUS_ATTR_SECURE);
 	genattr->set_master_id(pkt.busaccess.master_id);
@@ -124,18 +125,20 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
 
-	rp_encode_busaccess_in_rsp_init(&in, &lpkt);
 	delay = rp_bus_access(lpkt, can_sync,
 				tlm::TLM_WRITE_COMMAND, data, len);
 
-	in.clk = adaptor->rp_map_time(delay);
-	in.clk += lpkt.busaccess.timestamp;
+	if (!(lpkt.hdr.flags & RP_PKT_FLAGS_posted)) {
+		rp_encode_busaccess_in_rsp_init(&in, &lpkt);
+		in.clk = adaptor->rp_map_time(delay);
+		in.clk += lpkt.busaccess.timestamp;
 
-	plen = rp_encode_busaccess(&adaptor->peer,
-				   &pkt_tx.pkt->busaccess_ext_base,
-				   &in);
-	adaptor->rp_write(pkt_tx.pkt, plen);
-	assert(plen <= sizeof pkt_tx.pkt->busaccess_ext_base);
+		plen = rp_encode_busaccess(&adaptor->peer,
+					   &pkt_tx.pkt->busaccess_ext_base,
+					   &in);
+		adaptor->rp_write(pkt_tx.pkt, plen);
+		assert(plen <= sizeof pkt_tx.pkt->busaccess_ext_base);
+	}
 	adaptor->sync->post_memory_master_cmd(pkt.sync.timestamp, can_sync);
 }
 

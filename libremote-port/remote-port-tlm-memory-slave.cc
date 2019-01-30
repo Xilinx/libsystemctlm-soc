@@ -100,6 +100,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 
 	trans.get_extension(genattr);
 	if (genattr) {
+		in.flags |= genattr->get_posted() ? RP_PKT_FLAGS_posted : 0;
 		master_id = genattr->get_master_id();
 		attr |= genattr_to_rpattr(genattr);
 	}
@@ -129,6 +130,11 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	}
 	if (in.byte_enable_len) {
 		adaptor->rp_write(be, in.byte_enable_len);
+	}
+
+	trans.set_response_status(tlm::TLM_OK_RESPONSE);
+	if (genattr->get_posted()) {
+		return;
 	}
 
 	ri = response_wait(in.id);
@@ -166,5 +172,4 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	}
 	// Give back the RP response slot.
 	response_done(ri);
-	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }

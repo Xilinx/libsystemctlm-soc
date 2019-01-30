@@ -455,6 +455,11 @@ bool remoteport_tlm::rp_process(bool can_sync)
 		if (pkt_rx.pkt->hdr.flags & RP_PKT_FLAGS_response) {
 			unsigned int ri;
 
+			if (pkt_rx.pkt->hdr.flags & RP_PKT_FLAGS_posted) {
+				// Drop responses for posted packets.
+				return true;
+			}
+
 			pkt_rx.data_offset = sizeof pkt_rx.pkt->hdr + dlen;
 
 			ri = dev->response_lookup(pkt_rx.pkt->hdr.id);
