@@ -23,7 +23,9 @@
  * THE SOFTWARE.
  */
 
-#define _DEFEFAUL_SOURCE
+#ifndef _DEFAULT_SOURCE
+# define _DEFAULT_SOURCE
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -76,11 +78,6 @@
 #    define be16toh(x) x
 #  endif
 #endif
-
-#define RP_OPT_ENT(name) [RP_OPT_ ## name] = offsetof(struct rp_cfg_state, name)
-static const size_t rp_opt_map[] = {
-    RP_OPT_ENT(quantum),
-};
 
 static const char *rp_cmd_names[RP_CMD_max + 1] = {
     [RP_CMD_nop] = "nop",
@@ -353,18 +350,27 @@ size_t rp_encode_busaccess(struct rp_peer_state *peer,
     return sizeof *pkt + ret_size;
 }
 
-size_t rp_encode_interrupt(uint32_t id, uint32_t dev,
-                           struct rp_pkt_interrupt *pkt,
-                           int64_t clk,
-                           uint32_t line, uint64_t vector, uint8_t val)
+size_t rp_encode_interrupt_f(uint32_t id, uint32_t dev,
+                             struct rp_pkt_interrupt *pkt,
+                             int64_t clk,
+                             uint32_t line, uint64_t vector, uint8_t val,
+                             uint32_t flags)
 {
     rp_encode_hdr(&pkt->hdr, RP_CMD_interrupt, id, dev,
-                  sizeof *pkt - sizeof pkt->hdr, 0);
+                  sizeof *pkt - sizeof pkt->hdr, flags);
     pkt->timestamp = htobe64(clk);
     pkt->vector = htobe64(vector);
     pkt->line = htobe32(line);
     pkt->val = val;
     return sizeof *pkt;
+}
+
+size_t rp_encode_interrupt(uint32_t id, uint32_t dev,
+                           struct rp_pkt_interrupt *pkt,
+                           int64_t clk,
+                           uint32_t line, uint64_t vector, uint8_t val)
+{
+    return rp_encode_interrupt_f(id, dev, pkt, clk, line, vector, val, 0);
 }
 
 static size_t rp_encode_sync_common(uint32_t id, uint32_t dev,
@@ -409,6 +415,9 @@ void rp_process_caps(struct rp_peer_state *peer,
             break;
         case CAP_BUSACCESS_EXT_BYTE_EN:
             peer->caps.busaccess_ext_byte_en = true;
+            break;
+        case CAP_WIRE_POSTED_UPDATES:
+            peer->caps.wire_posted_updates = true;
             break;
         }
     }
