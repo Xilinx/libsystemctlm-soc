@@ -59,8 +59,7 @@ remoteport_tlm_wires::remoteport_tlm_wires(sc_module_name name,
 
 	if (nr_wires_in) {
 		wires_in = new sc_in<bool>[nr_wires_in];
-		SC_METHOD(wire_update);
-		dont_initialize();
+		SC_THREAD(wire_update);
 
 		for (i = 0; i < nr_wires_in; i++) {
 			sensitive << wires_in[i];
@@ -84,29 +83,57 @@ void remoteport_tlm_wires::cmd_interrupt(struct rp_pkt &pkt, bool can_sync)
 	assert(lpkt.interrupt.line < cfg.nr_wires_out);
 	wires_out[lpkt.interrupt.line].write(lpkt.interrupt.val);
 
+	if (adaptor->peer.caps.wire_posted_updates
+	    && !(lpkt.hdr.flags & RP_PKT_FLAGS_posted)) {
+		int64_t clk;
+		size_t plen;
+		unsigned int id = lpkt.hdr.id;
+
+	        clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
+		plen = rp_encode_interrupt_f(lpkt.hdr.id,
+					     dev_id,
+					     &lpkt.interrupt,
+					     clk, lpkt.interrupt.line,
+					     0, lpkt.interrupt.val,
+					     lpkt.hdr.flags | RP_PKT_FLAGS_response);
+		adaptor->rp_write(&lpkt, plen);
+	}
+
 	adaptor->sync->post_wire_cmd(pkt.sync.timestamp, can_sync);
 }
 
 void remoteport_tlm_wires::wire_update(void)
 {
 	remoteport_packet pkt_tx;
-        size_t plen;
-        int64_t clk;
-        unsigned int i;
+	unsigned int ri;
+	size_t plen;
+	int64_t clk;
+	unsigned int i;
 
 	pkt_tx.alloc(sizeof pkt_tx.pkt->interrupt);
 
-        clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
-        for (i = 0; i < cfg.nr_wires_in; i++) {
-                if (wires_in[i].event()) {
-                        bool val = wires_in[i].read();
-                        plen = rp_encode_interrupt(adaptor->rp_pkt_id++,
-                                                   dev_id,
-                                                   &pkt_tx.pkt->interrupt,
-                                                   clk, i, 0, val);
-                        adaptor->rp_write(pkt_tx.pkt, plen);
-                }
-        }
+	while (true) {
+		wait();
+
+	        clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
+	        for (i = 0; i < cfg.nr_wires_in; i++) {
+			if (wires_in[i].event()) {
+				bool val = wires_in[i].read();
+				uint32_t id = adaptor->rp_pkt_id++;
+				plen = rp_encode_interrupt(id,
+						dev_id,
+						&pkt_tx.pkt->interrupt,
+						clk, i, 0, val);
+				adaptor->rp_write(pkt_tx.pkt, plen);
+
+				if (adaptor->peer.caps.wire_posted_updates) {
+					ri = response_wait(id);
+					assert(resp[ri].pkt.pkt->hdr.id == id);
+					response_done(ri);
+				}
+			}
+		}
+	}
 }
 
 
