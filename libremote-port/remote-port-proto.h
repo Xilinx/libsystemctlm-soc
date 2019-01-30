@@ -83,6 +83,15 @@ struct rp_cfg_state {
 enum {
     RP_PKT_FLAGS_optional      = 1 << 0,
     RP_PKT_FLAGS_response      = 1 << 1,
+
+    /* Posted hint.
+     * When set this means that the receiver is not required to respond to
+     * the message. Since it's just a hint, the sender must be prepared to
+     * drop responses. Note that since flags are echoed back in responses
+     * a response to a posted packet will be easy to identify early in the
+     * protocol stack.
+     */
+    RP_PKT_FLAGS_posted        = 1 << 2,
 };
 
 struct rp_pkt_hdr {
