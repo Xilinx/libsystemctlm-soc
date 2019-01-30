@@ -69,6 +69,10 @@ private:
 	// AMBA TrustZone Secure vs Non-Secure transactions.
 	bool secure;
 
+	// A hint to say that the transaction is posted and does
+	// not need to be ACKed.
+	bool posted;
+
 	// For specifying if this is an AMBA AXI wrapping burst.
 	bool wrap;
 
@@ -124,6 +128,7 @@ public:
 	PROP_GETSET_GEN(secure, bool, true);
 	PROP_GETSET_GEN(master_id, uint64_t, 0);
 	PROP_GETSET_GEN(wrap, bool, false);
+	PROP_GETSET_GEN(posted, bool, false);
 	PROP_GETSET_GEN(burst_width, uint32_t, 0);
 	PROP_GETSET_GEN(transaction_id, uint32_t, 0);
 	PROP_GETSET_GEN(exclusive, bool, false);
@@ -140,6 +145,7 @@ public:
 		set_secure();
 		set_master_id();
 		set_wrap();
+		set_posted();
 		set_burst_width();
 		set_transaction_id();
 		set_exclusive();
@@ -176,6 +182,7 @@ public:
 		set_master_id(ext_genattr.get_master_id());
 		set_secure(ext_genattr.get_secure());
 		set_wrap(ext_genattr.get_wrap());
+		set_posted(ext_genattr.get_posted());
 		set_burst_width(ext_genattr.get_burst_width());
 		set_transaction_id(ext_genattr.get_transaction_id());
 		set_exclusive(ext_genattr.get_exclusive());
