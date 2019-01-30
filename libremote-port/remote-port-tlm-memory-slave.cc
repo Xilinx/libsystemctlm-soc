@@ -160,7 +160,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 					data[i] = rx_data[i];
 				}
 			}
-                } else {
+		} else {
 			memcpy(data, rx_data, len);
 		}
 	}
