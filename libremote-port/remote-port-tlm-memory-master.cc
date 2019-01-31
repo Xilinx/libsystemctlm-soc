@@ -84,6 +84,8 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	adaptor->sync->set_local_time(delay);
 
 	tr.release_extension(genattr);
+
+	wait(SC_ZERO_TIME);
 	return delay;
 }
 
