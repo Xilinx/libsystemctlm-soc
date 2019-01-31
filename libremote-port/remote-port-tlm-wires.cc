@@ -47,13 +47,15 @@ using namespace std;
 
 remoteport_tlm_wires::remoteport_tlm_wires(sc_module_name name,
 					   unsigned int nr_wires_in,
-					   unsigned int nr_wires_out)
+					   unsigned int nr_wires_out,
+					   bool posted_updates)
         : sc_module(name)
 {
 	unsigned int i;
 
 	cfg.nr_wires_in = nr_wires_in;
 	cfg.nr_wires_out = nr_wires_out;
+	cfg.posted_updates = posted_updates;
 
 	wire_name = name;
 
@@ -105,6 +107,7 @@ void remoteport_tlm_wires::cmd_interrupt(struct rp_pkt &pkt, bool can_sync)
 void remoteport_tlm_wires::wire_update(void)
 {
 	remoteport_packet pkt_tx;
+	bool events[cfg.nr_wires_in];
 	unsigned int ri;
 	size_t plen;
 	int64_t clk;
@@ -113,25 +116,43 @@ void remoteport_tlm_wires::wire_update(void)
 	pkt_tx.alloc(sizeof pkt_tx.pkt->interrupt);
 
 	while (true) {
+		int nr_events = 0;
+		uint32_t flags = RP_PKT_FLAGS_posted;
+		uint32_t id;
+
 		wait();
+	        for (i = 0; i < cfg.nr_wires_in; i++) {
+			events[i] = 0;
+			if (wires_in[i].event()) {
+				events[i] = true;
+				nr_events++;
+			}
+		}
 
 	        clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
 	        for (i = 0; i < cfg.nr_wires_in; i++) {
-			if (wires_in[i].event()) {
+			if (events[i]) {
 				bool val = wires_in[i].read();
-				uint32_t id = adaptor->rp_pkt_id++;
-				plen = rp_encode_interrupt(id,
+
+				nr_events--;
+				if (nr_events == 0 && !cfg.posted_updates) {
+					flags = 0;
+				}
+				id = adaptor->rp_pkt_id++;
+				plen = rp_encode_interrupt_f(id,
 						dev_id,
 						&pkt_tx.pkt->interrupt,
-						clk, i, 0, val);
+						clk, i, 0, val, flags);
 				adaptor->rp_write(pkt_tx.pkt, plen);
-
-				if (adaptor->peer.caps.wire_posted_updates) {
-					ri = response_wait(id);
-					assert(resp[ri].pkt.pkt->hdr.id == id);
-					response_done(ri);
-				}
 			}
+		}
+
+		// Wait for an ACK on the last one.
+		if (adaptor->peer.caps.wire_posted_updates
+                    && !(flags & RP_PKT_FLAGS_posted) ) {
+			ri = response_wait(id);
+			assert(resp[ri].pkt.pkt->hdr.id == id);
+			response_done(ri);
 		}
 	}
 }

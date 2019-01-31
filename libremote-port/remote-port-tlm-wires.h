@@ -30,7 +30,8 @@ public:
 	SC_HAS_PROCESS(remoteport_tlm_wires);
 	remoteport_tlm_wires(sc_module_name name,
 			     unsigned int nr_wires_in,
-			     unsigned int nr_wires_out);
+			     unsigned int nr_wires_out,
+			     bool posted_updates = true);
 	void cmd_interrupt(struct rp_pkt &pkt, bool can_sync);
 	void tie_off(void);
 
@@ -45,6 +46,7 @@ private:
 	struct {
 		unsigned int nr_wires_in;
 		unsigned int nr_wires_out;
+		bool posted_updates;
 	} cfg;
 };
 
