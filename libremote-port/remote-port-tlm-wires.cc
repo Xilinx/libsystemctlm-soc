@@ -46,8 +46,8 @@ using namespace sc_core;
 using namespace std;
 
 remoteport_tlm_wires::remoteport_tlm_wires(sc_module_name name,
-                                           unsigned int nr_wires_in,
-                                           unsigned int nr_wires_out)
+					   unsigned int nr_wires_in,
+					   unsigned int nr_wires_out)
         : sc_module(name)
 {
 	unsigned int i;
