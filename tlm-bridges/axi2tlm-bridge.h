@@ -34,10 +34,17 @@
 
 #include <list>
 
+#include "tlm-bridges/amba.h"
+#include "tlm-bridges/amba-ace.h"
+#include "tlm-extensions/genattr.h"
+#include "tlm-bridges/ace-snoop-channels.h"
+
 /*
   MAX DATA_WIDTH = 1024 bits / 128 bytes
   MAX ADDR_WIDTH = 64 bits / 8 bytes
 */
+
+using namespace AMBA::ACE;
 
 template
 <int ADDR_WIDTH,
@@ -49,12 +56,18 @@ template
 	int ARUSER_WIDTH = 2,
 	int WUSER_WIDTH = 2,
 	int RUSER_WIDTH = 2,
-	int BUSER_WIDTH = 2>
+	int BUSER_WIDTH = 2,
+	int ACE_MODE = ACE_MODE_OFF,
+	int CD_DATA_WIDTH = DATA_WIDTH>
 class axi2tlm_bridge :
 	public sc_core::sc_module,
 	public axi_common
 {
 public:
+	typedef ACESnoopChannels_S<
+				ADDR_WIDTH,
+				CD_DATA_WIDTH> ACESnoopChannels_S__;
+
 	tlm_utils::simple_initiator_socket<axi2tlm_bridge> socket;
 
 	SC_HAS_PROCESS(axi2tlm_bridge);
@@ -112,10 +125,23 @@ public:
 	sc_out<bool> rvalid;
 	sc_in<bool> rready;
 	sc_out<sc_bv<DATA_WIDTH> > rdata;
-	sc_out<sc_bv<2> > rresp;
+	sc_out<sc_bv<(ACE_MODE == ACE_MODE_ACE) ? 4 : 2> > rresp;
 	sc_out<AXISignal(RUSER_WIDTH) > ruser;	// AXI4 only
 	sc_out<AXISignal(ID_WIDTH) > rid;
 	sc_out<bool> rlast;
+
+	// AXI4 signals
+	sc_in<sc_bv<3> > awsnoop;
+	sc_in<sc_bv<2> > awdomain;
+	sc_in<sc_bv<2> > awbar;
+
+	sc_in<bool > wack;
+
+	sc_in<sc_bv<4> > arsnoop;
+	sc_in<sc_bv<2> > ardomain;
+	sc_in<sc_bv<2> > arbar;
+
+	sc_in<bool > rack;
 
 	axi2tlm_bridge(sc_core::sc_module_name name,
 			AXIVersion version = V_AXI4) :
@@ -175,14 +201,34 @@ public:
 		rid("rid"),
 		rlast("rlast"),
 
+		// AXI4 ACE signals
+		awsnoop("awsnoop"),
+		awdomain("awdomain"),
+		awbar("awbar"),
+		wack("wack"),
+
+		arsnoop("arsnoop"),
+		ardomain("ardomain"),
+		arbar("arbar"),
+		rack("rack"),
+
+		m_snp_chnls(NULL),
+
 		m_maxReadTransactions(16),
 		m_maxWriteTransactions(16),
 		m_numReadTransactions(0),
 		m_numWriteTransactions(0),
+		m_numReadBarriers(0),
+		m_numWriteBarriers(0),
 		m_maxBurstLength(AXI4_MAX_BURSTLENGTH),
 		m_version(version),
 		dummy("axi-dummy")
 	{
+		if (ACE_MODE == ACE_MODE_ACE) {
+			m_snp_chnls = new ACESnoopChannels_S__(
+						"ace-snp-chnls", clk, resetn);
+		}
+
 		if (m_version == V_AXI3) {
 			//
 			// Change m_maxBurstLength to AXI3 values
@@ -200,9 +246,16 @@ public:
 		SC_THREAD(reset);
 	}
 
+	~axi2tlm_bridge()
+	{
+		delete m_snp_chnls;
+	}
+
+	ACESnoopChannels_S__& GetACESnoopChannels() { return *m_snp_chnls; };
 private:
 
-	class Transaction
+	class Transaction :
+		public ace_tx_helpers
 	{
 	public:
 		Transaction(tlm::tlm_command cmd,
@@ -299,6 +352,10 @@ private:
 			m_gp->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
 			m_gp->set_extension(m_genattr);
+
+			if (ACE_MODE) {
+				setup_ace_helpers(m_gp);
+			}
 		}
 
 		~Transaction()
@@ -324,6 +381,11 @@ private:
 		{
 			return numberBytes - (address - alignedAddress)
 					+ (burstLen-1) * numberBytes;
+		}
+
+		unsigned int GetDataLen()
+		{
+			return m_gp->get_data_length();
 		}
 
 		tlm::tlm_response_status GetTLMResponse()
@@ -443,6 +505,7 @@ private:
 
 		void IncBeat() { m_beat++; }
 		uint32_t GetBeat() { return m_beat; }
+		void SetBeat(uint32_t beat) { m_beat = beat; }
 
 		uint32_t GetBurstLength() { return m_burstLen; }
 
@@ -491,6 +554,42 @@ private:
 			return (AxCache >> 3) & 0x1;
 		}
 
+		void SetAxSnoop(uint8_t AxSnoop)
+		{
+			m_genattr->set_snoop(AxSnoop);
+		}
+
+		bool WaitForSnoop()
+		{
+			uint8_t domain = m_genattr->get_domain();
+
+			//
+			// Wait for all except or WriteBack WriteClean
+			//
+			if (domain == Domain::Inner ||
+				domain == Domain::Outer) {
+				uint8_t snoop = m_genattr->get_snoop();
+
+				if (snoop == AW::WriteBack ||
+					snoop == AW::WriteClean) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		void SetAxDomain(uint8_t AxDomain)
+		{
+			m_genattr->set_domain(AxDomain);
+		}
+
+		void SetAxBar(uint8_t AxBar)
+		{
+			bool barrier = (AxBar) ? true : false;
+
+			m_genattr->set_barrier(barrier);
+		}
+
 		bool IsNonSecure(uint8_t AxProt)
 		{
 			return (AxProt & AXI_PROT_NS) == AXI_PROT_NS;
@@ -504,6 +603,44 @@ private:
 			m_TLMOngoing = TLMOngoing;
 		}
 		bool TLMOngoing() { return m_TLMOngoing; }
+
+		uint64_t GetAddress() { return m_gp->get_address(); }
+
+		bool hasData()
+		{
+			if (ACE_MODE) {
+				if (IsBarrier() || IsEvict()) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		void SetupSingleRdDataTransfers()
+		{
+			uint8_t domain = m_genattr->get_domain();
+			uint8_t snoop = m_genattr->get_snoop();
+			uint8_t bar = m_genattr->get_barrier();
+
+			if (ace_helpers::HasSingleRdDataTransfer(domain,
+								snoop,
+								bar)) {
+				m_gp->set_command(tlm::TLM_IGNORE_COMMAND);
+				m_genattr->set_is_read_tx(true);
+			}
+		}
+
+		void SetupNoWrDataTransfers()
+		{
+			uint8_t domain = m_genattr->get_domain();
+			uint8_t snoop = m_genattr->get_snoop();
+			uint8_t bar = m_genattr->get_barrier();
+
+			if (bar || ace_helpers::IsEvict(domain, snoop)) {
+				m_gp->set_command(tlm::TLM_IGNORE_COMMAND);
+				m_genattr->set_is_write_tx(true);
+			}
+		}
 
 	private:
 		tlm::tlm_generic_payload *m_gp;
@@ -590,6 +727,57 @@ private:
 		return false;
 	}
 
+	bool is_after_barrier(std::list<Transaction*> *list, Transaction *tr)
+	{
+		for (typename std::list<Transaction*>::iterator it = list->begin();
+			*it != tr; it++) {
+			Transaction *t = (*it);
+
+			if (t->IsBarrier()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool WaitForTransactions(std::list<Transaction*> *list, Transaction *tr)
+	{
+		if (ACE_MODE) {
+			if (tr->IsBarrier()) {
+				//
+				// Wait a clock cycle if it is an ACE barrier
+				// with transactions that need to complete
+				// before the barrier.
+				//
+				if (tr != list->front()) {
+					return true;
+				}
+
+			} else {
+				//
+				// Wait a clock cycle if it is a transactions
+				// that has a barrier in front in the queue and
+				// it is not WriteBack WriteClean or Evict
+				// (section C8.4.1 [1])
+				//
+
+				if (is_after_barrier(list, tr)) {
+
+					if (!tr->IsWriteBack() &&
+						!tr->IsWriteClean() &&
+						!tr->IsEvict()) {
+						return true;
+					}
+				}
+			}
+		}
+
+		//
+		// Issue transactions with overlapping addresses in order [1]
+		//
+		return OverlappingAddress(list, tr);
+	}
+
 	void RunTLMTransaction(std::list<Transaction*> *list,
 				uint32_t transactionID,
 				sc_fifo<Transaction*> *fifo)
@@ -605,10 +793,7 @@ private:
 
 			tr->SetTLMOngoing();
 
-			//
-			// Issue transactions with overlapping addresses in order [1]
-			//
-			while (OverlappingAddress(list, tr) && resetn.read()) {
+			while (WaitForTransactions(list, tr) && resetn.read()) {
 				wait(clk.posedge_event() | resetn.negedge_event());
 			}
 
@@ -642,6 +827,15 @@ private:
 				break;
 			}
 
+			if (ACE_MODE == ACE_MODE_ACE) {
+				//
+				// Keep track of ongoing responses for
+				// overlapping address checks with snoop
+				// transactions
+				//
+				m_snp_chnls->GetOverlapList().push_back(m_gp);
+			}
+
 			list->remove(tr);
 
 			fifo->write(tr);
@@ -664,14 +858,31 @@ private:
 		}
 	}
 
+	unsigned int get_num_ongoing_read()
+	{
+		return m_numReadTransactions - m_numReadBarriers;
+	}
+
+	bool assert_arready()
+	{
+		bool arready_val = true;
+
+		if (get_num_ongoing_read() >= m_maxReadTransactions) {
+			arready_val = false;
+		}
+
+		if (ACE_MODE == ACE_MODE_ACE &&
+			m_numReadBarriers >= ACE::MaxBarriers) {
+			arready_val = false;
+		}
+
+		return arready_val;
+	}
+
 	void read_address_phase()
 	{
 		while (true) {
-			if (m_numReadTransactions < m_maxReadTransactions) {
-				arready.write(true);
-			} else {
-				arready.write(false);
-			}
+			arready.write(assert_arready());
 
 			wait(clk.posedge_event() | resetn.negedge_event());
 
@@ -696,6 +907,35 @@ private:
 							arcache.read().to_uint(),
 							arqos.read().to_uint(),
 							arregion.read().to_uint());
+
+				if (ACE_MODE) {
+					rt->SetAxSnoop(arsnoop.read().to_uint());
+					rt->SetAxDomain(ardomain.read().to_uint());
+					rt->SetAxBar(arbar.read().to_uint());
+
+					//
+					// Setup commands with no transfers
+					//
+					rt->SetupSingleRdDataTransfers();
+
+					if (rt->HasSingleRdDataTransfer()) {
+						//
+						// Just transmit the final beat
+						// (rlast need to be set, see
+						// section 3.2.1 [1])
+						//
+						rt->SetBeat(rt->GetBurstLength());
+					}
+
+					//
+					// ACE has a limit of 256 outstanding
+					// barriers (section C8.4.1 [1])
+					//
+					if (ACE_MODE == ACE_MODE_ACE &&
+						rt->IsBarrier()) {
+						m_numReadBarriers++;
+					}
+				}
 
 				Validate(rt);
 
@@ -744,6 +984,31 @@ private:
 				break;
 			}
 
+			//
+			// If ACE_MODE == ACE_MODE_ACE an ongoing snoop channel
+			// transactions to the same cache line is not allowed
+			// at the same time
+			//
+			if (ACE_MODE == ACE_MODE_ACE) {
+				sc_bv<4> tmp_rresp = rresp.read();
+
+				if (m_snp_chnls->wait_for_snoop_channel(
+						rt->GetAddress(),
+						rt->GetDataLen()) == false) {
+
+					delete rt;
+					wait_for_reset_release();
+					continue;
+				}
+				m_snp_chnls->lock_rresp.lock(rt->GetAddress(),
+							rt->GetDataLen());
+
+				tmp_rresp[2] = rt->PassDirty();
+				tmp_rresp[3] = rt->IsShared();
+
+				rresp.write(tmp_rresp);
+			}
+
 			rid.write(rt->GetTransactionID());
 
 			while (!rt->Done()) {
@@ -771,6 +1036,17 @@ private:
 
 			rlast.write(false);
 
+			if (ACE_MODE == ACE_MODE_ACE) {
+				wait_abort_on_reset(rack);
+
+				m_snp_chnls->lock_rresp.unlock();
+
+				if (rt->IsBarrier()) {
+					m_numReadBarriers--;
+				}
+				m_snp_chnls->GetOverlapList().remove(rt->GetTLMGenericPayload());
+			}
+
 			delete rt;
 
 			if (reset_asserted()) {
@@ -785,14 +1061,31 @@ private:
 		}
 	}
 
+	unsigned int get_num_ongoing_write()
+	{
+		return m_numWriteTransactions - m_numWriteBarriers;
+	}
+
+	bool assert_awready()
+	{
+		bool awready_val = true;
+
+		if (get_num_ongoing_write() >= m_maxWriteTransactions) {
+			awready_val = false;
+		}
+
+		if (ACE_MODE == ACE_MODE_ACE &&
+			m_numWriteBarriers >= ACE::MaxBarriers) {
+			awready_val = false;
+		}
+
+		return awready_val;
+	}
+
 	void write_address_phase()
 	{
 		while (true) {
-			if (m_numWriteTransactions < m_maxWriteTransactions) {
-				awready.write(true);
-			} else {
-				awready.write(false);
-			}
+			awready.write(assert_awready());
 
 			wait(clk.posedge_event() | resetn.negedge_event());
 
@@ -815,6 +1108,33 @@ private:
 								awqos.read().to_uint(),
 								awregion.read().to_uint(),
 								true);
+
+				if (ACE_MODE) {
+					wt->SetAxSnoop(awsnoop.read().to_uint());
+					wt->SetAxDomain(awdomain.read().to_uint());
+					wt->SetAxBar(awbar.read().to_uint());
+
+					wt->SetupNoWrDataTransfers();
+
+					//
+					// ACE has a limit of 256 outstanding
+					// barriers (section C8.4.1 [1])
+					//
+					if (ACE_MODE == ACE_MODE_ACE &&
+						wt->IsBarrier()) {
+						m_numWriteBarriers++;
+					}
+
+					if (!wt->hasData() && wrDataList.empty()) {
+						//
+						// Barrier and Evict have no data
+						//
+						handle_no_data_tx(wt);
+						m_numWriteTransactions++;
+						continue;
+					}
+				}
+
 				//
 				// Master must issue write transactions in the
 				// same order in which it issues transaction
@@ -824,6 +1144,32 @@ private:
 				m_numWriteTransactions++;
 				m_awEvent.notify();
 			}
+		}
+	}
+
+	Transaction *next_from(std::list<Transaction*>& l)
+	{
+		if (l.empty()) {
+			return NULL;
+		}
+		return l.front();
+	}
+
+	void handle_no_data_tx(Transaction *wt)
+	{
+		bool procesingTransId;
+
+		procesingTransId = InList(wtList, wt->GetTransactionID());
+
+		wtList.push_back(wt);
+
+		if (!procesingTransId) {
+			sc_spawn(sc_bind(
+				&axi2tlm_bridge::RunTLMTransaction,
+					this,
+					&wtList,
+					wt->GetTransactionID(),
+					&wrRespFifo));
 		}
 	}
 
@@ -906,6 +1252,19 @@ private:
 							wt->GetTransactionID(),
 							&wrRespFifo));
 				}
+
+				if (ACE_MODE) {
+					//
+					// Barrier and Evict have no data
+					//
+					wt = next_from(wrDataList);
+
+					while (wt && !wt->hasData()) {
+						wrDataList.remove(wt);
+						handle_no_data_tx(wt);
+						wt = next_from(wrDataList);
+					}
+				}
 			}
 		}
 	}
@@ -944,6 +1303,17 @@ private:
 
 			bvalid.write(false);
 
+			if (ACE_MODE == ACE_MODE_ACE) {
+				wait_abort_on_reset(wack);
+				if (wt->WaitForSnoop()) {
+					m_snp_chnls->lock_bresp.unlock();
+				}
+				if (wt->IsBarrier()) {
+					m_numWriteBarriers--;
+				}
+				m_snp_chnls->GetOverlapList().remove(wt->GetTLMGenericPayload());
+			}
+
 			delete wt;
 
 			if (reset_asserted()) {
@@ -953,6 +1323,7 @@ private:
 				//
 				wait_for_reset_release();
 			} else {
+
 				m_numWriteTransactions--;
 			}
 		}
@@ -1021,6 +1392,16 @@ private:
 		sc_signal<AXISignal(ARUSER_WIDTH) > aruser;
 		sc_signal<AXISignal(RUSER_WIDTH) > ruser;
 
+		// AXI4 ACE signals
+		sc_signal<sc_bv<3> > awsnoop;
+		sc_signal<sc_bv<2> > awdomain;
+		sc_signal<sc_bv<2> > awbar;
+		sc_signal<bool > wack;
+		sc_signal<sc_bv<4> > arsnoop;
+		sc_signal<sc_bv<2> > ardomain;
+		sc_signal<sc_bv<2> > arbar;
+		sc_signal<bool > rack;
+
 		axi_dummy(sc_module_name name) :
 			wid("wid"),
 			awqos("awqos"),
@@ -1031,7 +1412,17 @@ private:
 			arregion("arregion"),
 			arqos("arqos"),
 			aruser("aruser"),
-			ruser("ruser")
+			ruser("ruser"),
+
+			// AXI4 ACE signals
+			awsnoop("awsnoop"),
+			awdomain("awdomain"),
+			awbar("awbar"),
+			wack("wack"),
+			arsnoop("arsnoop"),
+			ardomain("ardomain"),
+			arbar("arbar"),
+			rack("rack")
 		{ }
 	};
 
@@ -1058,6 +1449,20 @@ private:
 			if (RUSER_WIDTH == 0) {
 				ruser(dummy.ruser);
 			}
+
+			if (ACE_MODE == false) {
+				awsnoop(dummy.awsnoop);
+				awdomain(dummy.awdomain);
+				awbar(dummy.awbar);
+				wack(dummy.wack);
+				arsnoop(dummy.arsnoop);
+				ardomain(dummy.ardomain);
+				arbar(dummy.arbar);
+				rack(dummy.rack);
+			} else if (ACE_MODE == ACE_MODE_ACELITE) {
+				rack(dummy.rack);
+				wack(dummy.wack);
+			}
 		} else if (m_version == V_AXI3) {
 			awqos(dummy.awqos);
 			awregion(dummy.awregion);
@@ -1068,6 +1473,16 @@ private:
 			arqos(dummy.arqos);
 			aruser(dummy.aruser);
 			ruser(dummy.ruser);
+
+			// AXI4 ACE signals
+			awsnoop(dummy.awsnoop);
+			awdomain(dummy.awdomain);
+			awbar(dummy.awbar);
+			wack(dummy.wack);
+			arsnoop(dummy.arsnoop);
+			ardomain(dummy.ardomain);
+			arbar(dummy.arbar);
+			rack(dummy.rack);
 		}
 	}
 
@@ -1075,6 +1490,8 @@ private:
 	{
 		bind_dummy();
 	}
+
+	ACESnoopChannels_S__ *m_snp_chnls;
 
 	sc_fifo<Transaction*> rdDataFifo;
 	sc_fifo<Transaction*> wrRespFifo;
@@ -1086,6 +1503,10 @@ private:
 	unsigned int m_maxWriteTransactions;
 	unsigned int m_numReadTransactions;
 	unsigned int m_numWriteTransactions;
+
+	// ACE specific
+	unsigned int m_numReadBarriers;
+	unsigned int m_numWriteBarriers;
 
 	unsigned int m_maxBurstLength;
 
