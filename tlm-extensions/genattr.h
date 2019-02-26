@@ -36,6 +36,71 @@
 	type get_ ## name (void) const { return name ; }	\
 	void set_ ## name (type new_v = def) { name = new_v; }	\
 
+// AXI-ACE extensions.
+class genattr_ace
+{
+public:
+	genattr_ace() :
+		snoop(0),
+		domain(0),
+		barrier(false),
+		datatransfer(false),
+		error_bit(false),
+		shared(false),
+		dirty(false),
+		was_unique(false),
+		is_read_tx(true)
+	{}
+
+	PROP_GETSET_GEN(snoop, uint8_t, 0)
+	PROP_GETSET_GEN(domain, uint8_t, 0)
+	PROP_GETSET_GEN(barrier, bool, true)
+
+	PROP_GETSET_GEN(datatransfer, bool, true)
+	PROP_GETSET_GEN(error_bit, bool, true)
+	PROP_GETSET_GEN(shared, bool, true)
+	PROP_GETSET_GEN(dirty, bool, true)
+	PROP_GETSET_GEN(was_unique, bool, true)
+	PROP_GETSET_GEN(is_read_tx, bool, true)
+
+	void set_is_write_tx(bool is_write_tx) { is_read_tx = !is_write_tx; }
+	bool get_is_write_tx() { return !is_read_tx; }
+
+private:
+	// For AMBA ACE this is the snoop transaction type.
+	uint8_t snoop;
+
+	// For AMBA ACE this is the shareability domain of the transaction.
+	uint8_t domain;
+
+	// For AMBA ACE this specifies if it is a barrier transaction.
+	bool barrier;
+
+	// For AMBA ACE this indicates that a full cache line of data will be
+	// provided on the snoop data channel for this transaction.
+	bool datatransfer;
+
+	// For AMBA ACE this indicates that the snooped cache line is in error.
+	bool error_bit;
+
+	// For AMBA ACE this indicates that another copy of the associated data
+	// might be held in another cache.
+	bool shared;
+
+	// For AMBA ACE this indicates that the cache lines is dirty with
+	// respect to main memory.
+	bool dirty;
+
+	// For AMBA ACE this indicates that the cache line was held in an
+	// unique state before the snoop process.
+	bool was_unique;
+
+	// For differentiating if a TLM_IGNORE_COMMAND generic payload should
+	// be treated as read or write (for example when issuing barrier
+	// transactions).
+	bool is_read_tx;
+};
+
 // Stream extensions that for example apply to AXI-Stream.
 class genattr_stream
 {
@@ -171,7 +236,8 @@ public:
 class genattr_extension
 : public tlm::tlm_extension<genattr_extension>,
   public genattr_bus,
-  public genattr_stream
+  public genattr_stream,
+  public genattr_ace
 {
 public:
 	void copy_from(const tlm_extension_base &extension) {
@@ -194,6 +260,15 @@ public:
 		set_qos(ext_genattr.get_qos());
 		set_region(ext_genattr.get_region());
 		set_exclusive_handled(ext_genattr.get_exclusive_handled());
+		set_snoop(ext_genattr.get_snoop());
+		set_domain(ext_genattr.get_domain());
+		set_barrier(ext_genattr.get_barrier());
+		set_datatransfer(ext_genattr.get_datatransfer());
+		set_error_bit(ext_genattr.get_error_bit());
+		set_shared(ext_genattr.get_shared());
+		set_dirty(ext_genattr.get_dirty());
+		set_was_unique(ext_genattr.get_was_unique());
+		set_is_read_tx(ext_genattr.get_is_read_tx());
 	}
 
 	tlm::tlm_extension_base *clone(void) const
