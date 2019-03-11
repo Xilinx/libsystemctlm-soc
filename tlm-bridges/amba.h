@@ -116,6 +116,11 @@ public:
 		resetn(mod->resetn)
 	{}
 
+	axi_common(sc_in<bool>& _clk, sc_in<bool>& _resetn) :
+		clk(_clk),
+		resetn(_resetn)
+	{}
+
 	void wait_for_reset_release()
 	{
 		do {
