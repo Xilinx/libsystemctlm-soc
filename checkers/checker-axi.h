@@ -762,9 +762,10 @@ private:
 			}
 
 			return wt;
-		} else {
+		} else if (!m_wtList.empty()) {
 			return m_wtList.front();
 		}
+		return NULL;
 	}
 
 	bool check_axi_resp(Transaction *tr)
