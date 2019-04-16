@@ -228,3 +228,207 @@ transactions are expected to be excuted in order. The AXI4Lite to TLM
 bridge achieves this by issuing translated TLM transactions and AXI4Lite
 responses in the order the corresponding AXI4Lite transactions where
 received.
+
+TLM to ACE
+----------
+The TLM to ACE bridge implements the translation between TLM Generic
+Payloads coming from a TLM Initiator, playing the role of an ACE Master,
+into ACE (master) signaling. It also translates ACE snoop signaling into
+TLM generic payloads that are forwarded through a TLM initiator socket (to
+the ACE master).
+
+
+                     .----------.
+  TLM target socket | TLM-2-ACE |
+  ----------------->|  Bridge   |
+     b_transport()  |           |
+                    |           |
+   TLM snoop        |           |
+   initiator socket |           |
+  <-----------------|           |
+     b_transport()  |           |
+                    '-----------'
+                         /|\
+                          | ACE Master port
+                          |
+                          |     ACE Slave port .---------------.
+                           `------------------>|     ACE       |
+                                               | interconnect  |
+                                               |_______________|
+
+
+The flow is that a TLM module (acting as an ACE master) sends traffic onto
+the bridges target_socket calling our b_transport() function.  ACE
+specific transaction properties (such as the domain and snoop) are carried
+in an Generic Attributes extension. The bridge will translate the generic
+payload (with the extension) to ACE signal wiggling.
+
+Incoming snoop transactions into the bridge from the opposite direction
+(through the ACE snoop channels signals) are translated into generic
+payloads with a Generic Attributes extension containing the ACE specific
+properties (snoop transaction type). These transactions are forwarded to
+the TLM module (acting as an ACE master) through the bridge's snoop init
+socket.
+
+Timing
+------
+The generic payload incoming into the bridge may already be anottated with
+a delay. As in the TLM to AXI bridge the delay is waited for before signal
+ACE wiggling starts.
+
+A handled snoop request might return to the bridge with an anottated
+delay. This delay is also waited for before the snoop response and data is
+signaled out on the snoop channels.
+
+Multiple Outstanding transactions
+---------------------------------
+As in the TLM to AXI bridge the TLM to ACE bridge's slave port's
+b_transport() can be called by multiple threads simultaneously. This means
+that multiple masters, or even a single multi-threaded master can issue
+multiple outstanding transactions towards the bridge. The bridge is also
+internally structured in a pipeline allowing for multiple outstanding
+transactions to be generated on the ACE signaling.
+
+ACE snoop requests detected on the ACE signaling are collected into a
+generic payload container allowing for multiple outstading snoop requests
+against the bridge. The ACE snoop requests are therafter handled and sent
+one at a time to the connected TLM module (ACE master) through the TLM
+initiator socket.
+
+ACE to TLM
+----------
+The ACE to TLM bridge translates ACE signal wiggling and transactions into
+TLM Generic Payloads carrying ACE specific attributes in a Generic
+Attributes extension (such as domain and snoop transaction type). The
+generic payloads are thereafter forwarded through an TLM initiator socket
+to an ACE slave (interconnect). The bridge also contains a TLM target
+socket handling snoop requests contained in generic payloads going in the
+opposite direction. Generic payloads payloads incoming into the snoop
+target socket are translates into ACE snoop channel signal wiggling.
+
+                             .----------.
+                             | ACE-2-TLM |   TLM initiator socket
+                             |  Bridge   |--------------------->
+                             |           |   b_transport()
+                             |           |
+                             |           |   TLM snoop target socket
+                             |           |<---------------------
+                             |           |   b_transport()
+                             '-----------'
+                                  /|\
+                                   | ACE Slave port
+                                   |
+  .------------.  ACE master port  ¦
+  | ACE Master |<------------------+
+  |____________|
+
+
+The flow is that a TLM module (acting as an ACE interconnect) receives ACE
+transactions through the bridges initiator socket and generates ACE snoop
+request towards an ACE master through the snoop target socket. ACE
+specific attributes in both direction are carried in a Generic Attributes
+extension.
+
+Timing
+------
+Timing in the bridge is handled similarly as in the AXI to TLM bridge. If
+a TLM generic payload issued by the bridge through the initatior socket
+returns with an anotatted delay that delay is waited for before the ACE
+response is signaled back to the ACE master.
+
+An incoming ACE snoop request might enter the bridge with an anottated
+delay. This delay also waited for before the snoop transaction is
+signaled out on the snoop channels.
+
+Multiple Outstanding transactions
+---------------------------------
+As in the AXI to TLM bridge the ACE to TLM bridge issues the TLM
+transactions in threads. This means that the bridge suppports generating
+multiple outstanding transactions to the connected TLM module (ACE
+interconnect).
+
+In the opposite direction the ACE to TLM bridge also supports multiple
+outstanding ACE snoop requests from the connected TLM module (ACE
+interconnect). The ACE snoop channels as the extended AXI channels are
+structured in a pipeline allowing for multiple outstanding snoop requests
+being signaled to the ACE master.
+
+TLM to ACELite
+----------
+The TLM to ACELite bridge implements the translation between TLM Generic
+Payloads coming from a TLM Initiator, playing the role of an ACELite
+Master, into ACELite (master) signaling.
+
+                     .--------------.
+  TLM target socket | TLM-2-ACELite |
+  ----------------->|  Bridge       |
+     b_transport()  |               |
+                    '---------------'
+                         /|\
+                          | ACELite Master port
+                          |
+                          |     ACELite Slave port .---------------.
+                           `---------------------->|     ACE       |
+                                                   | interconnect  |
+                                                   |_______________|
+
+
+The flow is that a TLM module (acting as an ACELite master) sends traffic onto
+the bridges target_socket calling our b_transport() function.  ACE
+specific transaction properties (such as the domain and snoop) are carried
+in an Generic Attributes extension. The bridge will translate the generic
+payload (with the extension) to ACELite signal wiggling.
+
+Timing
+------
+The generic payload incoming into the bridge may already be anottated with
+a delay. As in the TLM to AXI bridge the delay is waited for before signal
+ACELite wiggling starts.
+
+Multiple Outstanding transactions
+---------------------------------
+As in the TLM to AXI bridge the TLM to ACELite bridge's slave port's
+b_transport() can be called by multiple threads simultaneously. This means
+that multiple masters, or even a single multi-threaded master can issue
+multiple outstanding transactions towards the bridge. The bridge is also
+internally structured in a pipeline allowing for multiple outstanding
+transactions to be generated on the ACELite signaling.
+
+ACELite to TLM
+----------
+The ACELite to TLM bridge translates ACELite signal wiggling and
+transactions into TLM Generic Payloads carrying ACE specific attributes in
+a Generic Attributes extension (such as domain and snoop transaction
+type). The generic payloads are thereafter forwarded through an TLM
+initiator socket to an ACE slave (interconnect).
+
+                             .---------------.
+                             | ACELite-2-TLM |   TLM initiator socket
+                             |  Bridge       |--------------------->
+                             |               |   b_transport()
+                             '---------------'
+                                  /|\
+                                   | ACELite Slave port
+                      ACELite      |
+  .----------------.  master port  ¦
+  | ACELite Master |<--------------+
+  |________________|
+
+
+The flow is that a TLM module (acting as an ACE interconnect) receives
+ACELite transactions through the bridges initiator socket containing ACE
+specific attributes in a Generic Attributes extension.
+
+Timing
+------
+Timing in the bridge is handled similarly as in the AXI to TLM bridge. If
+a TLM generic payload issued by the bridge through the initatior socket
+returns with an anotatted delay that delay is waited for before the
+ACELite response is signaled back to the ACELite master.
+
+Multiple Outstanding transactions
+---------------------------------
+As in the AXI to TLM bridge the ACELite to TLM bridge issues the TLM
+transactions in threads. This means that the bridge suppports generating
+multiple outstanding transactions to the connected TLM module (ACE
+interconnect).
