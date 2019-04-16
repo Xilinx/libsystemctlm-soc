@@ -226,7 +226,7 @@ private:
 		bool rvalid;
 		bool rready;
 		sc_bv<T::DATA_W> rdata;
-		sc_bv<2> rresp;
+		sc_bv<T::RRESP_W> rresp;
 		AXISignal(T::RUSER_W) ruser;
 		AXISignal(T::ID_W) rid;
 		bool rlast;
@@ -1087,6 +1087,8 @@ private:
 		IAxLen(PC& pc) :
 			m_pc(pc)
 		{}
+
+		bool hasData() { return true; }
 
 		uint32_t get_arlen() { return to_uint(m_pc.arlen); }
 		uint32_t get_awlen() { return to_uint(m_pc.awlen); }

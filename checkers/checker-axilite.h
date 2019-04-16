@@ -195,6 +195,7 @@ private:
 	class IAxLen
 	{
 	public:
+		bool hasData() { return true; }
 		uint32_t get_arlen() { return 0; }
 		uint32_t get_awlen() { return 0; }
 		bool get_wlast() { return true; }

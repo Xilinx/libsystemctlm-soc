@@ -26,11 +26,12 @@
 #define CHECKER_UTILS_H__
 
 #include <tlm-bridges/amba.h>
+#include <tlm-bridges/amba-ace.h>
 #include "config-axi.h"
 #include "config-axilite.h"
 
-#define AXI_CHECKER(name)	\
-template<typename T>		\
+#define AXI_CHECKER(name)					\
+template<typename T, typename CFG = __AXIPCConfig>		\
 class name : public sc_core::sc_module, public axi_common
 
 #define AXI_CHECKER_CTOR(name)				\
@@ -77,11 +78,11 @@ class name : public sc_core::sc_module, public axi_common
 	sc_in<bool >& rvalid;				\
 	sc_in<bool >& rready;				\
 	sc_in<sc_bv<T::DATA_W> >& rdata;		\
-	sc_in<sc_bv<2> >& rresp;			\
+	sc_in<sc_bv<T::RRESP_W> >& rresp;		\
 	sc_in<AXISignal(T::RUSER_W) >& ruser;		\
 	sc_in<AXISignal(T::ID_W) >& rid;		\
 	sc_in<bool >& rlast;				\
-	__AXIPCConfig& m_cfg;				\
+	CFG& m_cfg;					\
 	T& m_pc;					\
 							\
 	SC_HAS_PROCESS(name);				\
@@ -195,6 +196,156 @@ class name : public sc_core::sc_module, public axi_common
 		m_cfg(pc->Cfg()),			\
 		m_pc(*pc)
 
+#define ACE_CHECKER(name)					\
+template<typename T, typename CFG = __ACEPCConfig>		\
+class name : public sc_core::sc_module, public axi_common
+
+#define ACE_CHECKER_CTOR(name)				\
+	sc_in<bool >& clk;				\
+	sc_in<bool >& resetn;				\
+	sc_in<bool >& awvalid;				\
+	sc_in<bool >& awready;				\
+	sc_in<sc_bv<T::ADDR_W> >& awaddr;		\
+	sc_in<sc_bv<3> >& awprot;			\
+	sc_in<AXISignal(T::AWUSER_W) >& awuser;		\
+	sc_in<sc_bv<4> >& awregion;			\
+	sc_in<sc_bv<4> >& awqos;			\
+	sc_in<sc_bv<4> >& awcache;			\
+	sc_in<sc_bv<2> >& awburst;			\
+	sc_in<sc_bv<3> >& awsize;			\
+	sc_in<AXISignal(T::AxLEN_W) >& awlen;		\
+	sc_in<AXISignal(T::ID_W) >& awid;		\
+	sc_in<AXISignal(T::AxLOCK_W) >& awlock;		\
+	sc_in<AXISignal(T::ID_W) >& wid;		\
+	sc_in<bool >& wvalid;				\
+	sc_in<bool >& wready;				\
+	sc_in<sc_bv<T::DATA_W> >& wdata;		\
+	sc_in<sc_bv<T::DATA_W/8> >& wstrb;		\
+	sc_in<AXISignal(T::WUSER_W) >& wuser;		\
+	sc_in<bool >& wlast;				\
+	sc_in<bool >& bvalid;				\
+	sc_in<bool >& bready;				\
+	sc_in<sc_bv<2> >& bresp;			\
+	sc_in<AXISignal(T::BUSER_W) >& buser;		\
+	sc_in<AXISignal(T::ID_W) >& bid;		\
+	sc_in<bool >& arvalid;				\
+	sc_in<bool >& arready;				\
+	sc_in<sc_bv<T::ADDR_W> >& araddr;		\
+	sc_in<sc_bv<3> >& arprot;			\
+	sc_in<AXISignal(T::ARUSER_W) >& aruser;		\
+	sc_in<sc_bv<4> >& arregion;			\
+	sc_in<sc_bv<4> >& arqos;			\
+	sc_in<sc_bv<4> >& arcache;			\
+	sc_in<sc_bv<2> >& arburst;			\
+	sc_in<sc_bv<3> >& arsize;			\
+	sc_in<AXISignal(T::AxLEN_W) >& arlen;		\
+	sc_in<AXISignal(T::ID_W) >& arid;		\
+	sc_in<AXISignal(T::AxLOCK_W) >& arlock;		\
+	sc_in<bool >& rvalid;				\
+	sc_in<bool >& rready;				\
+	sc_in<sc_bv<T::DATA_W> >& rdata;		\
+	sc_in<sc_bv<T::RRESP_W> >& rresp;		\
+	sc_in<AXISignal(T::RUSER_W) >& ruser;		\
+	sc_in<AXISignal(T::ID_W) >& rid;		\
+	sc_in<bool >& rlast;				\
+	sc_in<sc_bv<3> >& awsnoop;			\
+	sc_in<sc_bv<2> >& awdomain;			\
+	sc_in<sc_bv<2> >& awbar;			\
+	sc_in<bool >& wack;				\
+	sc_in<sc_bv<4> >& arsnoop;			\
+	sc_in<sc_bv<2> >& ardomain;			\
+	sc_in<sc_bv<2> >& arbar;			\
+	sc_in<bool >& rack;				\
+	sc_in<bool >& acvalid;				\
+	sc_in<bool >& acready;				\
+	sc_in<sc_bv<T::ADDR_W> >& acaddr;		\
+	sc_in<sc_bv<4> >& acsnoop;			\
+	sc_in<sc_bv<3> >& acprot;			\
+	sc_in<bool >& crvalid;				\
+	sc_in<bool >& crready;				\
+	sc_in<sc_bv<5> >& crresp;			\
+	sc_in<bool >& cdvalid;				\
+	sc_in<bool >& cdready;				\
+	sc_in<sc_bv<T::CD_DATA_W> >& cddata;		\
+	sc_in<bool >& cdlast;				\
+	CFG& m_cfg;					\
+	T& m_pc;					\
+							\
+	SC_HAS_PROCESS(name);				\
+	name(sc_core::sc_module_name name, T *pc) :	\
+		sc_module(name),			\
+		axi_common(pc),				\
+		clk(pc->clk),				\
+		resetn(pc->resetn),			\
+		awvalid(pc->awvalid),			\
+		awready(pc->awready),			\
+		awaddr(pc->awaddr),			\
+		awprot(pc->awprot),			\
+		awuser(pc->awuser),			\
+		awregion(pc->awregion),			\
+		awqos(pc->awqos),			\
+		awcache(pc->awcache),			\
+		awburst(pc->awburst),			\
+		awsize(pc->awsize),			\
+		awlen(pc->awlen),			\
+		awid(pc->awid),				\
+		awlock(pc->awlock),			\
+		wid(pc->wid),				\
+		wvalid(pc->wvalid),			\
+		wready(pc->wready),			\
+		wdata(pc->wdata),			\
+		wstrb(pc->wstrb),			\
+		wuser(pc->wuser),			\
+		wlast(pc->wlast),			\
+		bvalid(pc->bvalid),			\
+		bready(pc->bready),			\
+		bresp(pc->bresp),			\
+		buser(pc->buser),			\
+		bid(pc->bid),				\
+		arvalid(pc->arvalid),			\
+		arready(pc->arready),			\
+		araddr(pc->araddr),			\
+		arprot(pc->arprot),			\
+		aruser(pc->aruser),			\
+		arregion(pc->arregion),			\
+		arqos(pc->arqos),			\
+		arcache(pc->arcache),			\
+		arburst(pc->arburst),			\
+		arsize(pc->arsize),			\
+		arlen(pc->arlen),			\
+		arid(pc->arid),				\
+		arlock(pc->arlock),			\
+		rvalid(pc->rvalid),			\
+		rready(pc->rready),			\
+		rdata(pc->rdata),			\
+		rresp(pc->rresp),			\
+		ruser(pc->ruser),			\
+		rid(pc->rid),				\
+		rlast(pc->rlast),			\
+		awsnoop(pc->awsnoop),			\
+		awdomain(pc->awdomain),			\
+		awbar(pc->awbar),			\
+		wack(pc->wack),				\
+		arsnoop(pc->arsnoop),			\
+		ardomain(pc->ardomain),			\
+		arbar(pc->arbar),			\
+		rack(pc->rack),				\
+		acvalid(pc->acvalid),			\
+		acready(pc->acready),			\
+		acaddr(pc->acaddr),			\
+		acsnoop(pc->acsnoop),			\
+		acprot(pc->acprot),			\
+		crvalid(pc->crvalid),			\
+		crready(pc->crready),			\
+		crresp(pc->crresp),			\
+		cdvalid(pc->cdvalid),			\
+		cdready(pc->cdready),			\
+		cddata(pc->cddata),			\
+		cdlast(pc->cdlast),			\
+		m_cfg(pc->Cfg()),			\
+		m_pc(*pc)
+
+
 #define CHECKER_AXI_ERROR "AXI Protocol Checker Error"
 #define AXI_HANDSHAKE_ERROR "axi_handshakes"
 #define AXI_RESET_ERROR "axi_reset"
@@ -265,9 +416,14 @@ public:
 			if (aw_channel.run()) {
 				//
 				// aw signals received, now expect num_beats wd
-				// handshakes
+				// handshakes (or if in ACE mode and it is a
+				// write barrier expect a response instead)
 				//
-				m_wd += axlen.get_awlen() + 1;
+				if (!axlen.hasData()) {
+					m_b++;
+				} else {
+					m_wd += axlen.get_awlen() + 1;
+				}
 			}
 			if (w_channel.run(inc_wvalid)) {
 				m_wd--;

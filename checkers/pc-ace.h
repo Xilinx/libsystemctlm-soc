@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2018 Xilinx Inc.
- * Written by Edgar E. Iglesias,
- *            Francisco Iglesias.
+ * Copyright (c) 2019 Xilinx Inc.
+ * Written by Francisco Iglesias.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +21,14 @@
  * THE SOFTWARE.
  */
 
-#ifndef PC_AXI_H__
-#define PC_AXI_H__
+#ifndef PC_ACE_H__
+#define PC_ACE_H__
 
 #include <sstream>
 #include <tlm-bridges/amba.h>
+#include "config-ace.h"
 #include "checker-axi.h"
+#include "checker-ace.h"
 
 template<int ADDR_WIDTH,
 	 int DATA_WIDTH,
@@ -38,8 +39,10 @@ template<int ADDR_WIDTH,
 	 int ARUSER_WIDTH = 2,
 	 int WUSER_WIDTH = 2,
 	 int RUSER_WIDTH = 2,
-	 int BUSER_WIDTH = 2>
-class AXIProtocolChecker : public sc_core::sc_module
+	 int BUSER_WIDTH = 2,
+	 int CACHELINE_SZ = 64,
+	 int CD_DATA_WIDTH = DATA_WIDTH>
+class ACEProtocolChecker : public sc_core::sc_module
 {
 public:
 	enum {	ADDR_W = ADDR_WIDTH,
@@ -52,9 +55,11 @@ public:
 		WUSER_W = WUSER_WIDTH,
 		RUSER_W = RUSER_WIDTH,
 		BUSER_W = BUSER_WIDTH,
-		RRESP_W = 2 };
+		CD_DATA_W = CD_DATA_WIDTH,
+		RRESP_W = 4
+		};
 
-	typedef AXIProtocolChecker<ADDR_WIDTH,
+	typedef ACEProtocolChecker<ADDR_WIDTH,
 					DATA_WIDTH,
 					ID_WIDTH,
 					AxLEN_WIDTH,
@@ -63,7 +68,9 @@ public:
 					ARUSER_WIDTH,
 					WUSER_WIDTH,
 					RUSER_WIDTH,
-					BUSER_WIDTH> PCType;
+					BUSER_WIDTH,
+					CACHELINE_SZ,
+					CD_DATA_WIDTH> PCType;
 
 	sc_in<bool > clk;
 	sc_in<bool > resetn;
@@ -73,9 +80,9 @@ public:
 	sc_in<bool > awready;
 	sc_in<sc_bv<ADDR_WIDTH> > awaddr;
 	sc_in<sc_bv<3> > awprot;
-	sc_in<AXISignal(AWUSER_WIDTH) > awuser;	// AXI4 only
-	sc_in<sc_bv<4> > awregion;		// AXI4 only
-	sc_in<sc_bv<4> > awqos;			// AXI4 only
+	sc_in<AXISignal(AWUSER_WIDTH) > awuser;
+	sc_in<sc_bv<4> > awregion;
+	sc_in<sc_bv<4> > awqos;
 	sc_in<sc_bv<4> > awcache;
 	sc_in<sc_bv<2> > awburst;
 	sc_in<sc_bv<3> > awsize;
@@ -84,19 +91,19 @@ public:
 	sc_in<AXISignal(AxLOCK_WIDTH) > awlock;
 
 	/* Write data channel.  */
-	sc_in<AXISignal(ID_WIDTH) > wid;		// AXI3 only
+	sc_in<AXISignal(ID_WIDTH) > wid; // Keep for stable checker
 	sc_in<bool > wvalid;
 	sc_in<bool > wready;
 	sc_in<sc_bv<DATA_WIDTH> > wdata;
 	sc_in<sc_bv<DATA_WIDTH/8> > wstrb;
-	sc_in<AXISignal(WUSER_WIDTH) > wuser;	// AXI4 only
+	sc_in<AXISignal(WUSER_WIDTH) > wuser;
 	sc_in<bool > wlast;
 
 	/* Write response channel.  */
 	sc_in<bool > bvalid;
 	sc_in<bool > bready;
 	sc_in<sc_bv<2> > bresp;
-	sc_in<AXISignal(BUSER_WIDTH) > buser;	// AXI4 only
+	sc_in<AXISignal(BUSER_WIDTH) > buser;
 	sc_in<AXISignal(ID_WIDTH) > bid;
 
 	/* Read address channel.  */
@@ -104,9 +111,9 @@ public:
 	sc_in<bool > arready;
 	sc_in<sc_bv<ADDR_WIDTH> > araddr;
 	sc_in<sc_bv<3> > arprot;
-	sc_in<AXISignal(ARUSER_WIDTH) > aruser;	// AXI4 only
-	sc_in<sc_bv<4> > arregion;		// AXI4 only
-	sc_in<sc_bv<4> > arqos;			// AXI4 only
+	sc_in<AXISignal(ARUSER_WIDTH) > aruser;
+	sc_in<sc_bv<4> > arregion;
+	sc_in<sc_bv<4> > arqos;
 	sc_in<sc_bv<4> > arcache;
 	sc_in<sc_bv<2> > arburst;
 	sc_in<sc_bv<3> > arsize;
@@ -118,14 +125,45 @@ public:
 	sc_in<bool > rvalid;
 	sc_in<bool > rready;
 	sc_in<sc_bv<DATA_WIDTH> > rdata;
-	sc_in<sc_bv<2> > rresp;
-	sc_in<AXISignal(RUSER_WIDTH) > ruser;	// AXI4 only
+	sc_in<sc_bv<RRESP_W> > rresp;
+	sc_in<AXISignal(RUSER_WIDTH) > ruser;
 	sc_in<AXISignal(ID_WIDTH) > rid;
 	sc_in<bool > rlast;
 
-	SC_HAS_PROCESS(AXIProtocolChecker);
-	AXIProtocolChecker(sc_core::sc_module_name name,
-			AXIPCConfig cfg = AXIPCConfig()) :
+	// AXI4 ACE signals
+	sc_in<sc_bv<3> > awsnoop;
+	sc_in<sc_bv<2> > awdomain;
+	sc_in<sc_bv<2> > awbar;
+
+	sc_in<bool > wack;
+
+	sc_in<sc_bv<4> > arsnoop;
+	sc_in<sc_bv<2> > ardomain;
+	sc_in<sc_bv<2> > arbar;
+
+	sc_in<bool > rack;
+
+	// Snoop address channel
+	sc_in<bool > acvalid;
+	sc_in<bool > acready;
+	sc_in<sc_bv<ADDR_WIDTH> > acaddr;
+	sc_in<sc_bv<4> > acsnoop;
+	sc_in<sc_bv<3> > acprot;
+
+	// Snoop response channel
+	sc_in<bool > crvalid;
+	sc_in<bool > crready;
+	sc_in<sc_bv<5> > crresp;
+
+	// Snoop data channel
+	sc_in<bool > cdvalid;
+	sc_in<bool > cdready;
+	sc_in<sc_bv<CD_DATA_WIDTH> > cddata;
+	sc_in<bool > cdlast;
+
+	SC_HAS_PROCESS(ACEProtocolChecker);
+	ACEProtocolChecker(sc_core::sc_module_name name,
+			ACEPCConfig cfg = ACEPCConfig()) :
 		sc_module(name),
 
 		clk("clk"),
@@ -181,102 +219,96 @@ public:
 		rid("rid"),
 		rlast("rlast"),
 
+		// AXI4 ACE signals
+		awsnoop("awsnoop"),
+		awdomain("awdomain"),
+		awbar("awbar"),
+		wack("wack"),
+
+		arsnoop("arsnoop"),
+		ardomain("ardomain"),
+		arbar("arbar"),
+		rack("rack"),
+
+		// Snoop address channel
+		acvalid("acvalid"),
+		acready("acready"),
+		acaddr("acaddr"),
+		acsnoop("acsnoop"),
+		acprot("acprot"),
+
+		// Snoop response channel
+		crvalid("crvalid"),
+		crready("crready"),
+		crresp("crresp"),
+
+		// Snoop data channel
+		cdvalid("cdvalid"),
+		cdready("cdready"),
+		cddata("cddata"),
+		cdlast("cdlast"),
+
 		dummy("axi-dummy"),
-		m_cfg(*reinterpret_cast<__AXIPCConfig*>(&cfg)),
-		m_checker_axi_stable("checker-axi-stable", this),
-		m_check_rd_tx("check-rd-tx", this),
-		m_check_wr_tx("check-wr-tx", this),
-		m_check_addr_alignment("check-addr-alignment", this),
-		m_check_axi_handshakes("check-axi-handshakes", this),
-		m_check_axi_reset("check-axi-reset", this)
-	{}
 
-	AXIVersion GetVersion() { return m_cfg.get_axi_version(); }
+		m_ace_mode(ACE_MODE_ACE),
 
-	__AXIPCConfig& Cfg() { return m_cfg; }
+		m_cfg(*reinterpret_cast<__ACEPCConfig*>(&cfg)),
+		m_check_axi_stable("check-axi-stable", this),
+		m_check_axi_reset("check-axi-reset", this),
+		m_check_ace_stable("check-ace-stable", this),
+		m_check_ace_handshakes("check-ace-handshakes", this),
+		m_check_ace_rd_tx("check-ace-rd-tx", this),
+		m_check_ace_wr_tx("check-ace-wr-tx", this),
+		m_check_ace_snoop_ch("check-ace-snoop-ch", this),
+		m_check_ace_barrier("check-ace-barrier", this),
+		m_check_ace_cd_data("check-ace-cd-data", this),
+		m_check_ace_reset("check-ace-reset", this)
+	{
+		m_cfg.set_cacheline_size(CACHELINE_SZ);
+	}
+
+	__ACEPCConfig& Cfg() { return m_cfg; }
+
+	unsigned int GetACEMode() { return m_ace_mode; }
 private:
 	class axi_dummy : public sc_core::sc_module {
 	public:
-		// AXI4
 		sc_signal<AXISignal(ID_WIDTH) > wid;
 
-		// AXI3
-		sc_signal<sc_bv<4> > awqos;
-		sc_signal<sc_bv<4> > awregion;
-		sc_signal<AXISignal(AWUSER_WIDTH) > awuser;
-		sc_signal<AXISignal(WUSER_WIDTH) > wuser;
-		sc_signal<AXISignal(BUSER_WIDTH) > buser;
-		sc_signal<sc_bv<4> > arregion;
-		sc_signal<sc_bv<4> > arqos;
-		sc_signal<AXISignal(ARUSER_WIDTH) > aruser;
-		sc_signal<AXISignal(RUSER_WIDTH) > ruser;
-
 		axi_dummy(sc_module_name name) :
-			wid("wid"),
-			awqos("awqos"),
-			awregion("awregion"),
-			awuser("awuser"),
-			wuser("wuser"),
-			buser("buser"),
-			arregion("arregion"),
-			arqos("arqos"),
-			aruser("aruser"),
-			ruser("ruser")
+			wid("wid")
 		{ }
 	};
 
-	void bind_dummy(void) {
-		if (GetVersion() == V_AXI4) {
-			wid(dummy.wid);
-
-			//
-			// Optional signals
-			//
-			if (AWUSER_WIDTH == 0) {
-				awuser(dummy.awuser);
-			}
-			if (WUSER_WIDTH == 0) {
-				wuser(dummy.wuser);
-			}
-			if (BUSER_WIDTH == 0) {
-				buser(dummy.buser);
-			}
-			if (ARUSER_WIDTH == 0) {
-				aruser(dummy.aruser);
-			}
-			if (RUSER_WIDTH == 0) {
-				ruser(dummy.ruser);
-			}
-		} else if (GetVersion() == V_AXI3) {
-			awqos(dummy.awqos);
-			awregion(dummy.awregion);
-			awuser(dummy.awuser);
-			wuser(dummy.wuser);
-			buser(dummy.buser);
-			arregion(dummy.arregion);
-			arqos(dummy.arqos);
-			aruser(dummy.aruser);
-			ruser(dummy.ruser);
-		}
-	}
-
 	void before_end_of_elaboration()
 	{
-		bind_dummy();
+		wid(dummy.wid);
 	}
 
 	axi_dummy dummy;
 
-	// Checker cfg
-	__AXIPCConfig m_cfg;
+	unsigned int m_ace_mode;
 
-	// Checkers
-	checker_axi_stable<PCType> m_checker_axi_stable;
-	check_rd_tx<PCType> m_check_rd_tx;
-	check_wr_tx<PCType> m_check_wr_tx;
-	check_addr_alignment<PCType> m_check_addr_alignment;
-	check_axi_handshakes<PCType> m_check_axi_handshakes;
-	check_axi_reset<PCType> m_check_axi_reset;
+	// Checker cfg
+	__ACEPCConfig m_cfg;
+
+	//
+	// AXI checkers, monitors signals that are both AXI and ACE
+	//
+	checker_axi_stable<PCType, __ACEPCConfig> m_check_axi_stable;
+	check_axi_reset<PCType, __ACEPCConfig>    m_check_axi_reset;
+
+	//
+	// ACE checkers, monitors ACE signals only
+	//
+	checker_ace_stable<PCType>         m_check_ace_stable;
+	checker_ace_handshakes<PCType>     m_check_ace_handshakes;
+	checker_ace_rd_tx<PCType>          m_check_ace_rd_tx;
+	checker_ace_wr_tx<PCType>          m_check_ace_wr_tx;
+	checker_ace_snoop_channels<PCType> m_check_ace_snoop_ch;
+	checker_ace_barrier<PCType> 	   m_check_ace_barrier;
+	checker_ace_cd_data<PCType> 	   m_check_ace_cd_data;
+	checker_ace_reset<PCType>          m_check_ace_reset;
 };
 
-#endif /* PC_AXI_H__ */
+#endif /* PC_ACE_H__ */
