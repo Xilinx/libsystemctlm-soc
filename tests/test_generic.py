@@ -41,6 +41,11 @@ pc_ace_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/checkers/ace/"), '*-test')
 tests_pc_ace = ['./checkers/ace/{0}'.format(i) for i in pc_ace_tests]
 
+pc_acelite_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/checkers/acelite/"), '*-test')
+tests_pc_acelite = ['./checkers/acelite/{0}'.format(i) for i in pc_acelite_tests]
+
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -95,5 +100,10 @@ def test_tg_ace_tests(filename):
 
 @pytest.mark.parametrize("filename", tests_pc_ace)
 def test_checker_ace_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.parametrize("filename", tests_pc_acelite)
+def test_checker_acelite_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)

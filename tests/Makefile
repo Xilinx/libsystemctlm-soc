@@ -39,6 +39,7 @@ SUBDIRS += traffic-generators/ace/
 SUBDIRS += checkers/axi
 SUBDIRS += checkers/axilite
 SUBDIRS += checkers/ace
+SUBDIRS += checkers/acelite
 
 PYTEST ?=py.test
 PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html
