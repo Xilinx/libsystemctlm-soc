@@ -33,6 +33,10 @@ tg_axis_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/traffic-generators/axis/"), '*-tg-test')
 tests_tg_axis = ['./traffic-generators/axis/{0}'.format(i) for i in tg_axis_tests]
 
+tg_ace_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/traffic-generators/ace/"), '*-tg-test')
+tests_tg_ace = ['./traffic-generators/ace/{0}'.format(i) for i in tg_ace_tests]
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -77,5 +81,10 @@ def test_cp_tg_axilite(filename):
 
 @pytest.mark.parametrize("filename", tests_tg_axis)
 def test_tg_axis_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.parametrize("filename", tests_tg_ace)
+def test_tg_ace_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)

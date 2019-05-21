@@ -60,7 +60,8 @@ DataTransferVec merge(DataTransferVec transfers)
 		}
 
 		if (t.cmd == DataTransfer::READ ||
-				t.cmd == DataTransfer::WRITE) {
+				t.cmd == DataTransfer::WRITE ||
+				t.cmd == DataTransfer::IGNORE ) {
 			merged_transfers.push_back(t);
 		}
 	}

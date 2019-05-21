@@ -28,6 +28,11 @@ def match_id_width(f):
 	if m:
 		print("-DAXI_ID_WIDTH=" + m.group(1))
 
+def match_cacheline_sz(f):
+	m = re.match('cl(\d+)', f)
+	if m:
+		print("-DCACHELINE_SIZE=" + m.group(1))
+
 def main():
 	if len(sys.argv) < 2:
 		usage(1)
@@ -40,6 +45,7 @@ def main():
 		match_address_width(f)
 		match_data_width(f)
 		match_id_width(f)
+		match_cacheline_sz(f)
 
 if __name__ == "__main__":
 	main()

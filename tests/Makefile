@@ -35,6 +35,7 @@ SUBDIRS += traffic-generators/axi/cp-tg/
 SUBDIRS += traffic-generators/axilite/
 SUBDIRS += traffic-generators/axilite/cp-tg/
 SUBDIRS += traffic-generators/axis/
+SUBDIRS += traffic-generators/ace/
 SUBDIRS += checkers/axi
 SUBDIRS += checkers/axilite
 
