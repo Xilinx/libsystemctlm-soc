@@ -30,6 +30,7 @@ struct DataTransfer {
 	enum : uint32_t {
 		READ,
 		WRITE,
+		IGNORE,
 	};
 
 	uint64_t                 addr;
@@ -58,6 +59,10 @@ struct DataTransfer {
 			bool write_allocate;
 			uint8_t qos;
 			uint8_t region;
+			uint8_t snoop;
+			uint8_t domain;
+			bool barrier;
+			bool is_read;
 		} gen_attr;
 	} ext;
 
@@ -148,7 +153,10 @@ struct DataTransfer {
 			<< ".read_allocate: " << t.ext.gen_attr.read_allocate << ", "
 			<< ".write_allocate: " << t.ext.gen_attr.write_allocate << ", "
 			<< ".qos: " << static_cast<uint32_t>(t.ext.gen_attr.qos) << ", "
-			<< ".region: " << static_cast<uint32_t>(t.ext.gen_attr.region)
+			<< ".region: " << static_cast<uint32_t>(t.ext.gen_attr.region) << ", "
+			<< ".snoop: " << static_cast<uint32_t>(t.ext.gen_attr.snoop) << ", "
+			<< ".domain: " << static_cast<uint32_t>(t.ext.gen_attr.domain) << ", "
+			<< ".barrier: " << t.ext.gen_attr.barrier
 			<< " }, ";
 		return out;
 	}

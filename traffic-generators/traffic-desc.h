@@ -44,8 +44,15 @@ public:
 
 	virtual tlm::tlm_command getCmd()
 	{
-		return ((*m_it).cmd == DataTransfer::WRITE) ?
-			tlm::TLM_WRITE_COMMAND : tlm::TLM_READ_COMMAND;
+		tlm::tlm_command cmd = tlm::TLM_IGNORE_COMMAND;
+
+		if ((*m_it).cmd == DataTransfer::WRITE) {
+			cmd = tlm::TLM_WRITE_COMMAND;
+		} else if ((*m_it).cmd == DataTransfer::READ) {
+			cmd = tlm::TLM_READ_COMMAND;
+		}
+
+		return cmd;
 	}
 
 	virtual uint64_t getAddress() { return (*m_it).addr; }
@@ -95,6 +102,10 @@ public:
 			genattr->set_write_allocate(t.ext.gen_attr.write_allocate);
 			genattr->set_qos(t.ext.gen_attr.qos);
 			genattr->set_region(t.ext.gen_attr.qos);
+			genattr->set_snoop(t.ext.gen_attr.snoop);
+			genattr->set_domain(t.ext.gen_attr.domain);
+			genattr->set_barrier(t.ext.gen_attr.barrier);
+			genattr->set_is_read_tx(t.ext.gen_attr.is_read);
 
 			gp->set_extension(genattr);
 		}
