@@ -49,6 +49,11 @@ tg_chi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/traffic-generators/chi/"), '*-tg-test')
 tests_tg_chi = ['./traffic-generators/chi/{0}'.format(i) for i in tg_chi_tests]
 
+pc_chi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/checkers/chi/"), '*-test')
+tests_pc_chi = ['./checkers/chi/{0}'.format(i) for i in pc_chi_tests]
+
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -113,5 +118,10 @@ def test_checker_acelite_tests(filename):
 
 @pytest.mark.parametrize("filename", tests_tg_chi)
 def test_tg_chi_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.parametrize("filename", tests_pc_chi)
+def test_checker_chi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)

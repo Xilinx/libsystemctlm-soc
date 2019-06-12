@@ -41,6 +41,7 @@ SUBDIRS += checkers/axi
 SUBDIRS += checkers/axilite
 SUBDIRS += checkers/ace
 SUBDIRS += checkers/acelite
+SUBDIRS += checkers/chi
 
 PYTEST ?=py.test
 PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html
