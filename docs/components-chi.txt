@@ -1,0 +1,191 @@
+RequestNode_F
+-------------
+
+The Request Node operates in TLM and consists internally of a TLM traffic
+generator coupled with a cache_chi. The traffic generator generates TLM
+generic payloads based on a traffic description given at construction of
+the RequestNode_F class. The generated generic payloads are then pipelined
+into the CHI cache that either processes the transaction if the needed
+data already resides in the cache (in the correct state), or generates
+required CHI transactions (requests) for fetching the data before
+processing.
+
+
+    RequestNode_F              TLM initiator sockets (REQ, RSP, DAT)
+    .------------------------.---------------------->
+   |            .----------. |---------------------->
+   |           | cache_chi | |---------------------->
+   |  Traffic  |           | |
+   | generator '-----------' |   TLM target sockets (RSP, DAT, SNP)
+   |                         |<---------------------
+   |                         |<---------------------
+   |                         |<---------------------
+    '------------------------'   b_transport()
+
+
+
+cache_chi
+---------
+
+The cache_chi operates as a writeback cache. The cache generates CHI
+transactions as needed when processing incoming TLM generic payloads (if
+data already resides in the cache in the required cache state no CHI
+transaction will be generated). In it's default mode it generates copyback
+write transactions, dataless transactions (CleanUnique, MakeUnique and
+Evict) and read transactions resulting in cache line allocation
+(ReadShared and ReadUnique). It is also possible to configure the cache to
+scramble the generated transactions for transmitting request as
+WriteUnique* and ReadOnce* if desired, the result for these transactions
+will not be cached.
+
+The cache acts on incoming snoop requests and also replies on DVM snoop
+requests.
+
+The cache contains three initiator sockets where it outputs REQ, RSP and
+DAT messages described in a TLM generic payload and an attached CHI
+attributes tlm extension. The cache also has three target sockets where
+incoming RSP, DAT and SNP messages are received (also described in a
+generic payload with an CHI attributes extension).
+
+
+                                   TLM initiator sockets (REQ, RSP, DAT)
+                     .----------.---------------------->
+                    |           |---------------------->
+                    |           |---------------------->
+  TLM target socket | cache_chi |
+  <---------------->|           |  TLM target sockets (RSP, DAT, SNP)
+                    |           |<---------------------
+                    |           |<---------------------
+     b_transport()  '-----------'<---------------------
+                                     b_transport()
+
+
+SlaveNode_F
+-------------
+
+The SlaveNode_F contains two TLM target sockets where it receives REQ and
+DAT messages and also two TLM initiator sockets where it transmits DAT and
+RSP messages (all these messages are described with a TLM generic payload
+containing an attached CHI attributes extension). Finally it also contains
+a TLM initiator socket where the SN-F generates transactions (non CHI)
+towards a TLM target socket (TLM module).
+
+Incoming CHI read requests (transactions incoming on the rigth in picture
+below) result in a read TLM transaction (non CHI) towards the connected
+TLM module (connected to the left in the picture below). Incoming CHI
+write transaction result in a write towards the TLM module. Incoming CHI
+atomic transactions will be processed with a read and a write towards the
+TLM module (AtomicStore only generates a write). CHI dataless transactions
+are responded on by the Slave Node (but no TLM transactions is generated
+towards the TLM module).
+
+Finally the SN also generates RetryAck and PCrdGrant messages on occation.
+
+
+                             TLM target sockets (REQ, DAT)
+                 .------------.<---------------------
+                |             |<---------------------
+ TLM initiator  |             |
+    socket      |             |  b_transport()
+ <------------->| SlaveNode_F |
+                |             |  TLM initiator sockets (RSP, DAT)
+                |             |--------------------->
+                '-------------'--------------------->
+
+
+iconnect_chi
+------------
+
+The iconnect_chi operates in TLM as an HN-F and also contains an MN
+handling DVM operations. It contains ports, of type Port_RN_F, for
+connecting RN-Fs and a port, of type Port_SN, for connecting an SN.
+The ICN also contains a snoop filter.
+
+The CHI ICN receives request messages from masters, RN-Fs, through the
+ports (Port_RN_Fs). If the requests require snooping the ICN will then
+look into it's snoop filter to decide which masters, RN-Fs, to snoop (this
+is also done through the Port_RN_Fs). If no snooping is required the ICN
+will proceed with replying on the transaction as required or generating a
+transaction (request) downstream towards the connected slave node.
+
+Finally the ICN also generates RetryAck and PCrdGrant messages on occation
+(towards the RN-Fs).
+
+ .----------------------------------.
+|  |           |  |           |     |
+|  | Port_RN_F |  | Port_RN_F | ... |
+|  |           |  |           |     |
+|  '-----------'  '-----------'     |
+|                                   |
+|          .----------.             |
+|          |          |             |
+|          | Port_SN  |             |
+|          |          |             |
+ '----------------------------------'
+
+Each Port_RN_F contains three TLM target sockets where reception of REQ,
+RSP and DAT messages is done and also three TLM initiator sockets for
+transmitting RSP, DAT and SNP messages (all CHI messages are described
+with at TLM generic payload with an attached CHI attributes extension).
+Received messages are forwarded to and therafter processed by the HN-F/MN.
+
+               TLM target sockets (REQ, RSP, DAT)
+   .----------.<----------------------
+  |           |<----------------------
+  |           |<----------------------
+  |           |  b_transport()
+  | Port_RN_F |
+  |           |  TLM snoop initiator socket (RSP, DAT, SNP)
+  |           |--------------------->
+  |           |--------------------->
+  '-----------'--------------------->
+
+The port towards the slave node, Port_SN, contains two TLM initiator
+sockets where REQ and DAT messages are transmitted and two TLM target
+sockets where RSP and DAT messages are received from the SN (as with the
+Port_RN_F all CHI messages are described with at TLM generic payload with
+an attached CHI attributes extension). Received messages are forwarded to
+and therafter processed by the HN-F/MN.
+
+               TLM target sockets (REQ, DAT)
+   .----------.--------------------->
+  |           |--------------------->
+  |           |  b_transport()
+  |  Port_SN  |
+  |           |  TLM snoop initiator socket (RSP, DAT)
+  |           |<---------------------
+  '-----------'<---------------------
+
+
+CHI traffic generation
+----------------------
+
+For generating CHI traffic against an interconnect a RequestNode_F can be
+pipelined with a TLM to CHI bridge. The bridges will then translate the
+incoming CHI messages and generate the CHI signal wiggling required.
+
+ .--------------. TLM  .---------------.
+| RequestNode_F | <--> | tlm2chi_bridge | ----> CHI signal wiggling
+ '--------------'       '---------------'
+
+With the CHI interconnect pipelined to an CHI to TLM bridge CHI snoop
+transactions can be generated towards a Request Node. The bridge will then
+handle the CHI signal wiggling required of the translated snoop
+transactions.
+
+ .--------------------------. TLM   .---------------.
+| iconnect_chi  | Port_RN_F | <--> | chi2tlm_bridge | ----> CHI signal
+|               '-----------|       '---------------'        wiggling
+|                           |
+'--------------------------'
+
+Through the CHI interconnect (pipelined into a TLM to CHI bridge of the
+type SN) CHI traffic can be generated towards a Slave Node. The bridge
+will then handle the CHI signal wiggling required of the translated CHI
+messages.
+
+ .------------------------. TLM   .---------------.
+| iconnect_chi  | Port_SN | <--> | tlm2chi_bridge | ----> CHI signal
+|               '---------|       '---------------'        wiggling
+|                         |
+'-------------------------'
