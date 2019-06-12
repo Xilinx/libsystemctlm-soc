@@ -155,11 +155,45 @@ protocol checkers are setup. The ACELite protocol checker will ignore
 configured checks that are not applicable to ACELite (for example checks on the
 snoop channels).
 
+CHIProtocolChecker
+------------------
+
+The CHI protocol checker monitors CHI signaling between an RN-F and an ICN
+and reports protocol errors detected on the signals. All checks are
+disabled by default and have to be enabled with a CHIPCConfig given at
+class construction. The CHI protocol checker can be configured to perform
+the following checks:
+
+	* Check CHI requests and validate fields in the request flit
+	  as the Opcode, SnpAtt, Excl, Order, AllowRetry, Address (atomic)
+	  and Size.
+
+	* Check CHI data flit opcodes
+
+	* Check CHI snoop request opcodes and validate DVM messages
+
+	* Check CHI responses opcodes
+
+	* Check that outstanding link credits on the CHI channels are between 0
+	 - 15 (13.2.1 [2])
+
+	* Check transactions structures (read, dataless, write and snoop
+	  transactions, 2.3 [2]).
+
+	* Check request retries and Protocol Credits (2.11 [2]).
+
+CHIPCConfig - Configuraring the CHI protocol checker
+----------------------------------------------------
+
+The CHI protocol checker is configured at construction with an
+CHIPCConfig. Through the CHIPCConfig the checks desired to be performed by the
+protocol checkers are setup.
+
 Error reports
 -------------
-The AXI, AXI4Lite, ACE and ACELite protocol checkers report errors using
-systemc's SC_REPORT_ERROR macro and errors can thus be caught/intercepted
-through systemc's error reporting API.
+The AXI, AXI4Lite, ACE, ACELite and CHI protocol checkers report errors
+using systemc's SC_REPORT_ERROR macro and errors can thus be
+caught/intercepted through systemc's error reporting API.
 
 Example 1 - Default configuration
 ---------------------------------
@@ -298,8 +332,32 @@ ACEPCConfig checker_config()
 }
 ...
 
+Example 8 - Configuring an CHI protocol checker
+---------------------------------------------------------------------------
+The following example configures the protocol checker to perform all checks:
+
+...
+
+
+CHIPCConfig checker_config()
+{
+	CHIPCConfig cfg;
+
+	cfg.enable_all_checks();
+
+	return cfg;
+}
+...
+{
+	...
+	CHIProtocolChecker<> checker("checker", checker_config());
+	...
+}
+...
+
 
 References
 ----------
 
  [1] AMBA AXI and ACE Protocol Specification, ARM IHI 0022D, ID102711
+ [2] AMBA 5 CHI Architecture Specification, ARM IHI 0050C, ID050218
