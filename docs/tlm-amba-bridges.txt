@@ -432,3 +432,149 @@ As in the AXI to TLM bridge the ACELite to TLM bridge issues the TLM
 transactions in threads. This means that the bridge suppports generating
 multiple outstanding transactions to the connected TLM module (ACE
 interconnect).
+
+TLM to CHI bridges
+------------------
+
+The TLM to CHI bridges (type RN-F and type SN) translate TLM generic
+payloads, with attached CHI attributes extensions, and describing CHI
+messages into CHI packets and CHI signal wiggling on the TX channels. The
+bridges also translate back incoming CHI packets on the CHI RX link
+signals into generic payloads with attached CHI attributes.
+
+The TLM to CHI bridge of type RN-F contains three TLM target sockets where
+incoming REQ, RSP, DAT messages are received (left hand side in the
+picture). The messages are thereafter translated into signal wiggling on
+the corresponding CHI TX channel (right hand side in the picture below).
+
+The bridge also translate incoming RSP, DAT and SNP messages on the CHI RX
+channel signals (right hand side in the picture) into TLM generic
+payloads with CHI attributes extensions which are thereafter transmitted
+on the corresponding TLM initiator socket (left hand side in the picture
+below).
+
+                     .----------.
+  TLM target socket |           |
+     b_transport()  |           | CHI TXREQ, TXRSP, TXDAT channels
+    (REQ, RSP, DAT) | TLM-2-CHI |
+  ----------------->|  Bridge   |------------------->
+  ----------------->|    RN-F   |------------------->
+  ----------------->|           |------------------->
+                    |           |
+   TLM snoop        |           |
+   initiator socket |           | CHI RXRSP, RXDAT, RXSNP channels
+    (RSP, DAT, SNP) |           |
+  <-----------------|           |<-------------------
+  <-----------------|           |<-------------------
+  <-----------------|           |<-------------------
+                    '-----------'
+
+The TLM to CHI bridge of type SN contains two TLM target sockets where
+incoming REQ and DAT messages are received (left hand side in the
+picture below). The messages are thereafter translated into signal wiggling on
+the corresponding CHI TX channel (right hand side in the picture below).
+
+The bridge also translate incoming RSP and DAT messages on the CHI RX
+channel signals (right hand side in the picture) into TLM generic
+payloads with CHI attributes extensions which are thereafter transmitted
+on the corresponding TLM initiator socket (left hand side in the picture
+below).
+
+                     .----------.
+  TLM target socket |           |
+     b_transport()  |           | CHI TXREQ, TXDAT channels
+    (REQ, DAT)      | TLM-2-CHI |
+  ----------------->|  Bridge   |------------------->
+  ----------------->|    SN     |------------------->
+                    |           |
+   TLM snoop        |           |
+   initiator socket |           | CHI RXRSP, RXDAT channels
+    (RSP, DAT)      |           |
+  <-----------------|           |<-------------------
+  <-----------------|           |<-------------------
+                    '-----------'
+
+Timing
+------
+Incoming CHI messages might enter the bridges (type RN-F or SN) with an
+anottated delay. This delay is waited for before the message's CHI signal
+wiggling starts.
+
+If a TLM generic payload issued by the bridges (type RN-F or SN) through
+one of the initatior sockets returns with an anotatted delay that delay is
+waited for before processing of the next CHI message starts.
+
+CHI to TLM bridges
+------------------
+
+The CHI to TLM bridges (type RN-F and type SN) operate in a similar fashion
+as the TLM to CHI bridges. The bridges translate TLM generic payloads,
+with attached CHI attributes extensions, and describing CHI messages into
+CHI packets and CHI signal wiggling on the TX channels. The bridges also
+translate back incoming CHI packets on the CHI RX link signals into
+generic payloads with attached CHI attributes.
+
+The CHI to TLM bridge of type RN-F contains three TLM target sockets where
+incoming RSP, DAT and SNP messages are received (left hand side in the
+picture). The messages are thereafter translated into signal wiggling on
+the corresponding CHI TX channel (right hand side in the picture below).
+
+The bridge also translate incoming REQ, RSP and DAT messages on the CHI RX
+channel signals (right hand side in the picture) into TLM generic
+payloads with CHI attributes extensions which are thereafter transmitted
+on the corresponding TLM initiator socket (left hand side in the picture
+below).
+
+
+                     .----------.
+    TLM initiator   |           |
+       socket       |           | CHI RXREQ, RXRSP, RXDAT channels
+    (REQ, RSP, DAT) | CHI-2-TLM |
+  <-----------------|  Bridge   |<-------------------
+  <-----------------|    RN-F   |<-------------------
+  <-----------------|           |<-------------------
+                    |           |
+ TLM target sockets |           |
+     b_transport()  |           | CHI TXRSP, TXDAT, TXSNP channels
+    (RSP, DAT, SNP) |           |
+  ----------------->|           |------------------->
+  ----------------->|           |------------------->
+  ----------------->|           |------------------->
+                    '-----------'
+
+The CHI to TLM bridge of type SN contains two TLM target sockets where
+outgoing RSP and DAT messages are received (left hand side in the
+picture below). The messages are thereafter translated into signal wiggling on
+the corresponding CHI TX channel (right hand side in the picture below).
+
+The bridge also translate incoming REQ and DAT messages on the CHI RX
+channel signals (right hand side in the picture) into TLM generic
+payloads with CHI attributes extensions which are thereafter transmitted
+on the corresponding TLM initiator socket (left hand side in the picture
+below).
+
+                     .----------.
+    TLM initiator   |           |
+       socket       |           | CHI TXREQ, TXDAT channels
+     (REQ, DAT)     | CHI-2-TLM |
+  <-----------------|  Bridge   |<-------------------
+  <-----------------|    SN     |<-------------------
+                    |           |
+                    |           |
+  TLM target socket |           |
+     b_transport()  |           | CHI TXRSP, TXDAT channels
+     (RSP, DAT)     |           |
+  ----------------->|           |------------------->
+  ----------------->|           |------------------->
+                    '-----------'
+
+Timing
+------
+
+Timing is handled in the manner as in the TLM to CHI bridges. If incoming
+CHI messages enter the bridges (type RN-F or SN) with an anottated delay,
+the delay is waited for before the message's CHI signal wiggling starts.
+
+If a TLM generic payload issued by the bridges (type RN-F or SN) through
+one of the initatior sockets returns with an anotatted delay that delay is
+waited for before processing of the next CHI message starts.
