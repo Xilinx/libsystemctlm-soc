@@ -23,7 +23,7 @@
 #ifndef SIGNALGENERATOR_H
 #define SIGNALGENERATOR_H
 
-#include <tlm-bridges/pkts-chi.h>
+#include <tlm-bridges/private/chi/pkts.h>
 
 #define SG_CHI_CH(name, flit_width)		\
 sc_out<bool > name ## flitpend;			\

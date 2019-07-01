@@ -25,7 +25,7 @@
 #define __PC_CHI_H__
 
 #include <sstream>
-#include <tlm-bridges/common-chi.h>
+#include <tlm-bridges/private/chi/common.h>
 #include "config-chi.h"
 #include "checker-chi.h"
 

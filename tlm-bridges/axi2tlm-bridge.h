@@ -37,7 +37,7 @@
 #include "tlm-bridges/amba.h"
 #include "tlm-bridges/amba-ace.h"
 #include "tlm-extensions/genattr.h"
-#include "tlm-bridges/ace-snoop-channels.h"
+#include "tlm-bridges/private/ace/snoop-channels.h"
 
 /*
   MAX DATA_WIDTH = 1024 bits / 128 bytes

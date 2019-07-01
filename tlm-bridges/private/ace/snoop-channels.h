@@ -41,13 +41,13 @@
  * THE SOFTWARE.
  */
 
-#ifndef TLM_BRIDGES_ACE_SNOOP_CHANNELS_H__
-#define TLM_BRIDGES_ACE_SNOOP_CHANNELS_H__
+#ifndef TLM_BRIDGES_PRIV_ACE_SNOOP_CHANNELS_H__
+#define TLM_BRIDGES_PRIV_ACE_SNOOP_CHANNELS_H__
 
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include "amba.h"
-#include "amba-ace.h"
+#include "tlm-bridges/amba.h"
+#include "tlm-bridges/amba-ace.h"
 #include "tlm-extensions/genattr.h"
 
 namespace AMBA {

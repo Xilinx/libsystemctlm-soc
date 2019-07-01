@@ -26,8 +26,8 @@
 #ifndef TLM2CHI_BRIDGE_RNF_H__
 #define TLM2CHI_BRIDGE_RNF_H__
 
-#include "tlm-bridges/pkts-chi.h"
-#include "tlm-bridges/common-chi.h"
+#include "tlm-bridges/private/chi/pkts.h"
+#include "tlm-bridges/private/chi/common.h"
 
 using namespace AMBA::CHI;
 

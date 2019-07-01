@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef COMMON_CHI_H__
-#define COMMON_CHI_H__
+#ifndef TLM_BRIDGES_PRIV_CHI_COMMON_H__
+#define TLM_BRIDGES_PRIV_CHI_COMMON_H__
 
 #include <list>
 

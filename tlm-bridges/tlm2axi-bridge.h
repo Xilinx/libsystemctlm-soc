@@ -36,7 +36,7 @@
 #include "tlm-bridges/amba-ace.h"
 #include "tlm-modules/tlm-aligner.h"
 #include "tlm-extensions/genattr.h"
-#include "tlm-bridges/ace-snoop-channels.h"
+#include "tlm-bridges/private/ace/snoop-channels.h"
 
 #define TLM2AXI_BRIDGE_MSG "tlm2axi-bridge"
 

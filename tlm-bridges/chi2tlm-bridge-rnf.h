@@ -26,8 +26,8 @@
 #ifndef CHI2TLM_BRIDGE_RNF_H__
 #define CHI2TLM_BRIDGE_RNF_H__
 
-#include "tlm-bridges/pkts-chi.h"
-#include "tlm-bridges/common-chi.h"
+#include "tlm-bridges/private/chi/pkts.h"
+#include "tlm-bridges/private/chi/common.h"
 
 template<
 	int DATA_WIDTH = 512,

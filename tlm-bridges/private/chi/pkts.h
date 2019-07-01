@@ -21,8 +21,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef BRIDGE_FLITS_CHI_H__
-#define BRIDGE_FLITS_CHI_H__
+#ifndef TLM_BRIDGES_PRIV_CHI_PKTS_H__
+#define TLM_BRIDGES_PRIV_CHI_PKTS_H__
 
 #include <list>
 
