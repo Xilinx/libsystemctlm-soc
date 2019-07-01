@@ -68,8 +68,8 @@ private:
 		enum { MAX_CREDITS = 15 };	// 13.2.1 [1]
 
 		LCrdMonitor(sc_in<bool >& flitv, sc_in<bool >& lcrdv) :
-			m_flitv(flitv),
 			m_lcrdv(lcrdv),
+			m_flitv(flitv),
 			m_credits(0)
 		{}
 
@@ -2557,7 +2557,6 @@ private:
 	{
 		sc_bv<T::RXRSP_FLIT_W> flit = rxrspflit.read();
 		RspFlit_t rsp(flit);
-		bool rspHandled = false;
 
 		if (rsp.IsRetryAck()) {
 			Completer *comp = LookupCompleter(rsp);

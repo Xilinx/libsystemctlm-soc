@@ -119,11 +119,15 @@ public:
 
 	virtual bool HandleRxRsp(tlm::tlm_generic_payload& gp,
 				chiattr_extension *chiattr)
-	{}
+	{
+		return false;
+	}
 
 	virtual bool HandleRxDat(tlm::tlm_generic_payload& gp,
 				chiattr_extension *chiattr)
-	{}
+	{
+		return false;
+	}
 
 	virtual bool TransmitOnTxDatChannel() { return false; }
 
@@ -528,7 +532,6 @@ public:
 				unsigned int line_offset)
 	{
 		unsigned char *data = gp.get_data_ptr() + pos;
-		uint64_t addr = gp.get_address() + pos;
 		unsigned int len = gp.get_data_length() - pos;
 		unsigned int max_len = CACHELINE_SZ - line_offset;
 		unsigned char *be = gp.get_byte_enable_ptr();
@@ -539,7 +542,7 @@ public:
 		}
 
 		if (be_len) {
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++, pos++) {
 				bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
@@ -830,7 +833,7 @@ public:
 		}
 
 		if (be_len) {
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++, pos++) {
 				bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
@@ -1197,8 +1200,8 @@ public:
 		m_gotDBID(false),
 		m_gotCompData(false),
 		m_datOpcode(Dat::NonCopyBackWrData),
-		m_inboundLen(gp.get_data_length()),
-		m_received(0)
+		m_received(0),
+		m_inboundLen(gp.get_data_length())
 	{
 		unsigned int len = gp.get_data_length();
 		uint64_t addr = gp.get_address();
@@ -1370,7 +1373,7 @@ public:
 		}
 
 		if (be_len) {
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++) {
 				bool do_access = be[i % be_len] == TLM_BYTE_ENABLED;
@@ -1404,7 +1407,7 @@ public:
 		}
 
 		if (be_len) {
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++, pos++) {
 				bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
@@ -1683,14 +1686,14 @@ public:
 			m_gotCompData == true;
 	}
 
-	bool SetSnpResp(uint8_t lineState,
+	void SetSnpResp(uint8_t lineState,
 			bool passDirty = false)
 	{
 		m_chiattr->SetOpcode(Rsp::SnpResp);
 		m_chiattr->SetResp(GetResp(lineState, passDirty));
 	}
 
-	bool SetSnpRespData(uint8_t lineState,
+	void SetSnpRespData(uint8_t lineState,
 				bool passDirty = false)
 	{
 		m_chiattr->SetOpcode(Dat::SnpRespData);
@@ -1699,7 +1702,7 @@ public:
 		m_dataToHomeNode = true;
 	}
 
-	bool SetSnpRespDataPtl(uint8_t lineState,
+	void SetSnpRespDataPtl(uint8_t lineState,
 				bool passDirty = false)
 	{
 		m_chiattr->SetOpcode(Dat::SnpRespDataPtl);
@@ -1707,7 +1710,7 @@ public:
 		m_dataToHomeNode = true;
 	}
 
-	bool SetSnpRespFwded(uint8_t lineState,
+	void SetSnpRespFwded(uint8_t lineState,
 			uint8_t fwdedState,
 			bool passDirty = false,
 			bool fwdedPassDirty = false)
@@ -1718,7 +1721,7 @@ public:
 						fwdedPassDirty));
 	}
 
-	bool SetSnpRespDataFwded(uint8_t lineState,
+	void SetSnpRespDataFwded(uint8_t lineState,
 			uint8_t fwdedState,
 			bool passDirty = false,
 			bool fwdedPassDirty = false)

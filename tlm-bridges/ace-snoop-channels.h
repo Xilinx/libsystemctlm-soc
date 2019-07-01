@@ -429,8 +429,8 @@ public:
 	{
 	public:
 		ACELock(sc_module_name name, sc_in<bool>& _resetn) :
-			resetn(_resetn),
 			sc_module(name),
+			resetn(_resetn),
 			m_ongoing(false),
 			m_addr(0)
 		{}

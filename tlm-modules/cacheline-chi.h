@@ -67,7 +67,7 @@ public:
 			unsigned int pos = 0)
 	{
 		if (be_len) {
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++, pos++) {
 				bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;

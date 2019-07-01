@@ -398,7 +398,7 @@ private:
 		{
 			unsigned char *gp_data = m_gp->get_data_ptr();
 			unsigned char *be = m_gp->get_byte_enable_ptr();
-			int i = 0;
+			unsigned int i = 0;
 
 			if (m_beat == 1) {
 				uint64_t address = m_gp->get_address();
@@ -433,17 +433,17 @@ private:
 		{
 			unsigned char *gp_data = m_gp->get_data_ptr();
 			uint64_t address = m_gp->get_address();
-			unsigned int streaming_width = m_gp->get_address();
 			uint8_t numberBytes = m_genattr->get_burst_width();
 			uint64_t alignedAddress;
-			int lower_byte_lane;
-			int upper_byte_lane;
+			unsigned int lower_byte_lane;
+			unsigned int upper_byte_lane;
+			unsigned int i;
 
 			alignedAddress = Align(address, numberBytes);
 
 			if (m_burstType == AXI_BURST_FIXED) {
 				// Set everything
-				for (int i = 0; i < DATA_BUS_BYTES; i++) {
+				for (i = 0; i < DATA_BUS_BYTES; i++) {
 					int firstbit = i*8;
 					int lastbit = firstbit + 8-1;
 
@@ -468,7 +468,7 @@ private:
 				}
 
 				// Set data
-				for (int i = 0; i < DATA_BUS_BYTES; i++) {
+				for (i = 0; i < DATA_BUS_BYTES; i++) {
 					if (i >= lower_byte_lane && i <= upper_byte_lane) {
 						int firstbit = i*8;
 						int lastbit = firstbit + 8-1;
@@ -516,7 +516,7 @@ private:
 		{
 			unsigned be_len = m_gp->get_byte_enable_length();
 			unsigned char *be = m_gp->get_byte_enable_ptr();
-			int i;
+			unsigned int i;
 
 			// If all bytes are enabled delete byte_enable
 			for (i = 0; i < be_len; i++) {
@@ -787,7 +787,7 @@ private:
 		//
 		// Issue transactions with the same ID in order
 		//
-		while (tr = GetFirstWithID(list, transactionID)) {
+		while ((tr = GetFirstWithID(list, transactionID))) {
 			sc_time delay(SC_ZERO_TIME);
 			tlm::tlm_generic_payload *m_gp = tr->GetTLMGenericPayload();
 
@@ -1450,7 +1450,7 @@ private:
 				ruser(dummy.ruser);
 			}
 
-			if (ACE_MODE == false) {
+			if (ACE_MODE == ACE_MODE_OFF) {
 				awsnoop(dummy.awsnoop);
 				awdomain(dummy.awdomain);
 				awbar(dummy.awbar);

@@ -99,7 +99,8 @@ private:
 			sc_bv<DATA_WIDTH> tmp;
 			sc_bv<DATA_WIDTH/8> strb;
 
-			for (int i = 0; i < bus_width && pos < len; i++) {
+			for (unsigned int i = 0;
+				i < bus_width && pos < len; i++) {
 				int firstbit = i*8;
 				int lastbit = firstbit + 8-1;
 

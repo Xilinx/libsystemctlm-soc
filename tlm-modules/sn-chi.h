@@ -245,7 +245,7 @@ private:
 			return false;
 		}
 
-		unsigned int CopyWriteData(tlm::tlm_generic_payload& gp,
+		void CopyWriteData(tlm::tlm_generic_payload& gp,
 				chiattr_extension *chiattr)
 		{
 			m_dataReceived += CopyData(gp, chiattr);
@@ -347,7 +347,7 @@ private:
 			}
 
 			if (be_len) {
-				int i;
+				unsigned int i;
 
 				for (i = 0; i < len; i++) {
 					bool do_access = be[i % be_len] == TLM_BYTE_ENABLED;
@@ -383,7 +383,6 @@ private:
 
 		RspMsg(ReqTxn *req, uint8_t opcode, uint8_t DBID = 0)
 		{
-			tlm::tlm_generic_payload& gp = req->GetGP();
 			chiattr_extension *attr = req->GetCHIAttr();
 
 			m_chiattr->SetQoS(attr->GetQoS());
@@ -429,8 +428,6 @@ private:
 				}
 
 			} else {
-				unsigned int len = req->GetDataLength();
-
 				memcpy(m_data, req->GetOrginialData(), CACHELINE_SZ);
 				memcpy(m_byteEnable, req->GetOrginialByteEnable(), CACHELINE_SZ);
 				m_gp.set_data_length(CACHELINE_SZ);
@@ -884,7 +881,7 @@ private:
 		void SwapBytes(uint8_t *data, unsigned int len)
 		{
 			uint8_t swappedData[len];
-			int i;
+			unsigned int i;
 
 			for (i = 0; i < len; i++) {
 				swappedData[i] = data[len-1-i];
@@ -987,7 +984,6 @@ private:
 				unsigned int maxLen)
 		{
 			tlm::tlm_generic_payload gp;
-			chiattr_extension *attr = req->GetCHIAttr();
 			unsigned int len = req->GetDataLength() ;
 			sc_time delay(SC_ZERO_TIME);
 
@@ -1168,14 +1164,6 @@ public:
 	SlaveNode_F(sc_core::sc_module_name name) :
 		sc_core::sc_module(name),
 
-		init_socket("init-socket"),
-
-		rxreq_tgt_socket("rxreq-tgt-socket"),
-		rxdat_tgt_socket("rxdat-tgt-socket"),
-
-		txrsp_init_socket("txrsp-init-socket"),
-		txdat_init_socket("txdat-init-socket"),
-
 		m_txRspChannel("TxRspChannel", txrsp_init_socket),
 		m_txDatChannel("TxDatChannel", txdat_init_socket),
 
@@ -1189,7 +1177,16 @@ public:
 		m_toggle(false),
 
 		m_reqOrderer("reqOrderer",
-				m_txnProcessor)
+				m_txnProcessor),
+
+		init_socket("init-socket"),
+
+		rxreq_tgt_socket("rxreq-tgt-socket"),
+		rxdat_tgt_socket("rxdat-tgt-socket"),
+
+		txrsp_init_socket("txrsp-init-socket"),
+		txdat_init_socket("txdat-init-socket")
+
 	{
 		rxreq_tgt_socket.register_b_transport(
 				this, &SlaveNode_F::b_transport_rxreq);

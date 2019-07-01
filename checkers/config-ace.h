@@ -38,6 +38,7 @@ public:
 	__ACEPCConfig() :
 		m_mon_data_resp(false),
 		m_check_handshakes(false),
+		m_reset_check(false),
 		m_rd_tx_check(false),
 		m_wr_tx_check(false),
 		m_wr_wstrb(false),
@@ -46,7 +47,6 @@ public:
 		m_ace_snoop_ch_check(false),
 		m_ace_barrier_check(false),
 		m_ace_cd_data_check(false),
-		m_reset_check(false),
 		m_max_clks(200),
 		m_cacheline_sz(64),
 		m_max_depth(64)
@@ -104,7 +104,6 @@ protected:
 	uint64_t m_cacheline_sz;
 
 	// Dump configuration
-	bool m_en_disp_all;
 	std::vector<uint64_t> m_addr;
 
 	uint32_t m_max_depth;

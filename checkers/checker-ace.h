@@ -340,7 +340,6 @@ private:
 						cdready, max_clks);
 
 		uint32_t cd_handshakes_per_line = get_cd_handshakes_per_line();
-		uint32_t m_ac = 0;
 		uint32_t m_cr = 0;
 		uint32_t m_cd = 0;
 
@@ -583,7 +582,8 @@ private:
 		bool Done()
 		{
 			if (HasSingleRdDataTransfer()) {
-				assert(m_numBeats == (m_AxLen + 1));
+				assert((unsigned int) m_numBeats ==
+					(m_AxLen + 1));
 				return true;
 			}
 
@@ -828,7 +828,10 @@ private:
 			return passdirty_isshared == passdirty_isshared_old;
 		}
 
-		bool IsFirstBeat() { return m_numBeats == (m_AxLen + 1); }
+		bool IsFirstBeat()
+		{
+			return (unsigned int)m_numBeats == (m_AxLen + 1);
+		}
 
 		bool HasSingleRdDataTransfer()
 		{
@@ -3109,10 +3112,10 @@ private:
 	public:
 		Transaction(uint64_t addr, uint8_t snoop, uint8_t prot,
 				uint32_t id = 0, bool is_read = false) :
+			m_AxID(id),
 			m_addr(addr),
 			m_snoop(snoop),
 			m_non_secure(get_non_secure(prot)),
-			m_AxID(id),
 			m_is_read(is_read),
 			m_crresp(0)
 		{}

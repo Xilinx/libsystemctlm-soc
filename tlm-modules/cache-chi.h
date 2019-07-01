@@ -269,7 +269,7 @@ private:
 			}
 
 			if (be_len) {
-				int i;
+				unsigned int i;
 
 				for (i = 0; i < len; i++, pos++) {
 					bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
@@ -1742,7 +1742,7 @@ private:
 		{
 			unsigned char *be = gp.get_byte_enable_ptr();
 			unsigned int be_len = gp.get_byte_enable_length();
-			int i;
+			unsigned int i;
 
 			if (be_len < CACHELINE_SZ) {
 				return false;
@@ -2285,9 +2285,6 @@ private:
 
 	void HandleAtomic(tlm::tlm_generic_payload& gp)
 	{
-		uint64_t addr = gp.get_address();
-		unsigned int len = gp.get_data_length();
-		unsigned int pos = 0;
 		chiattr_extension *attr;
 
 		gp.get_extension(attr);
@@ -2304,9 +2301,6 @@ private:
 
 	void HandleDVMOperation(tlm::tlm_generic_payload& gp)
 	{
-		uint64_t addr = gp.get_address();
-		unsigned int len = gp.get_data_length();
-		unsigned int pos = 0;
 		chiattr_extension *attr;
 
 		gp.get_extension(attr);
@@ -2378,6 +2372,11 @@ public:
 	cache_chi(sc_core::sc_module_name name) :
 		sc_core::sc_module(name),
 
+		m_txReqChannel("TxReqChannel", txreq_init_socket),
+		m_txRspChannel("TxRspChannel", txrsp_init_socket),
+		m_txDatChannel("TxDatChannel", txdat_init_socket),
+		m_transmitter(m_txRspChannel, m_txDatChannel),
+
 		target_socket("target-socket"),
 
 		txreq_init_socket("txreq-init-socket"),
@@ -2386,12 +2385,7 @@ public:
 
 		rxrsp_tgt_socket("rxrsp-tgt-socket"),
 		rxdat_tgt_socket("rxdat-tgt-socket"),
-		rxsnp_tgt_socket("rxsnp-tgt-socket"),
-
-		m_txReqChannel("TxReqChannel", txreq_init_socket),
-		m_txRspChannel("TxRspChannel", txrsp_init_socket),
-		m_txDatChannel("TxDatChannel", txdat_init_socket),
-		m_transmitter(m_txRspChannel, m_txDatChannel)
+		rxsnp_tgt_socket("rxsnp-tgt-socket")
 	{
 		m_txRspChannel.SetTransmitter(&m_transmitter);
 		m_txDatChannel.SetTransmitter(&m_transmitter);

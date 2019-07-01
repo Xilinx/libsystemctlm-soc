@@ -1029,13 +1029,14 @@ private:
 		unsigned int len = m_gp->get_data_length();
 		unsigned int firstbit = m_pos;
 		unsigned int bus_width_bytes = DATA_WIDTH/8;
+		unsigned int i;
 
 		// Only write up to DATA_WIDTH size
 		if (len > bus_width_bytes) {
 			len = bus_width_bytes;
 		}
 
-		for (int i = 0; i <= len; i++, firstbit += 8) {
+		for (i = 0; i <= len; i++, firstbit += 8) {
 			unsigned int lastbit = firstbit + 8 - 1;
 
 			flit.range(lastbit, firstbit) = data[i];
@@ -1068,7 +1069,7 @@ private:
 	{
 		unsigned int be_len = BE_Width;
 		uint8_t *be = new uint8_t[be_len];
-		int i;
+		unsigned int i;
 
 		m_gp->set_byte_enable_ptr(be);
 		m_gp->set_byte_enable_length(be_len);
@@ -1086,7 +1087,7 @@ private:
 	{
 		unsigned int dataLen = Data_Width / 8;
 		uint8_t *data = new uint8_t[dataLen];
-		int i;
+		unsigned int i;
 
 		m_gp->set_data_ptr(data);
 		m_gp->set_data_length(dataLen);

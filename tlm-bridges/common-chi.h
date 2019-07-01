@@ -413,9 +413,9 @@ public:
 	PortState(sc_core::sc_module_name name,
 			T *bridge) :
 		sc_module(name),
-		txsactive(bridge->txsactive),
 		clk(bridge->clk),
 		resetn(bridge->resetn),
+		txsactive(bridge->txsactive),
 		txlinkactivereq(bridge->txlinkactivereq),
 		txlinkactiveack(bridge->txlinkactiveack),
 		rxlinkactivereq(bridge->rxlinkactivereq),

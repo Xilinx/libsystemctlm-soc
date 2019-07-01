@@ -549,6 +549,7 @@ public:
 		if (IsIgnoreWrite()) {
 			return m_genattr->get_barrier();
 		}
+		return false;
 	}
 
 	bool AllowPassDirty()

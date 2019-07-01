@@ -208,7 +208,7 @@ private:
 			// Fill in data or mark the byte as TLM_DISABLED.
 			// All data accesses use the full width of the data bus.
 			//
-			for (int i = 0; i < DATA_BUS_BYTES; i++) {
+			for (unsigned int i = 0; i < DATA_BUS_BYTES; i++) {
 				if (wstrb.read().bit(i)) {
 					int firstbit = i * 8;
 					int lastbit = firstbit + 8 - 1;
@@ -229,7 +229,7 @@ private:
 			unsigned char *gp_data = m_gp->get_data_ptr();
 
 			// All data accesses use the full width of the data bus.
-			for (int i = 0; i < DATA_BUS_BYTES; i++) {
+			for (unsigned int i = 0; i < DATA_BUS_BYTES; i++) {
 				int firstbit = i*8;
 				int lastbit = firstbit + 8-1;
 
@@ -249,7 +249,7 @@ private:
 		{
 			unsigned be_len = m_gp->get_byte_enable_length();
 			unsigned char *be = m_gp->get_byte_enable_ptr();
-			int i;
+			unsigned int i;
 
 			// If all bytes are enabled delete byte_enable
 			for (i = 0; i < be_len; i++) {
@@ -378,8 +378,6 @@ private:
 			}
 
 			if (arvalid.read() && arready.read()) {
-				bool procesingTransId;
-
 				// Sample read address and control lines
 				Transaction *rt =
 					new Transaction(tlm::TLM_READ_COMMAND,

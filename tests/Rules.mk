@@ -37,6 +37,9 @@ LDLIBS   += -pthread $(LDLIBS_SYSTEMC)
 CFLAGS += -MMD
 CXXFLAGS += -MMD
 
+# For dependency generation
+CXXFLAGS += -Wall -Wno-strict-overflow
+
 # Verilator
 VERILATOR ?=verilator
 

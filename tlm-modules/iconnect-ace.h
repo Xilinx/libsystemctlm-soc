@@ -641,7 +641,6 @@ public:
 					genattr_extension& snoop_genattr,
 					int i)
 		{
-			tlm::tlm_generic_payload& gp = m_tr->GetGP();
 			genattr_extension *genattr = new genattr_extension();
 			unsigned char *data = &m_snoop_mem[i*CACHELINE_SZ];
 

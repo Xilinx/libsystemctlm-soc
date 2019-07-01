@@ -884,7 +884,7 @@ private:
 	{
 		unsigned int be_len = BE_Width;
 		uint8_t *be = m_byteEnable;
-		int i;
+		unsigned int i;
 
 		for (i = 0; i < be_len; i++) {
 			if (ExtractBool(flit)) {
@@ -898,7 +898,7 @@ private:
 	void ExtractData(sc_bv<FLIT_WIDTH>& flit)
 	{
 		unsigned int dataLen = Data_Width / 8;
-		int i;
+		unsigned int i;
 
 		for (i = 0; i < dataLen; i++) {
 			m_data[i] = Extract<uint8_t>(flit, 8);

@@ -121,16 +121,22 @@ public:
 		txdat_tgt_socket("txdat-tgt-socket"),
 		txsnp_tgt_socket("txsnp-tgt-socket"),
 
-		txlinkactivereq("txlinkactivereq"),
-		txlinkactiveack("txlinkactiveack"),
+		clk("clk"),
+		resetn("resetn"),
+
+		rxsactive("rxsactive"),
+		txsactive("txsactive"),
+
+		rxlinkactivereq("rxlinkactivereq"),
+		rxlinkactiveack("rxlinkactiveack"),
 
 		// Init TX channels
 		CHI_INIT_CH(rxreq),
 		CHI_INIT_CH(rxrsp),
 		CHI_INIT_CH(rxdat),
 
-		rxlinkactivereq("rxlinkactivereq"),
-		rxlinkactiveack("rxlinkactiveack"),
+		txlinkactivereq("txlinkactivereq"),
+		txlinkactiveack("txlinkactiveack"),
 
 		// Init RX channels
 		CHI_INIT_CH(txrsp),

@@ -511,8 +511,6 @@ private:
 			genattr.set_snoop(AW::WriteUnique);
 
 			if (do_tlm(gp, genattr, pos, len)) {
-				uint64_t addr = gp.get_address();
-
 				//
 				// Only update lines that are in UC or SC
 				// state [1] (C4.8.2 WriteUnique)
@@ -913,7 +911,7 @@ private:
 			}
 
 			if (be_len) {
-				int i;
+				unsigned int i;
 
 				for (i = 0; i < len; i++, pos++) {
 					bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
@@ -947,7 +945,7 @@ private:
 			}
 
 			if (be_len) {
-				int i;
+				unsigned int i;
 
 				for (i = 0; i < len; i++, pos++) {
 					bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
@@ -1494,9 +1492,9 @@ private:
 			uint32_t be_len = gp.get_byte_enable_length();
 
 			if (be_len) {
-				int end_pos = pos + CACHELINE_SZ;
+				unsigned int end_pos = pos + CACHELINE_SZ;
 
-				for (pos; pos < end_pos; pos++) {
+				for (; pos < end_pos; pos++) {
 					bool do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
 
 					if (!do_access) {

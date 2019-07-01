@@ -874,7 +874,7 @@ private:
 			}
 
 			if (be_len) {
-				int i;
+				unsigned int i;
 
 				for (i = 0; i < len; i++) {
 					bool do_access = be[i % be_len] == TLM_BYTE_ENABLED;
@@ -962,7 +962,6 @@ private:
 		//
 		RspMsg(ReqTxn *req, uint8_t opcode)
 		{
-			tlm::tlm_generic_payload& gp = req->GetGP();
 			chiattr_extension *attr = req->GetCHIAttr();
 
 			m_gp->set_command(tlm::TLM_IGNORE_COMMAND);
@@ -1286,8 +1285,8 @@ private:
 					addr = data[0] & 0xF0;
 
 					// bits [39:8] (4 bytes)
-					for (i = 0; i < 4; i++) {
-						addr |= data[i++] << (i *8);
+					for (i = 1; i < 5; i++) {
+						addr |= (data[i] << (i *8));
 					}
 
 					// bits [43:40]
@@ -1305,7 +1304,7 @@ private:
 
 					addr = 0;
 					for (i = 0; i < 8; i++) {
-						addr |= data[i] << (i * 8);
+						addr |= (data[i] << (i * 8));
 					}
 				}
 
@@ -1315,7 +1314,6 @@ private:
 				// First packet
 				//
 				uint64_t addressMask;
-				int i;
 
 				//
 				// ((1 << DVM::AddressBits) - 1)
@@ -2132,9 +2130,7 @@ private:
 			m_ongoingTxn(ongoingTxn),
 			m_reqOrderer(reqOrderer),
 			m_poc(poc)
-		{
-			memset(m_ongoingTxn, 0x0, sizeof(m_ongoingTxn));
-		}
+		{}
 
 		void ProcessSnpdReq(ReqTxn *req)
 		{
@@ -2679,9 +2675,7 @@ private:
 			m_ids(ids),
 			m_ongoingTxn(ongoingTxn),
 			m_txnProcessor(txnProcessor)
-		{
-			memset(m_ongoingTxn, 0x0, sizeof(m_ongoingTxn));
-		}
+		{}
 
 		void ProcessReq(ReqTxn *req)
 		{
@@ -3030,7 +3024,7 @@ private:
 				} else {
 					m_txnProcessor.ProcessDat(dat);
 				}
-			} else if (port_RN_F = LookupPortRNF(dat.GetTgtID())) {
+			} else if ((port_RN_F = LookupPortRNF(dat.GetTgtID()))) {
 
 				port_RN_F->Transmit(new DatMsg(dat));
 			}
@@ -3132,7 +3126,9 @@ public:
 
 		port_SN = new Port_SN("Port-SN", &m_router, SLAVE_NODE_ID);
 
-		memset(m_ongoingTxn, 0, sizeof(m_ongoingTxn));
+		memset(m_ongoingTxn,
+			0x0,
+			TxnIDs::NumIDs * sizeof(m_ongoingTxn[0]));
 	}
 
 	virtual ~iconnect_chi()
