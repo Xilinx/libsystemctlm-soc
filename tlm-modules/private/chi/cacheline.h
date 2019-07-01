@@ -30,8 +30,8 @@
  *
  */
 
-#ifndef TLM_MODULES_CACHELINE_RN_CHI_H__
-#define TLM_MODULES_CACHELINE_RN_CHI_H__
+#ifndef TLM_MODULES_PRIV_CHI_CACHELINE_H__
+#define TLM_MODULES_PRIV_CHI_CACHELINE_H__
 
 #include <list>
 
@@ -231,4 +231,4 @@ private:
 } /* namespace CHI */
 } /* namespace AMBA */
 
-#endif /* TLM_MODULES_CACHELINE_RN_CHI_H__ */
+#endif /* TLM_MODULES_PRIV_CHI_CACHELINE_H__ */

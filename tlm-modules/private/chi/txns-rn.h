@@ -25,8 +25,8 @@
  *
  */
 
-#ifndef TLM_MODULES_COMMON_RN_CHI_H__
-#define TLM_MODULES_COMMON_RN_CHI_H__
+#ifndef TLM_MODULES_PRIV_CHI_TXNS_RN_H__
+#define TLM_MODULES_PRIV_CHI_TXNS_RN_H__
 
 #include <list>
 
@@ -35,7 +35,7 @@
 #include "tlm_utils/simple_target_socket.h"
 #include "tlm-extensions/chiattr.h"
 #include "tlm-bridges/amba-chi.h"
-#include "tlm-modules/cacheline-chi.h"
+#include "tlm-modules/private/chi/cacheline.h"
 
 namespace AMBA {
 namespace CHI {
@@ -1873,4 +1873,4 @@ private:
 } /* namespace CHI */
 } /* namespace AMBA */
 
-#endif /* TLM_MODULES_COMMON_RN_CHI_H__ */
+#endif /* TLM_MODULES_PRIV_CHI_TXNS_RN_H__ */

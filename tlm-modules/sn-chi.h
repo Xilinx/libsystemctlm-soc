@@ -38,7 +38,7 @@
 #include "tlm_utils/simple_target_socket.h"
 #include "tlm-extensions/chiattr.h"
 #include "tlm-bridges/amba-chi.h"
-#include "tlm-modules/txnids-chi.h"
+#include "tlm-modules/private/chi/txnids.h"
 
 using namespace AMBA::CHI;
 

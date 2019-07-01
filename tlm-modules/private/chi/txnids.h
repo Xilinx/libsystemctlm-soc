@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef TLM_MODULES_TXNIDS_CHI_H__
-#define TLM_MODULES_TXNIDS_CHI_H__
+#ifndef TLM_MODULES_PRIV_CHI_TXNIDS_H__
+#define TLM_MODULES_PRIV_CHI_TXNIDS_H__
 
 namespace AMBA {
 namespace CHI {
@@ -72,4 +72,4 @@ private:
 }; // namespace CHI
 }; // namespace AMBA
 
-#endif /* TLM_MODULES_TXNIDS_CHI_H__ */
+#endif /* TLM_MODULES_PRIV_CHI_TXNIDS_H__ */
