@@ -54,6 +54,6 @@ VERILATED_O=$(VOBJ_DIR)/verilated.o
 # for SystemC to use.
 #
 $(VOBJ_DIR)/V%__ALL.a $(VOBJ_DIR)/V%.h: %.v
-	$(VENV) $(VERILATOR) $(VFLAGS) -sc $^
+	$(VENV) $(VERILATOR) $(VFLAGS) -sc --top-module $(^:.v=) $^
 	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)"
 	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)" verilated.o
