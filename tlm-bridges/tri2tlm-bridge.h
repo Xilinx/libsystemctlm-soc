@@ -205,7 +205,9 @@ public:
 		socket->b_transport(tr.GetGP(), tr.GetDelay());
 
 		l15_transducer_val.write(true);
-		wait(clk.posedge_event());
+		while (transducer_l15_req_ack.read() == false) {
+			wait(clk.posedge_event());
+		}
 		l15_transducer_val.write(false);
 	}
 
@@ -227,7 +229,9 @@ public:
 		l15_transducer_val.write(true);
 		l15_transducer_data_0.write(data);
 
-		wait(clk.posedge_event());
+		while (transducer_l15_req_ack.read() == false) {
+			wait(clk.posedge_event());
+		}
 
 		l15_transducer_val.write(false);
 	}
