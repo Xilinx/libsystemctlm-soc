@@ -63,7 +63,7 @@ public:
 	sc_in<bool>                    transducer_l15_blockinitstore;
 	sc_in<sc_bv<2> >               transducer_l15_l1rplway;
 	sc_in<sc_bv<64> >              transducer_l15_data_next_entry;
-	sc_in<sc_bv<32> >              transducer_l15_csm_data;
+	sc_in<sc_bv<33> >              transducer_l15_csm_data;
 
 	//--- L1.5 -> Pico
 	sc_out<bool>                     l15_transducer_val;
