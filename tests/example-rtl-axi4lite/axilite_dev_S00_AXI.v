@@ -114,7 +114,7 @@
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg3;
 	wire	 slv_reg_rden;
 	wire	 slv_reg_wren;
-	wire [C_S_AXI_DATA_WIDTH-1:0]	 reg_data_out;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	 reg_data_out;
 	integer	 byte_index;
 	reg	 aw_en;
 
