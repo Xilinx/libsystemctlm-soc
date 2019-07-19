@@ -26,6 +26,15 @@ include ../Rules.mk
 
 VFLAGS=-Wno-fatal --pins-bv 2
 
+VM_TRACE=1
+
+ifeq "$(VM_TRACE)" "1"
+VFLAGS += --trace
+SC_OBJS += verilated_vcd_c.o
+SC_OBJS += verilated_vcd_sc.o
+CPPFLAGS += -DVM_TRACE=1
+endif
+
 CPPFLAGS += -I $(VOBJ_DIR)
 CPPFLAGS += -I $(VERILATOR_ROOT)/include
 
@@ -40,7 +49,7 @@ OPENPITON_DEV_V += system.v
 OPENPITON_DEV_H += $(VOBJ_DIR)/Vsystem.h
 OPENPITON_DEV_LIB += $(VOBJ_DIR)/Vsystem__ALL.a
 
-OBJS_COMMON += ../test-modules/memory.o
+OBJS_COMMON += ../test-modules/memory.o $(SC_OBJS)
 
 EXAMPLE_RTL_TRI_OBJS += example-rtl-tri.o $(VERILATED_O)
 ALL_OBJS += $(OBJS_COMMON) $(EXAMPLE_RTL_AXI4_OBJS)
@@ -56,7 +65,7 @@ all: $(TARGETS)
 
 $(EXAMPLE_RTL_TRI_OBJS): $(AXIFULL_DEV_H)
 
-example-rtl-tri: $(EXAMPLE_RTL_TRI_OBJS) $(AXIFULL_DEV_LIB) $(OPENPITON_DEV_LIB) $(OBJS_COMMON)
+example-rtl-tri: $(OPENPITON_DEV_LIB) $(AXIFULL_DEV_LIB) $(EXAMPLE_RTL_TRI_OBJS)  $(OBJS_COMMON)  
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 clean:

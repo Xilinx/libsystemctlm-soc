@@ -51,6 +51,9 @@ using namespace std;
 #include "Vaxifull_dev.h"
 #include "Vsystem.h"
 
+#include <verilated_vcd_sc.h>
+#include "verilated.h"
+
 using namespace utils;
 
 #define CONNECT_DUT(DUT, SIGS, SIGNAME) DUT.s00_axi_ ## SIGNAME(SIGS.SIGNAME)
@@ -180,7 +183,7 @@ SC_MODULE(Top)
 
 	{
 		// Configure the Traffic generator.
-		tg.setStartDelay(sc_time(2000, SC_US));
+		tg.setStartDelay(sc_time(10, SC_MS));
 		tg.enableDebug();
 		tg.addTransfers(transactions);
 		tg.socket.bind(m_cache.target_socket);
@@ -299,7 +302,7 @@ SC_MODULE(Top)
 		system.m_axi_buser(axi_signals.buser);
 	}
 
-	void trace(sc_trace_file *trace_fp)
+	void Trace(sc_trace_file *trace_fp)
 	{
 		sc_trace(trace_fp, clk, clk.name());
 		sc_trace(trace_fp, rst_n, rst_n.name());
@@ -395,7 +398,20 @@ int sc_main(int argc, char *argv[])
 
 	top.tri_signals.Trace(trace_fp);
 	top.axi_signals.Trace(trace_fp);
-	top.trace(trace_fp);
+	top.Trace(trace_fp);
+
+#if VM_TRACE
+        Verilated::traceEverOn(true);
+        // If verilator was invoked with --trace argument,
+        // and if at run time passed the +trace argument, turn on tracing
+        VerilatedVcdSc* tfp = NULL;
+        const char* flag = Verilated::commandArgsPlusMatch("trace");
+        if (flag && 0 == strcmp(flag, "+trace")) {
+                tfp = new VerilatedVcdSc;
+                top.system.trace(tfp, 99);
+                tfp->open("vlt_dump.vcd");
+        }
+#endif
 
 	// Reset is active low. Emit a reset cycle.
 	top.rst_n.write(false);
@@ -404,11 +420,15 @@ int sc_main(int argc, char *argv[])
 
 	reset_and_init(&top);
 
-	sc_start(3000, SC_US);
+	sc_start(20, SC_MS);
 	sc_stop();
 
 	if (trace_fp) {
 		sc_close_vcd_trace_file(trace_fp);
 	}
+#if VM_TRACE
+        if (tfp) { tfp->close(); tfp = NULL; }
+#endif
+
 	return 0;
 }

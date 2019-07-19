@@ -28,6 +28,7 @@ VFLAGS=-Wno-fatal --pins-bv 2
 
 CPPFLAGS += -I $(VOBJ_DIR)
 CPPFLAGS += -I $(VERILATOR_ROOT)/include
+CPPFLAGS += -DVM_TRACE=1
 
 CPPFLAGS += -I ../../ -I ../ -I .
 CXXFLAGS += -Wall -O3 -g
