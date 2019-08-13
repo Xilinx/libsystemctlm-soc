@@ -53,9 +53,9 @@ xilinx_zynq::xilinx_zynq(sc_module_name name, const char *sk_descr,
 	  rp_wires_in("wires_in", 20, 0),
 	  rp_wires_out("wires_out", 0, 17),
 	  rp_irq_out("irq_out", 0, 28),
-	  pl2ps_irq("pl2ps_irq", 20),
-	  ps2pl_irq("ps2pl_irq", 28),
-	  ps2pl_rst("ps2pl_rst", 17)
+	  pl2ps_irq("pl2ps_irq", rp_wires_in.wires_in.size()),
+	  ps2pl_irq("ps2pl_irq", rp_irq_out.wires_out.size()),
+	  ps2pl_rst("ps2pl_rst", rp_wires_out.wires_out.size())
 {
 	int i;
 
