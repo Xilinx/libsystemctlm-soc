@@ -77,9 +77,9 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	  rp_user_master("rp_net_master", 10),
 	  rp_user_slave("rp_net_slave", 10),
 	  proxy_in("proxy-in", 9),
-	  proxy_out("proxy-out", 9),
-	  pl2ps_irq("pl2ps_irq", 16),
-	  ps2pl_irq("ps2pl_irq", 164),
+	  proxy_out("proxy-out", proxy_in.size()),
+	  pl2ps_irq("pl2ps_irq", rp_wires_in.wires_in.size()),
+	  ps2pl_irq("ps2pl_irq", rp_irq_out.wires_out.size()),
 	  pl_resetn("pl_resetn", 4)
 {
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> * const out[] = {
@@ -145,15 +145,15 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 		proxy_out[i].bind(*out[i]);
 	}
 
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < pl2ps_irq.size(); i++) {
 		rp_wires_in.wires_in[i](pl2ps_irq[i]);
 	}
 
-	for (i = 0; i < 164; i++) {
+	for (i = 0; i < ps2pl_irq.size(); i++) {
 		rp_irq_out.wires_out[i](ps2pl_irq[i]);
 	}
 
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < emio[0]->out.size(); i++) {
 		rp_emio0.wires_out[i](emio[0]->out[i]);
 		rp_emio1.wires_out[i](emio[1]->out[i]);
 		if (i < 28) {
@@ -168,7 +168,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 		rp_emio2.wires_out[i + 32](emio[2]->out_enable[i]);
 	}
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < pl_resetn.size(); i++) {
 		char name[32];
 
 		sprintf(name, "pl_resetn_splitter[%d]", i);
