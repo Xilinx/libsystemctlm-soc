@@ -49,7 +49,9 @@ remoteport_tlm_wires::remoteport_tlm_wires(sc_module_name name,
 					   unsigned int nr_wires_in,
 					   unsigned int nr_wires_out,
 					   bool posted_updates)
-        : sc_module(name)
+        : sc_module(name),
+	  wires_in("wires-in", nr_wires_in),
+	  wires_out("wires-out", nr_wires_out)
 {
 	unsigned int i;
 
@@ -60,16 +62,11 @@ remoteport_tlm_wires::remoteport_tlm_wires(sc_module_name name,
 	wire_name = name;
 
 	if (nr_wires_in) {
-		wires_in = new sc_in<bool>[nr_wires_in];
 		SC_THREAD(wire_update);
 
 		for (i = 0; i < nr_wires_in; i++) {
 			sensitive << wires_in[i];
 		}
-	}
-
-	if (nr_wires_out) {
-		wires_out = new sc_out<bool>[nr_wires_out];
 	}
 }
 

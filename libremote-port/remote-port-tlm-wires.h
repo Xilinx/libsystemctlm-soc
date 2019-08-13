@@ -35,8 +35,8 @@ public:
 	void cmd_interrupt(struct rp_pkt &pkt, bool can_sync);
 	void tie_off(void);
 
-	sc_in<bool> *wires_in;
-	sc_out<bool> *wires_out;
+	sc_vector<sc_in<bool> > wires_in;
+	sc_vector<sc_out<bool> > wires_out;
 
 private:
 
