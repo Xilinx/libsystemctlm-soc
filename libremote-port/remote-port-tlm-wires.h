@@ -38,9 +38,6 @@ public:
 	sc_in<bool> *wires_in;
 	sc_out<bool> *wires_out;
 
-	const char *wire_name;
-
-	void wire_update(void);
 private:
 
 	struct {
@@ -48,5 +45,8 @@ private:
 		unsigned int nr_wires_out;
 		bool posted_updates;
 	} cfg;
+
+	const char *wire_name;
+	void wire_update(void);
 };
 
