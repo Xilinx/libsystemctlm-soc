@@ -50,9 +50,7 @@ xilinx_emio_bank::xilinx_emio_bank(const char *name_in, const char *name_out,
 	:in(name_in, num),
 	 out(name_out, num),
 	 out_enable(name_out_en, num)
-{
-    return;
-}
+{ }
 
 xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 				Iremoteport_tlm_sync *sync)
