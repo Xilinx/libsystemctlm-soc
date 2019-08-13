@@ -48,6 +48,16 @@ public:
 		         const char *name_out_en, int num);
 };
 
+class xilinx_mio_bank
+{
+private:
+public:
+	sc_vector<sc_signal<bool> > in;
+	sc_vector<sc_signal<bool> > out;
+	xilinx_mio_bank(const char *name_in, const char *name_out,
+		         int num);
+};
+
 class xilinx_zynqmp
 : public remoteport_tlm
 {
@@ -73,6 +83,8 @@ private:
 	remoteport_tlm_wires rp_emio0;
 	remoteport_tlm_wires rp_emio1;
 	remoteport_tlm_wires rp_emio2;
+	remoteport_tlm_wires rp_mio_in;
+	remoteport_tlm_wires rp_mio_out;
 
 	sc_vector<remoteport_tlm_memory_master > rp_user_master;
 	sc_vector<remoteport_tlm_memory_slave > rp_user_slave;
@@ -140,6 +152,8 @@ public:
 	sc_vector<sc_signal<bool> > ps2pl_irq;
 
 	xilinx_emio_bank *emio[3];
+	xilinx_mio_bank mio;
+
 	/*
 	 * 4 PL resets, same as EMIO[2][31:28] but with friendly names.
 	 * See the TRM, Chapter 27 GPIO, page 761.

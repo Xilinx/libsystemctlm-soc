@@ -45,11 +45,19 @@ extern "C" {
 #include "tlm-extensions/genattr.h"
 #include <sys/types.h>
 
+#define NUM_MIO_WIRES 78
+
 xilinx_emio_bank::xilinx_emio_bank(const char *name_in, const char *name_out,
 				   const char *name_out_en, int num)
 	:in(name_in, num),
 	 out(name_out, num),
 	 out_enable(name_out_en, num)
+{ }
+
+xilinx_mio_bank::xilinx_mio_bank(const char *name_in, const char *name_out,
+				   int num)
+	:in(name_in, num),
+	 out(name_out, num)
 { }
 
 xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
@@ -74,12 +82,15 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	  rp_emio0("emio0", 32, 64),
 	  rp_emio1("emio1", 32, 64),
 	  rp_emio2("emio2", 32, 64),
+	  rp_mio_in("mio_in", NUM_MIO_WIRES, 0),
+	  rp_mio_out("mio_out", 0, NUM_MIO_WIRES),
 	  rp_user_master("rp_net_master", 10),
 	  rp_user_slave("rp_net_slave", 10),
 	  proxy_in("proxy-in", 9),
 	  proxy_out("proxy-out", proxy_in.size()),
 	  pl2ps_irq("pl2ps_irq", rp_wires_in.wires_in.size()),
 	  ps2pl_irq("ps2pl_irq", rp_irq_out.wires_out.size()),
+	  mio("mio-in", "mio-out", NUM_MIO_WIRES),
 	  pl_resetn("pl_resetn", 4)
 {
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> * const out[] = {
@@ -168,6 +179,11 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 		rp_emio2.wires_out[i + 32](emio[2]->out_enable[i]);
 	}
 
+	for (i = 0; i < mio.in.size(); i++) {
+		rp_mio_in.wires_in[i](mio.in[i]);
+		rp_mio_out.wires_out[i](mio.out[i]);
+	}
+
 	for (i = 0; i < pl_resetn.size(); i++) {
 		char name[32];
 
@@ -201,6 +217,8 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	register_dev(16, &rp_emio0);
 	register_dev(17, &rp_emio1);
 	register_dev(18, &rp_emio2);
+	register_dev(19, &rp_mio_in);
+	register_dev(20, &rp_mio_out);
 
 	for (i = 0; i < rp_user_master.size(); i++) {
 		register_dev(256 + i, &rp_user_master[i]);
