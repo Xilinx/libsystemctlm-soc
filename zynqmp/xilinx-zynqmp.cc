@@ -171,7 +171,7 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	for (i = 0; i < pl_resetn.size(); i++) {
 		char name[32];
 
-		sprintf(name, "pl_resetn_splitter[%d]", i);
+		sprintf(name, "pl_resetn_splitter-%d", i);
 		pl_resetn_splitter[i] = new wire_splitter(name, 2);
 
 		pl_resetn_splitter[i]->in(rp_emio2.wires_out[28 + i]);
