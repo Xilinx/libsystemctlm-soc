@@ -47,8 +47,7 @@ extern "C" {
 using namespace sc_core;
 using namespace std;
 
-sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
-				   bool can_sync,
+void remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 				   tlm::tlm_command cmd,
 				   unsigned char *data, size_t len)
 {
@@ -56,7 +55,6 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	sc_time delay;
 	genattr_extension *genattr;
 
-	adaptor->sync->pre_memory_master_cmd(pkt.sync.timestamp, can_sync);
 	delay = adaptor->sync->get_local_time();
 	assert(pkt.busaccess.width == 0);
 
@@ -86,31 +84,36 @@ sc_time remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	tr.release_extension(genattr);
 
 	wait(SC_ZERO_TIME);
-	return delay;
 }
 
-void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
+void remoteport_tlm_memory_master::cmd_read_null(
+					remoteport_tlm *adaptor,
+					struct rp_pkt &pkt,
+					bool can_sync,
+					remoteport_tlm_memory_master *dev)
 {
 	size_t plen;
-	sc_time delay;
-	struct rp_pkt lpkt = pkt;
 	unsigned char *data;
 	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
 
-	rp_encode_busaccess_in_rsp_init(&in, &lpkt);
+	adaptor->sync->pre_memory_master_cmd(pkt.sync.timestamp, can_sync);
 
-	/* FIXME: We the callee is allowed to yield, and may call
-		us back out again (loop). So we should be reentrant
-		in respect to pkt_tx.  */
-	pkt_tx.alloc(sizeof lpkt.busaccess_ext_base + lpkt.busaccess.len);
+	rp_encode_busaccess_in_rsp_init(&in, &pkt);
+
+	pkt_tx.alloc(sizeof pkt.busaccess_ext_base + pkt.busaccess.len);
 	data = rp_busaccess_tx_dataptr(&adaptor->peer,
 				       &pkt_tx.pkt->busaccess_ext_base);
-	delay = rp_bus_access(lpkt, can_sync, tlm::TLM_READ_COMMAND,
-			      data, lpkt.busaccess.len);
 
-	in.clk = adaptor->rp_map_time(delay);
-	in.clk += lpkt.busaccess.timestamp;
+	if (dev) {
+		dev->rp_bus_access(pkt, tlm::TLM_READ_COMMAND,
+					data, pkt.busaccess.len);
+	} else {
+		memset(data, 0x0, pkt.busaccess.len);
+	}
+
+	in.clk = adaptor->rp_map_time(adaptor->sync->get_local_time());
+	in.clk += pkt.busaccess.timestamp;
 	plen = rp_encode_busaccess(&adaptor->peer,
 				   &pkt_tx.pkt->busaccess_ext_base,
 				   &in);
@@ -118,22 +121,30 @@ void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
 	adaptor->sync->post_memory_master_cmd(pkt.sync.timestamp, can_sync);
 }
 
-void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
-				  unsigned char *data, size_t len)
+void remoteport_tlm_memory_master::cmd_write_null(
+					remoteport_tlm *adaptor,
+					struct rp_pkt &pkt,
+					bool can_sync,
+					unsigned char *data,
+					size_t len,
+					remoteport_tlm_memory_master *dev)
 {
 	size_t plen;
 	sc_time delay;
-	struct rp_pkt lpkt = pkt;
 	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
 
-	delay = rp_bus_access(lpkt, can_sync,
-				tlm::TLM_WRITE_COMMAND, data, len);
+	adaptor->sync->pre_memory_master_cmd(pkt.sync.timestamp, can_sync);
 
-	if (!(lpkt.hdr.flags & RP_PKT_FLAGS_posted)) {
-		rp_encode_busaccess_in_rsp_init(&in, &lpkt);
-		in.clk = adaptor->rp_map_time(delay);
-		in.clk += lpkt.busaccess.timestamp;
+	if (dev) {
+		dev->rp_bus_access(pkt, tlm::TLM_WRITE_COMMAND, data, len);
+	}
+
+	if (!(pkt.hdr.flags & RP_PKT_FLAGS_posted)) {
+		rp_encode_busaccess_in_rsp_init(&in, &pkt);
+
+		in.clk = adaptor->rp_map_time(adaptor->sync->get_local_time());
+		in.clk += pkt.busaccess.timestamp;
 
 		plen = rp_encode_busaccess(&adaptor->peer,
 					   &pkt_tx.pkt->busaccess_ext_base,
@@ -142,6 +153,17 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 		assert(plen <= sizeof pkt_tx.pkt->busaccess_ext_base);
 	}
 	adaptor->sync->post_memory_master_cmd(pkt.sync.timestamp, can_sync);
+}
+
+void remoteport_tlm_memory_master::cmd_read(struct rp_pkt &pkt, bool can_sync)
+{
+	cmd_read_null(adaptor, pkt, can_sync, this);
+}
+
+void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
+				  unsigned char *data, size_t len)
+{
+	cmd_write_null(adaptor, pkt, can_sync, data, len, this);
 }
 
 void remoteport_tlm_memory_master::tie_off(void)
