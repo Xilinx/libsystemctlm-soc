@@ -40,6 +40,8 @@ extern "C" {
 #include "remote-port-sk.h"
 };
 #include "remote-port-tlm.h"
+#include "remote-port-tlm-wires.h"
+#include "remote-port-tlm-memory-master.h"
 
 using namespace sc_core;
 using namespace std;
@@ -259,6 +261,8 @@ remoteport_tlm::remoteport_tlm(sc_module_name name,
 	memset(devs, 0, sizeof devs);
 	memset(&peer, 0, sizeof peer);
 
+	dev_null.adaptor = this;
+
 	SC_THREAD(process);
 }
 
@@ -427,6 +431,24 @@ void remoteport_tlm::rp_cmd_sync(struct rp_pkt &pkt, bool can_sync)
 	sync->post_sync_cmd(pkt.sync.timestamp, can_sync);
 }
 
+void remoteport_tlm_dev::cmd_interrupt(struct rp_pkt &pkt, bool can_sync)
+{
+	remoteport_tlm_wires::cmd_interrupt_null(adaptor, pkt, can_sync, NULL);
+}
+
+void remoteport_tlm_dev::cmd_write(struct rp_pkt &pkt, bool can_sync,
+					unsigned char *data, size_t len)
+{
+	remoteport_tlm_memory_master::cmd_write_null(
+				adaptor, pkt, can_sync, data, len, NULL);
+}
+
+void remoteport_tlm_dev::cmd_read(struct rp_pkt &pkt, bool can_sync)
+{
+	remoteport_tlm_memory_master::cmd_read_null(
+				adaptor, pkt, can_sync, NULL);
+}
+
 bool remoteport_tlm::rp_process(bool can_sync)
 {
 	remoteport_packet pkt_rx;
@@ -453,6 +475,10 @@ bool remoteport_tlm::rp_process(bool can_sync)
 		datalen = pkt_rx.pkt->hdr.len - dlen;
 
 		dev = devs[pkt_rx.pkt->hdr.dev];
+		if (!dev) {
+			dev = &dev_null;
+		}
+
 		if (pkt_rx.pkt->hdr.flags & RP_PKT_FLAGS_response) {
 			unsigned int ri;
 
@@ -484,15 +510,12 @@ bool remoteport_tlm::rp_process(bool can_sync)
 			rp_cmd_hello(*pkt_rx.pkt);
 			break;
 		case RP_CMD_write:
-			assert(dev);
 			dev->cmd_write(*pkt_rx.pkt, can_sync, data, datalen);
 			break;
 		case RP_CMD_read:
-			assert(dev);
 			dev->cmd_read(*pkt_rx.pkt, can_sync);
 			break;
 		case RP_CMD_interrupt:
-			assert(dev);
 			dev->cmd_interrupt(*pkt_rx.pkt, can_sync);
 			break;
 		case RP_CMD_sync:

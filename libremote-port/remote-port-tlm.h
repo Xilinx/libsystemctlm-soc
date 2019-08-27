@@ -88,9 +88,9 @@ public:
 	void response_done(unsigned int resp_idx);
 
 	virtual void cmd_write(struct rp_pkt &pkt, bool can_sync,
-			       unsigned char *data, size_t len) {};
-	virtual void cmd_read(struct rp_pkt &pkt, bool can_sync) {} ;
-	virtual void cmd_interrupt(struct rp_pkt &pkt, bool can_sync) {};
+			       unsigned char *data, size_t len);
+	virtual void cmd_read(struct rp_pkt &pkt, bool can_sync);
+	virtual void cmd_interrupt(struct rp_pkt &pkt, bool can_sync);
 	virtual void tie_off(void) {} ;
 };
 
@@ -172,6 +172,7 @@ private:
 	unsigned char *pktbuf_data;
 	/* Socket.  */
 	int fd;
+	remoteport_tlm_dev dev_null;
 
 	sc_process_handle adaptor_proc;
 
