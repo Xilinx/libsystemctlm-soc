@@ -43,7 +43,7 @@ CXXFLAGS += -Wall -Wno-strict-overflow
 # Verilator
 VERILATOR ?=verilator
 
-VERILATOR_ROOT=$(shell $(VERILATOR) --getenv VERILATOR_ROOT 2>/dev/null || echo -n /usr/share/verilator)
+VERILATOR_ROOT?=$(shell $(VERILATOR) --getenv VERILATOR_ROOT 2>/dev/null || echo -n /usr/share/verilator)
 VOBJ_DIR ?=obj_dir
 VENV=SYSTEMC_INCLUDE=$(SYSTEMC_INCLUDE) SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR)
 VERILATED_O=$(VOBJ_DIR)/verilated.o
