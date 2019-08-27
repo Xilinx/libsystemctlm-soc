@@ -25,6 +25,7 @@
 #define SIGNALS_AXI_H__
 
 #include "tlm-bridges/amba.h"
+#include "test-modules/signals-common.h"
 
 template
 <int ADDR_WIDTH,
@@ -94,6 +95,60 @@ public:
 	sc_signal<AXISignal(RUSER_WIDTH) > ruser;
 	sc_signal<AXISignal(ID_WIDTH) > rid;
 	sc_signal<bool> rlast;
+
+	template<typename T>
+	void connect(T &dev, const char *prefix)
+	{
+		signal_connect(&dev, prefix, awvalid);
+		signal_connect(&dev, prefix, awready);
+		signal_connect(&dev, prefix, awaddr);
+		signal_connect(&dev, prefix, awprot);
+		signal_connect(&dev, prefix, awuser);
+		signal_connect(&dev, prefix, awregion);
+		signal_connect(&dev, prefix, awqos);
+		signal_connect(&dev, prefix, awcache);
+		signal_connect(&dev, prefix, awburst);
+		signal_connect(&dev, prefix, awsize);
+		signal_connect(&dev, prefix, awlen);
+		signal_connect(&dev, prefix, awid);
+		signal_connect(&dev, prefix, awlock);
+
+		signal_connect_optional(&dev, prefix, wid);
+		signal_connect(&dev, prefix, wvalid);
+		signal_connect(&dev, prefix, wready);
+		signal_connect(&dev, prefix, wdata);
+		signal_connect(&dev, prefix, wstrb);
+		signal_connect(&dev, prefix, wuser);
+		signal_connect(&dev, prefix, wlast);
+
+		signal_connect(&dev, prefix, bvalid);
+		signal_connect(&dev, prefix, bready);
+		signal_connect(&dev, prefix, bresp);
+		signal_connect(&dev, prefix, buser);
+		signal_connect(&dev, prefix, bid);
+
+		signal_connect(&dev, prefix, arvalid);
+		signal_connect(&dev, prefix, arready);
+		signal_connect(&dev, prefix, araddr);
+		signal_connect(&dev, prefix, arprot);
+		signal_connect(&dev, prefix, aruser);
+		signal_connect(&dev, prefix, arregion);
+		signal_connect(&dev, prefix, arqos);
+		signal_connect(&dev, prefix, arcache);
+		signal_connect(&dev, prefix, arburst);
+		signal_connect(&dev, prefix, arsize);
+		signal_connect(&dev, prefix, arlen);
+		signal_connect(&dev, prefix, arid);
+		signal_connect(&dev, prefix, arlock);
+
+		signal_connect(&dev, prefix, rvalid);
+		signal_connect(&dev, prefix, rready);
+		signal_connect(&dev, prefix, rdata);
+		signal_connect(&dev, prefix, rresp);
+		signal_connect(&dev, prefix, ruser);
+		signal_connect(&dev, prefix, rid);
+		signal_connect(&dev, prefix, rlast);
+	}
 
 	template<typename T>
 	void connect(T *dev)
