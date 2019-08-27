@@ -25,6 +25,7 @@
 #define SIGNALS_AXILITE_H__
 
 #include "tlm-bridges/amba.h"
+#include "test-modules/signals-common.h"
 
 template
 <int ADDR_WIDTH, int DATA_WIDTH>
@@ -59,6 +60,34 @@ public:
 	sc_signal<bool> rready;
 	sc_signal<sc_bv<DATA_WIDTH> > rdata;
 	sc_signal<sc_bv<2> > rresp;
+
+	template<typename T>
+	void connect(T &dev, const char *prefix)
+	{
+		signal_connect(&dev, prefix, awvalid);
+		signal_connect(&dev, prefix, awready);
+		signal_connect(&dev, prefix, awaddr);
+		signal_connect(&dev, prefix, awprot);
+
+		signal_connect(&dev, prefix, wvalid);
+		signal_connect(&dev, prefix, wready);
+		signal_connect(&dev, prefix, wdata);
+		signal_connect(&dev, prefix, wstrb);
+
+		signal_connect(&dev, prefix, bvalid);
+		signal_connect(&dev, prefix, bready);
+		signal_connect(&dev, prefix, bresp);
+
+		signal_connect(&dev, prefix, arvalid);
+		signal_connect(&dev, prefix, arready);
+		signal_connect(&dev, prefix, araddr);
+		signal_connect(&dev, prefix, arprot);
+
+		signal_connect(&dev, prefix, rvalid);
+		signal_connect(&dev, prefix, rready);
+		signal_connect(&dev, prefix, rdata);
+		signal_connect(&dev, prefix, rresp);
+	}
 
 	template<typename T>
 	void connect(T *dev)
