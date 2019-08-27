@@ -38,7 +38,12 @@ public:
 	sc_vector<sc_in<bool> > wires_in;
 	sc_vector<sc_out<bool> > wires_out;
 
+	static void cmd_interrupt_null(remoteport_tlm *adaptor,
+					struct rp_pkt &pkt,
+					bool can_sync,
+					remoteport_tlm_wires *dev);
 private:
+	void interrupt_action(struct rp_pkt &pkt);
 
 	struct {
 		unsigned int nr_wires_in;
