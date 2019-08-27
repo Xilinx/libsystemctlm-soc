@@ -48,6 +48,15 @@ VOBJ_DIR ?=obj_dir
 VENV=SYSTEMC_INCLUDE=$(SYSTEMC_INCLUDE) SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR)
 VERILATED_O=$(VOBJ_DIR)/verilated.o
 
+# VM_TRACE enables internal signals tracing with verilator
+# if the SystemC application supports it.
+VM_TRACE?=0
+# VM_COVERAGE enables coverage analysis if the SystemC application
+# supports it.
+#
+# See man verilator for more information.
+VM_COVERAGE?=0
+
 #
 # This Rule describes howto run a verilog top module through verilator
 # creating a Vmodule_ALL.a library and the corresponding header files
