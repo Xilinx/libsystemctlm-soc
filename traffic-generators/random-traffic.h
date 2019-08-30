@@ -191,9 +191,12 @@ private:
 		len = (len > m_minDataLen) ? len : m_minDataLen;
 		hasAddrLen = true;
 
-		has_be = rand_r(&m_seed) & 1;
-		max_be_len = MIN(m_maxByteEnablesLen, len);
-		be_len = has_be ? rand_r(&m_seed) % max_be_len : 0;
+		be_len = 0;
+		if (m_maxByteEnablesLen) {
+			has_be = rand_r(&m_seed) & 1;
+			max_be_len = MIN(m_maxByteEnablesLen, len);
+			be_len = has_be ? rand_r(&m_seed) % max_be_len : 0;
+		}
 
 		// If has_sw turns out to be true, create a streaming-width smaller than length
 		has_sw = rand_r(&m_seed) & 1;
