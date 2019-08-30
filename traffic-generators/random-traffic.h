@@ -46,6 +46,8 @@ public:
 		m_addressMask(addressMask),
 		m_minDataLen(minDataLen),
 		m_maxDataLen(maxDataLen),
+		m_minStreamingWidthLen(0),
+		m_maxStreamingWidthLen(maxDataLen),
 		m_maxByteEnablesLen(maxByteEnablesLen),
 		m_data(new uint8_t[maxDataLen]),
 		m_byte_enables(new uint8_t[maxDataLen]),
@@ -152,12 +154,20 @@ public:
 	void setSeed(unsigned int seed) { m_seed = seed; }
 	unsigned int getSeed() { return m_seed; }
 
+	void setMinStreamingWidthLen(uint32_t len) { m_minStreamingWidthLen = len; }
+	uint32_t getMinStreamingWidthLen(void) { return m_minStreamingWidthLen; }
+
+	void setMaxStreamingWidthLen(uint32_t len) { m_maxStreamingWidthLen = len; }
+	uint32_t getMaxStreamingWidthLen(void) { return m_maxStreamingWidthLen; }
+
 private:
 	uint64_t m_minAddress;
 	uint64_t m_maxAddress;
 	uint64_t m_addressMask;
 	uint32_t m_minDataLen;
 	uint32_t m_maxDataLen;
+	uint32_t m_minStreamingWidthLen;
+	uint32_t m_maxStreamingWidthLen;
 	uint32_t m_maxByteEnablesLen;
 	uint8_t *m_data;
 	uint8_t *m_byte_enables;
@@ -201,6 +211,13 @@ private:
 		// If has_sw turns out to be true, create a streaming-width smaller than length
 		has_sw = rand_r(&m_seed) & 1;
 		sw_len = has_sw ? rand_r(&m_seed) % len : len;
+		if (sw_len < m_minStreamingWidthLen) {
+			sw_len = m_minStreamingWidthLen;
+		}
+		if (sw_len > m_maxStreamingWidthLen) {
+			sw_len = m_maxStreamingWidthLen;
+		}
+
 		// sw_len zero is not allowed.
 		sw_len = sw_len ? sw_len : len;
 	}
