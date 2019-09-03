@@ -65,12 +65,16 @@ def test_checker_axi_tests(filename):
 	assert(subprocess.call([path_exe]) == 0)
 
 def test_config_parser():
+	if not os.path.exists(config_parser_test[0]):
+		pytest.xfail("Config-parser not available")
 	assert(subprocess.call(config_parser_test) ==0)
 
 @pytest.mark.parametrize("filename", cp_tg_axi_tests)
 def test_cp_tg_axi(filename):
 	dir_path = os.path.normpath(os.path.dirname(__file__) +
 					"/traffic-generators/axi/cp-tg")
+	if not os.path.exists(dir_path + "/" + filename):
+		pytest.xfail("Config-parser not available")
 	assert(subprocess.call([dir_path + "/" + filename,
 				dir_path + "/tests/*"]) == 0)
 
@@ -93,6 +97,8 @@ def test_checker_axilite_tests(filename):
 def test_cp_tg_axilite(filename):
 	dir_path = os.path.normpath(os.path.dirname(__file__) +
 					"/traffic-generators/axilite/cp-tg")
+	if not os.path.exists(dir_path + "/" + filename):
+		pytest.xfail("Config-parser not available")
 	assert(subprocess.call([dir_path + "/" + filename,
 				dir_path + "/tests/*"]) == 0)
 

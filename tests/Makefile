@@ -29,11 +29,8 @@ SUBDIRS_EXAMPLES += example-rtl-mixed
 
 SUBDIRS += $(SUBDIRS_EXAMPLES)
 SUBDIRS += tlm-modules
-SUBDIRS += traffic-generators/config-parser/
 SUBDIRS += traffic-generators/axi/
-SUBDIRS += traffic-generators/axi/cp-tg/
 SUBDIRS += traffic-generators/axilite/
-SUBDIRS += traffic-generators/axilite/cp-tg/
 SUBDIRS += traffic-generators/axis/
 SUBDIRS += traffic-generators/ace/
 SUBDIRS += traffic-generators/chi/
@@ -42,6 +39,12 @@ SUBDIRS += checkers/axilite
 SUBDIRS += checkers/ace
 SUBDIRS += checkers/acelite
 SUBDIRS += checkers/chi
+
+ifeq "$(HAVE_CONFIG_PARSER)" "y"
+SUBDIRS += traffic-generators/config-parser/
+SUBDIRS += traffic-generators/axi/cp-tg/
+SUBDIRS += traffic-generators/axilite/cp-tg/
+endif
 
 PYTEST ?=py.test
 PYTEST_HTML_ARGS ?=--self-contained-html --html=report.html
