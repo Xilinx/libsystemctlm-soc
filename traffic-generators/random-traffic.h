@@ -197,7 +197,7 @@ private:
 		// Need to cap length to stay within address-bounds.
 		max_len = MIN(max_len, m_maxAddress - address);
 
-		len = rand_r(&m_seed) % max_len;
+		len = rand_r(&m_seed) % (max_len + 1);
 		len = (len > m_minDataLen) ? len : m_minDataLen;
 		hasAddrLen = true;
 
@@ -205,7 +205,7 @@ private:
 		if (m_maxByteEnablesLen) {
 			has_be = rand_r(&m_seed) & 1;
 			max_be_len = MIN(m_maxByteEnablesLen, len);
-			be_len = has_be ? rand_r(&m_seed) % max_be_len : 0;
+			be_len = has_be ? rand_r(&m_seed) % (max_be_len + 1): 0;
 		}
 
 		// If has_sw turns out to be true, create a streaming-width smaller than length
