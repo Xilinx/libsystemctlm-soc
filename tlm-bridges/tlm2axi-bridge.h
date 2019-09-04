@@ -359,30 +359,6 @@ private:
 
 		uint64_t GetAddress() { return m_gp.get_address(); }
 
-		uint8_t GetAxSize()
-		{
-			switch (GetBurstWidth()) {
-			case 128:
-				return 7;
-			case 64:
-				return 6;
-			case 32:
-				return 5;
-			case 16:
-				return 4;
-			case 8:
-				return 3;
-			case 4:
-				return 2;
-			case 2:
-				return 1;
-			case 1:
-			default:
-				return 0;
-				break;
-			}
-		}
-
 		uint8_t GetAxProt()
 		{
 			uint8_t AxProt = 0;
@@ -656,6 +632,8 @@ private:
 
 	bool read_address_phase(Transaction *rt)
 	{
+		int axsize = map_size_to_axsize_assert(rt->GetBurstWidth());
+
 		if (reset_asserted()) {
 			arvalid.write(false);
 			return false;
@@ -663,7 +641,7 @@ private:
 
 		araddr.write(rt->GetAddress());
 		arprot.write(rt->GetAxProt());
-		arsize.write(rt->GetAxSize());
+		arsize.write(axsize);
 		arlen.write(rt->GetNumBeats() - 1);
 		arburst.write(rt->GetBurstType());
 		arid.write(rt->GetAxID());
@@ -714,6 +692,8 @@ private:
 
 	bool write_address_phase(Transaction *wt)
 	{
+		int axsize = map_size_to_axsize_assert(wt->GetBurstWidth());
+
 		if (reset_asserted()) {
 			awvalid.write(false);
 			return false;
@@ -721,7 +701,7 @@ private:
 
 		awaddr.write(wt->GetAddress());
 		awprot.write(wt->GetAxProt());
-		awsize.write(wt->GetAxSize());
+		awsize.write(axsize);
 		awlen.write(wt->GetNumBeats() - 1);
 		awburst.write(wt->GetBurstType());
 		awid.write(wt->GetAxID());

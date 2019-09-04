@@ -281,10 +281,7 @@ private:
 			m_abortScheduled(false),
 			m_TLMOngoing(false)
 		{
-			uint32_t dataLen = GetDataLen(address,
-							m_alignedAddress,
-							numberBytes,
-							burstLen);
+			uint32_t dataLen;
 			uint8_t *data;
 
 			if (burstType == AXI_BURST_FIXED) {
