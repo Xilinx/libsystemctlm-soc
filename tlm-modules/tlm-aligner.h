@@ -118,17 +118,17 @@ private:
 		natural_alignment = compute_natural_alignment(addr);
 		addr_range = compute_max_addr_range(addr, natural_alignment);
 
+		// FIXME: Streaming width is mandatory according to spec but
+		// we don't seem to set it always.
+		if (streaming_width == 0) {
+			streaming_width = len;
+		}
+
 		if ((!do_natural_alignment || addr % natural_alignment == 0) &&
                     len < max_len && streaming_width == len) {
 			// Fast path, just forward the transaction.
 			init_socket->b_transport(trans, delay);
 			return;
-		}
-
-		// FIXME: Streaming width is mandatory according to spec but
-		// we don't seem to set it always.
-		if (streaming_width == 0) {
-			streaming_width = len;
 		}
 
 		// Since data and byte_enable ptrs remain NULL, nothing gets copied.
