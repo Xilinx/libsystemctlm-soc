@@ -65,6 +65,22 @@ public:
 		target_socket.register_b_transport(this, &tlm_aligner::b_transport);
 	}
 
+	void set_bus_width(uint32_t w) {
+		bus_width = w;
+	}
+
+	uint32_t get_bus_width(void) {
+		return bus_width;
+	}
+
+	void set_max_len(uint64_t len) {
+		max_len = len;
+	}
+
+	uint64_t get_max_len(void) {
+		return max_len;
+	}
+
 private:
 	// Bus with in bits.
 	uint32_t bus_width;
