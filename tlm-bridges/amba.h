@@ -26,6 +26,8 @@
 #ifndef TLM_BRIDGES_AMBA_H__
 #define TLM_BRIDGES_AMBA_H__
 
+#include <assert.h>
+
 enum {
 	AXI_OKAY = 0,
 	AXI_EXOKAY = 1,
@@ -65,6 +67,60 @@ enum {
 	AXI3_MAX_BURSTLENGTH = 16,
 	AXI4_MAX_BURSTLENGTH = 256,
 };
+
+/* Compute AxSize given a size in bytes.  */
+static inline int map_size_to_axsize(int size) {
+	switch (size) {
+		case 128:
+			return 7;
+		case 64:
+			return 6;
+		case 32:
+			return 5;
+		case 16:
+			return 4;
+		case 8:
+			return 3;
+		case 4:
+			return 2;
+		case 2:
+			return 1;
+		case 1:
+			return 0;
+		default:
+			return -1;
+	}
+}
+
+static inline int map_size_to_axsize_assert(int size) {
+	int r;
+
+	r = map_size_to_axsize(size);
+	assert(r != -1);
+	return r;
+}
+
+/* Compute nearest AxSize given a size in bytes.  */
+static inline int map_size_to_nearest_axsize(int size) {
+	if (size == 1)
+		return 0;
+	else if (size == 2)
+		return 1;
+	else if (size <= 4)
+		return 2;
+	else if (size <= 8)
+		return 3;
+	else if (size <= 16)
+		return 4;
+	else if (size <= 32)
+		return 5;
+	else if (size <= 64)
+		return 6;
+	else if (size <= 128)
+		return 7;
+	assert(0);
+	return -1;
+}
 
 template<int N>
 struct __AXISignal
