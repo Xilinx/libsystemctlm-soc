@@ -92,6 +92,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	uint16_t master_id = 0;
 	uint64_t attr = 0;
 	unsigned int ri;
+	bool is_posted = false;
 
 	if (be && !adaptor->peer.caps.busaccess_ext_byte_en) {
 		trans.set_response_status(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE);
@@ -103,6 +104,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		in.flags |= genattr->get_posted() ? RP_PKT_FLAGS_posted : 0;
 		master_id = genattr->get_master_id();
 		attr |= genattr_to_rpattr(genattr);
+		is_posted = genattr->get_posted();
 	}
 
 	pkt_tx.alloc(sizeof pkt_tx.pkt->busaccess + len);
@@ -133,7 +135,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	}
 
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);
-	if (genattr->get_posted()) {
+	if (is_posted) {
 		return;
 	}
 
