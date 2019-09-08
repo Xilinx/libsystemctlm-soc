@@ -57,6 +57,8 @@ VM_TRACE?=0
 # See man verilator for more information.
 VM_COVERAGE?=0
 
+VFLAGS += --MMD
+
 #
 # This Rule describes howto run a verilog top module through verilator
 # creating a Vmodule_ALL.a library and the corresponding header files
