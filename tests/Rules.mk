@@ -59,6 +59,8 @@ VM_COVERAGE?=0
 
 VFLAGS += --MMD
 
+verilated_%.o: $(VERILATOR_ROOT)/include/verilated_%.cpp
+
 #
 # This Rule describes howto run a verilog top module through verilator
 # creating a Vmodule_ALL.a library and the corresponding header files
