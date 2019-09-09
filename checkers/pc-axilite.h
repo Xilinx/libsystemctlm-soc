@@ -105,7 +105,7 @@ public:
 		m_cfg(*reinterpret_cast<__AXILitePCConfig*>(&cfg)),
 		m_checker_axilite_stable("checker-axilite-stable", this),
 		m_check_axilite_responses("check-axilite-responses", this),
-		m_check_axilite_handshakes("check-axilite-reset", this),
+		m_check_axilite_handshakes("check-axilite-handshakes", this),
 		m_check_axilite_reset("check-axilite-reset", this)
 	{}
 
