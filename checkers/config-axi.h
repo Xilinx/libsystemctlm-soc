@@ -113,6 +113,15 @@ public:
 		__AXIPCConfig(version)
 	{}
 
+	// Constructor with all checks enabled.
+	// This is useful because it doesn't imply
+	// nor need explicit allocation at the caller.
+	static AXIPCConfig all_enabled(void) {
+		AXIPCConfig cfg;
+		cfg.enable_all_checks();
+		return cfg;
+	}
+
 	//
 	// Check that data response signals are stable between rvalid and
 	// rready (no changes on the signals are allowed until rready).
