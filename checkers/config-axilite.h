@@ -67,6 +67,15 @@ public:
 	AXILitePCConfig()
 	{}
 
+	// Constructor with all checks enabled.
+	// This is useful because it doesn't imply
+	// nor need explicit allocation at the caller.
+	static AXILitePCConfig all_enabled(void) {
+		AXILitePCConfig cfg;
+		cfg.enable_all_checks();
+		return cfg;
+	}
+
 	//
 	// Check that data response signals are stable between rvalid and
 	// rready (no changes on the signals are allowed until rready).
