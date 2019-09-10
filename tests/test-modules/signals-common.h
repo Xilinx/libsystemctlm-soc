@@ -66,13 +66,13 @@ static inline void signal_connect(sc_object *dev,
 		goto error;
 	}
 
-	p_in = dynamic_cast<typeof(p_in)>(obj);
+	p_in = dynamic_cast<__typeof__(p_in)>(obj);
 	if (p_in) {
 		(*p_in)(sig);
 		return;
 	}
 
-	p_out = dynamic_cast<typeof(p_out)>(obj);
+	p_out = dynamic_cast<__typeof__(p_out)>(obj);
 	if (p_out) {
 		(*p_out)(sig);
 	} else {
