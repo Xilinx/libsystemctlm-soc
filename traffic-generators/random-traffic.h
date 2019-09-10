@@ -30,6 +30,10 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 class RandomTraffic : public ITrafficDesc
 {
 public:
@@ -40,7 +44,8 @@ public:
 			uint32_t maxDataLen,
 			uint32_t maxByteEnablesLen,
 			uint32_t numTransfers,
-			unsigned int seed = 0) :
+			unsigned int seed = 0,
+			bool initMemory = false) :
 		m_minAddress(minAddress),
 		m_maxAddress(maxAddress),
 		m_addressMask(addressMask),
@@ -49,10 +54,11 @@ public:
 		m_minStreamingWidthLen(0),
 		m_maxStreamingWidthLen(maxDataLen),
 		m_maxByteEnablesLen(maxByteEnablesLen),
-		m_data(new uint8_t[maxDataLen]),
+		m_data(new uint8_t[MAX(maxDataLen, maxAddress - minAddress)]),
 		m_byte_enables(new uint8_t[maxDataLen]),
 		m_numTransfers(numTransfers),
 		m_last_write(false),
+		m_initMemory(initMemory),
 		m_seed(seed),
 		hasAddrLen(false)
 	{}
@@ -74,6 +80,10 @@ public:
 		cmd = (rand_r(&m_seed) % 2) ?
 			tlm::TLM_WRITE_COMMAND : tlm::TLM_READ_COMMAND;
 
+		if (m_initMemory) {
+			cmd = tlm::TLM_WRITE_COMMAND;
+		}
+
 		m_last_write = cmd == tlm::TLM_WRITE_COMMAND;
 		return cmd;
 	}
@@ -91,6 +101,11 @@ public:
 
 		if (!hasAddrLen)
 			genAddrLen();
+
+		if (m_initMemory) {
+			memset(m_data, 0, len);
+			return m_data;
+		}
 
 		// FIXME: Do something faster?
 		for (i = 0; i < len; i++) {
@@ -149,6 +164,7 @@ public:
 			sw_len = len;
 		}
 		m_numTransfers--;
+		m_initMemory = false;
 	}
 
 	void setSeed(unsigned int seed) { m_seed = seed; }
@@ -159,6 +175,9 @@ public:
 
 	void setMaxStreamingWidthLen(uint32_t len) { m_maxStreamingWidthLen = len; }
 	uint32_t getMaxStreamingWidthLen(void) { return m_maxStreamingWidthLen; }
+
+	void setInitMemory(bool v) { m_initMemory = v; }
+	bool getInitMemory(void) { return m_initMemory; }
 
 private:
 	uint64_t m_minAddress;
@@ -173,6 +192,7 @@ private:
 	uint8_t *m_byte_enables;
 	uint32_t m_numTransfers;
 	bool m_last_write;
+	bool m_initMemory;
 
 	unsigned int m_seed;
 
@@ -189,6 +209,16 @@ private:
 		uint32_t max_be_len;
 		bool has_be;
 		bool has_sw;
+
+		if (m_initMemory) {
+			address = m_minAddress;
+			len = m_maxAddress-m_minAddress;
+			sw_len = len;
+			be_len = 0;
+
+			hasAddrLen = true;
+			return;
+		}
 
 		address = (m_minAddress +
 					(rand_r(&m_seed) % (m_maxAddress-m_minAddress)));
