@@ -193,6 +193,7 @@ private:
 			}
 
 			assert(t_len > 0);
+			assert(t_len <= max_len);
 			gp.set_address(t_addr);
 			gp.set_data_ptr(data + pos);
 			gp.set_data_length(t_len);
