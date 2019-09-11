@@ -932,7 +932,7 @@ private:
 	}
 
 	bool check_address_alignment(uint64_t addr, uint8_t axburst,
-					uint8_t axsize)
+					uint8_t axsize, uint8_t axlen)
 	{
 		uint32_t numberBytes = (1 << axsize);
 		uint64_t aligned_addr;
@@ -992,7 +992,8 @@ private:
 			if (!check_address_alignment(
 					to_uint(araddr),
 					to_uint(arburst),
-					to_uint(arsize))) {
+					to_uint(arsize),
+					to_uint(arlen))) {
 				std::ostringstream msg;
 
 				msg << "Read address: "
@@ -1031,7 +1032,8 @@ private:
 			if (!check_address_alignment(
 					awaddr.read().to_uint64(),
 					to_uint(awburst),
-					to_uint(awsize))) {
+					to_uint(awsize),
+					to_uint(awlen))) {
 				std::ostringstream msg;
 
 				msg << "Write address: "
