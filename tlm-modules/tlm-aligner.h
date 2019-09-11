@@ -141,7 +141,9 @@ private:
 		}
 
 		if ((!do_natural_alignment || addr % natural_alignment == 0) &&
-                    len < max_len && streaming_width == len) {
+		     len < max_len &&
+		     len == addr_range &&
+		     streaming_width == len) {
 			// Fast path, just forward the transaction.
 			init_socket->b_transport(trans, delay);
 			return;
