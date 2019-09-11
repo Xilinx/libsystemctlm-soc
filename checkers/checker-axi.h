@@ -935,7 +935,11 @@ private:
 					uint8_t axsize, uint8_t axlen)
 	{
 		uint32_t numberBytes = (1 << axsize);
+		uint32_t burstlen = axlen + 1;
+		uint64_t mask_4k = ~(4096 - 1);
 		uint64_t aligned_addr;
+		uint64_t last_addr;
+		uint64_t end_addr;
 		bool ret = true;
 
 		aligned_addr = (addr / numberBytes) * numberBytes;
@@ -943,6 +947,14 @@ private:
 		switch (axburst) {
 		case AXI_BURST_WRAP:
 			ret = aligned_addr == addr;
+			break;
+		case AXI_BURST_INCR:
+			end_addr = aligned_addr + burstlen * numberBytes;
+			// Compute the last address accessed by this transfer.
+			last_addr = end_addr - 1;
+
+			// AXI transactions are not allowed to cross 4K regions.
+			ret = (aligned_addr & mask_4k) == (last_addr & mask_4k);
 			break;
 		default:
 			break;
@@ -998,7 +1010,7 @@ private:
 
 				msg << "Read address: "
 					<< std::hex << to_uint(araddr)
-					<< " wrongly aligned with AXI burst type: "
+					<< " wrongly aligned/sized with AXI burst type: "
 					<< std::hex << to_uint(arburst)
 					<< " and transfer size: "
 					<< std::dec << to_uint(arsize)
@@ -1038,7 +1050,7 @@ private:
 
 				msg << "Write address: "
 					<< std::hex << awaddr.read().to_uint64()
-					<< "wrongly aligned with AXI burst type: "
+					<< "wrongly aligned/sized with AXI burst type: "
 					<< std::hex << to_uint(awburst)
 					<< "and transfer size: "
 					<< std::dec << to_uint(awsize)
