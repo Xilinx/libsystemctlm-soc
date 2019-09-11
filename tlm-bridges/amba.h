@@ -26,6 +26,8 @@
 #ifndef TLM_BRIDGES_AMBA_H__
 #define TLM_BRIDGES_AMBA_H__
 
+#include "tlm.h"
+#include "tlm-extensions/genattr.h"
 #include <assert.h>
 
 enum {
@@ -120,6 +122,33 @@ static inline int map_size_to_nearest_axsize(int size) {
 		return 7;
 	assert(0);
 	return -1;
+}
+
+// Update a generic payload and it's optional generic attributes
+// based on an AXI response code.
+static inline void tlm_gp_set_axi_resp(tlm::tlm_generic_payload& trans,
+				       int resp)
+{
+	genattr_extension *genattr;
+
+	trans.get_extension(genattr);
+
+	switch (resp) {
+	case AXI_EXOKAY:
+		if (genattr)
+			genattr->set_exclusive_handled();
+		// Fall-through.
+	case AXI_OKAY:
+		trans.set_response_status(tlm::TLM_OK_RESPONSE);
+		break;
+	case AXI_DECERR:
+		trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+		break;
+	case AXI_SLVERR:
+	default:
+		trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+		break;
+	}
 }
 
 template<int N>
