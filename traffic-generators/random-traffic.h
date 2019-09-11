@@ -198,7 +198,7 @@ private:
 		max_len = MIN(max_len, m_maxAddress - address);
 
 		len = rand_r(&m_seed) % (max_len + 1);
-		len = (len > m_minDataLen) ? len : m_minDataLen;
+		len = (len > m_minDataLen) ? len : MIN(m_minDataLen, max_len);
 		hasAddrLen = true;
 
 		be_len = 0;
