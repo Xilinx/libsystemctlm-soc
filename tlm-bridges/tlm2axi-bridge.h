@@ -414,18 +414,6 @@ private:
 		bool IsLastBeat() { return m_beat == m_numBeats; }
 
 		bool IsExclusive() { return m_genattr.get_exclusive(); }
-		void SetExclusiveHandled()
-		{
-			genattr_extension *genattr;
-
-			m_gp.get_extension(genattr);
-
-			assert(genattr);
-
-			if (genattr) {
-				genattr->set_exclusive_handled(true);
-			}
-		}
 
 		sc_event& DoneEvent() { return m_done; }
 
@@ -897,23 +885,7 @@ private:
 			if (resetn.read() == true) {
 				uint64_t resp = rresp.read().to_uint64();
 
-				switch (resp & 0x3) {
-				case AXI_EXOKAY:
-					assert(tr->IsExclusive());
-					tr->SetExclusiveHandled();
-					// Fallthrough to set response
-				case AXI_OKAY:
-					trans->set_response_status(tlm::TLM_OK_RESPONSE);
-					break;
-				case AXI_DECERR:
-					D(printf("DECERR\n"));
-					trans->set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
-					break;
-				case AXI_SLVERR:
-					D(printf("SLVERR\n"));
-					trans->set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
-					break;
-				}
+				tlm_gp_set_axi_resp(*trans, resp & 3);
 
 				if (ACE_MODE == ACE_MODE_ACE) {
 					if (m_snp_chnls->ExtractIsShared(resp)) {
@@ -1028,26 +1000,8 @@ private:
 					"with an unexpected transaction ID");
 			}
 
-			tlm::tlm_generic_payload& trans = tr->GetGP();
-
-			// Set TLM response
-			switch (bresp.read().to_uint64()) {
-			case AXI_EXOKAY:
-				assert(tr->IsExclusive());
-				tr->SetExclusiveHandled();
-				// Fallthrough to set response
-			case AXI_OKAY:
-				trans.set_response_status(tlm::TLM_OK_RESPONSE);
-				break;
-			case AXI_DECERR:
-				D(printf("DECERR\n"));
-				trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
-				break;
-			case AXI_SLVERR:
-				D(printf("SLVERR\n"));
-				trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
-				break;
-			}
+			tlm_gp_set_axi_resp(tr->GetGP(),
+					bresp.read().to_uint64());
 
 			if (ACE_MODE == ACE_MODE_ACE) {
 				wack.write(true);
