@@ -934,17 +934,19 @@ private:
 	bool check_address_alignment(uint64_t addr, uint8_t axburst,
 					uint8_t axsize)
 	{
+		uint32_t numberBytes = (1 << axsize);
+		uint64_t aligned_addr;
 		bool ret = true;
 
-		if (axburst == AXI_BURST_WRAP) {
-			uint32_t numberBytes = (1 << axsize);
-			uint64_t aligned_addr;
+		aligned_addr = (addr / numberBytes) * numberBytes;
 
-			aligned_addr = (addr / numberBytes) * numberBytes;
-
-			return aligned_addr == addr;
+		switch (axburst) {
+		case AXI_BURST_WRAP:
+			ret = aligned_addr == addr;
+			break;
+		default:
+			break;
 		}
-
 		return ret;
 	}
 
