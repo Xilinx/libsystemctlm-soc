@@ -31,7 +31,7 @@
 using namespace sc_core;
 using namespace std;
 
-#define MIN(a, b) (a) > (b) ? (b) : (a)
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
 
 #include "memory.h"
 
