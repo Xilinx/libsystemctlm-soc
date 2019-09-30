@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef REMOTE_PORT_TLM_MEMORY_SLAVE
+#define REMOTE_PORT_TLM_MEMORY_SLAVE
 
 class remoteport_tlm_memory_slave
 	: public sc_module, public remoteport_tlm_dev
@@ -40,3 +42,5 @@ private:
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 				 sc_time& delay);
 };
+
+#endif

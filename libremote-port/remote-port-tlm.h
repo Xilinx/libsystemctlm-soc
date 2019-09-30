@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef REMOTE_PORT_TLM
+#define REMOTE_PORT_TLM
 
 extern "C" {
 #include "remote-port-proto.h"
@@ -185,3 +187,5 @@ private:
 // Pre-defined sync objects.
 extern Iremoteport_tlm_sync *remoteport_tlm_sync_loosely_timed_ptr;
 extern Iremoteport_tlm_sync *remoteport_tlm_sync_untimed_ptr;
+
+#endif

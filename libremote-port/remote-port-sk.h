@@ -22,5 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef REMOTE_PORT_SK
+#define REMOTE_PORT_SK
 
 int sk_open(const char *descr);
+
+#endif

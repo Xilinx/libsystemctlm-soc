@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef REMOTE_PORT_TLM_WIRES
+#define REMOTE_PORT_TLM_WIRES
 
 class remoteport_tlm_wires
 	: public sc_module, public remoteport_tlm_dev
@@ -55,3 +57,4 @@ private:
 	void wire_update(void);
 };
 
+#endif

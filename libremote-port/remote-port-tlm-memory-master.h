@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef REMOTE_PORT_TLM_MEMORY_MASTER
+#define REMOTE_PORT_TLM_MEMORY_MASTER
 
 class remoteport_tlm_memory_master
 	: public sc_module, public remoteport_tlm_dev
@@ -57,3 +59,5 @@ private:
                                    tlm::tlm_command cmd,
                                    unsigned char *data, size_t len);
 };
+
+#endif
