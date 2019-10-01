@@ -25,6 +25,8 @@
 #ifndef REMOTE_PORT_TLM
 #define REMOTE_PORT_TLM
 
+#include "utils/async_event.h"
+
 extern "C" {
 #include "remote-port-proto.h"
 };
@@ -149,7 +151,8 @@ public:
         remoteport_tlm(sc_core::sc_module_name name,
 			int fd,
 			const char *sk_descr,
-			Iremoteport_tlm_sync *sync = NULL);
+			Iremoteport_tlm_sync *sync = NULL,
+			bool blocking_socket = true);
 
 	void register_dev(unsigned int dev_id, remoteport_tlm_dev *dev);
 	virtual void tie_off(void);
@@ -168,6 +171,7 @@ public:
 	// thread for this adaptor.
 	bool current_process_is_adaptor(void);
 
+	void rp_pkt_main(void);
 private:
 	remoteport_tlm_dev *devs[RP_MAX_DEVS];
 	const char *sk_descr;
@@ -175,8 +179,13 @@ private:
 	/* Socket.  */
 	int fd;
 	remoteport_tlm_dev dev_null;
+	bool blocking_socket;
 
 	sc_process_handle adaptor_proc;
+
+	async_event rp_pkt_event;
+	pthread_t rp_pkt_thread;
+	pthread_mutex_t rp_pkt_mutex;
 
 	void rp_say_hello(void);
 	void rp_cmd_hello(struct rp_pkt &pkt);

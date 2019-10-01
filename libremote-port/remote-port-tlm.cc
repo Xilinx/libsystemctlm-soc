@@ -25,6 +25,8 @@
 
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <inttypes.h>
 #include <sys/utsname.h>
 
@@ -39,6 +41,8 @@ extern "C" {
 #include "remote-port-proto.h"
 #include "remote-port-sk.h"
 };
+
+#include "utils/async_event.h"
 #include "remote-port-tlm.h"
 #include "remote-port-tlm-wires.h"
 #include "remote-port-tlm-memory-master.h"
@@ -139,6 +143,8 @@ protected:
 	tlm_utils::tlm_quantumkeeper m_qk;
 private:
 	sc_time time_start;
+	async_event event;
+	pthread_t thread;
 };
 
 class remoteport_tlm_sync_loosely_timed : public remoteport_tlm_sync_untimed
@@ -241,12 +247,21 @@ void remoteport_packet::copy(remoteport_packet &pkt)
 	memcpy(pkt.u8, u8, size);
 }
 
+static void *thread_trampoline(void *arg) {
+        class remoteport_tlm *t = (class remoteport_tlm *)(arg);
+        t->rp_pkt_main();
+        return NULL;
+}
+
 remoteport_tlm::remoteport_tlm(sc_module_name name,
 			int fd,
 			const char *sk_descr,
-			Iremoteport_tlm_sync *sync)
+			Iremoteport_tlm_sync *sync,
+			bool blocking_socket)
 	: sc_module(name),
-	  rst("rst")
+	  rst("rst"),
+	  blocking_socket(blocking_socket),
+	  rp_pkt_event("rp-pkt-ev")
 {
 	this->fd = fd;
 	this->sk_descr = sk_descr;
@@ -263,7 +278,47 @@ remoteport_tlm::remoteport_tlm(sc_module_name name,
 
 	dev_null.adaptor = this;
 
+	if (fd == -1) {
+		printf("open socket\n");
+		this->fd = sk_open(sk_descr);
+		if (this->fd == -1) {
+			printf("Failed to create remote-port socket connection!\n");
+			if (sk_descr) {
+				perror(sk_descr);
+			}
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	pthread_mutex_init(&rp_pkt_mutex, NULL);
 	SC_THREAD(process);
+
+	if (!blocking_socket)
+		pthread_create(&rp_pkt_thread, NULL, thread_trampoline, this);
+}
+
+void remoteport_tlm::rp_pkt_main(void)
+{
+	fd_set rd;
+	int r;
+
+	while (true) {
+		FD_ZERO(&rd);
+
+		FD_SET(fd, &rd);
+		pthread_mutex_lock(&rp_pkt_mutex);
+		r = select(fd + 1, &rd, NULL, NULL, NULL);
+		if (r == -1 && errno == EINTR)
+			continue;
+
+		if (r == -1) {
+			perror("select()");
+			exit(EXIT_FAILURE);
+		}
+
+		rp_pkt_event.notify(SC_ZERO_TIME);
+		pthread_mutex_unlock(&rp_pkt_mutex);
+	}
 }
 
 void remoteport_tlm::register_dev(unsigned int dev_id, remoteport_tlm_dev *dev)
@@ -461,6 +516,10 @@ bool remoteport_tlm::rp_process(bool can_sync)
 		uint32_t dlen;
 		size_t datalen;
 
+		if (!blocking_socket)
+			wait(rp_pkt_event);
+
+		pthread_mutex_lock(&rp_pkt_mutex);
 		r = rp_read(&pkt_rx.pkt->hdr, sizeof pkt_rx.pkt->hdr);
 		if (r < 0)
 			perror(__func__);
@@ -469,6 +528,7 @@ bool remoteport_tlm::rp_process(bool can_sync)
 
 		pkt_rx.alloc(sizeof pkt_rx.pkt->hdr + pkt_rx.pkt->hdr.len);
 		r = rp_read(&pkt_rx.pkt->hdr + 1, pkt_rx.pkt->hdr.len);
+		pthread_mutex_unlock(&rp_pkt_mutex);
 
 		dlen = rp_decode_payload(pkt_rx.pkt);
 		data = pkt_rx.u8 + sizeof pkt_rx.pkt->hdr + dlen;
@@ -539,18 +599,6 @@ bool remoteport_tlm::current_process_is_adaptor(void)
 void remoteport_tlm::process(void)
 {
 	adaptor_proc = sc_get_current_process_handle();
-
-	if (fd == -1) {
-		fd = sk_open(sk_descr);
-		if (fd == -1) {
-			printf("Failed to create remote-port socket connection!\n");
-			if (sk_descr) {
-				perror(sk_descr);
-			}
-			exit(EXIT_FAILURE);
-			return;
-		}
-	}
 
 	sync->reset();
 	wait(rst.negedge_event());
