@@ -56,14 +56,14 @@ To run the test-suites and examples, libsystemctlm-soc by default assumes that t
 
 If you are using a different version or have installed the libraries on some other location, you'll need to create a `.config.mk` file to specify this.
 
-Also, if you used specific c++ flags to build the SystemC libraries, such as manually specifying `-std=c++17` or something like that, you can specify that in the config files.
+Also, if you used specific c++ flags to build the SystemC libraries, such as manually specifying `-std=gnu++17` or something like that, you can specify that in the config files.
 
 Here's an example with SystemC installed under `/opt/`:
 `SYSTEMC = /opt/systemc-2.3.2`
 
-Here's another example with SystemC installed under `/opt/` and built with c++17.
+Here's another example with SystemC installed under `/opt/` and built with gnu++17.
 `SYSTEMC = /opt/systemc-2.3.2
-CXXFLAGS +=-std=c++17`
+CXXFLAGS +=-std=gnu++17`
 
 ### How To Embed Into Your Project
 
