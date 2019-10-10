@@ -1,0 +1,378 @@
+pysimgen
+--------
+
+pysimgen translates an IP-XACT platform description into a SystemC
+simulation (or QEMU / SystemC co-simulation).
+
+pysimgen generates a SystemC source file named 'sc_sim.cc' containing the
+generated platform simulator and also a Makefile for building it. The
+files are placed in a specified output directory.
+
+pysimgen supports IP-XACT platforms mixing components with Verilog and
+SystemC views.
+
+Creating a platform
+-------------------
+
+Using a graphical EDA tool based on the IP-XACT standard it is possible to
+connect IP-XACT components and create platforms (hierarchical IP-XACT
+components) visually. An open source example of an IP-XACT based graphical
+EDA tool is 'kactus2' [1].
+
+SystemC library path
+--------------------
+
+pysimgen supports configuring the SystemC library to use when building the
+generated simulator. The SystemC library root path can be specified
+through the --systemc-path argument (see pysimgen -h). It is also possible
+to override the generated root path by creating a '.config.mk' in the
+ouput directory with the following variable defined:
+
+...
+SYSTEMC=/path/to/my/systemc-2.3.2
+...
+
+The SystemC library and include files are then expected to be found in the
+following paths (if this is not the case define below variables explicitly
+in the .config.mk instead):
+
+SYSTEMC_INCLUDE ?=$(SYSTEMC)/include/
+SYSTEMC_LIBDIR ?= $(SYSTEMC)/lib-linux64
+
+Verilator
+---------
+
+Verilog components are automatically translated to SystemC using the
+verilator tool. The translation through verilator is triggered
+when the 'componentInstantiation' language is 'Verilog'.
+
+Example XML:
+<ipxact:componentInstantiation>
+...
+ <ipxact:language>Verilog</ipxact:language>
+...
+</ipxact:componentInstantiation>
+
+pysimgen supports configuring the verilator command to use through the
+--verilator argument (see pysimgen -h). It is also possible to override
+the output verilator command by creating a '.config.mk' in the ouput
+directory with the following variable defined:
+
+...
+VERILATOR=/path/to/my/verilator
+...
+
+Clock generation
+----------------
+
+Two options are available for automatically generating an sc_clock. The
+first option is to attach an IP-XACT clockDriver to a port on the platform
+IP-XACT component. The second option is to create parameters with the
+equivalent names and definitions as the clockDriver on the platform
+IP-XACT component:
+
+parameter 'clockPort':
+	* This paramater contains the name of the port where to attach the
+	  sc_clock.
+
+parameter 'clockPeriod':
+	* This parameter contains the clock period.
+
+parameter 'clockPulseDuration':
+	* This parameter contains the clock pulse duration.
+
+parameter 'clockTimeUnit':
+	* This parameter contains the time unit of above two values and
+	  can be 'ps', 'ns', 'us' or 'ms' (translated to the SystemC
+	  counter parts SC_PS, SC_NS, SC_US, SC_MS).
+
+Example platforms using and configuring above parameters can be found
+under 'libsystemctlm-soc/packages/ipxact/xilinx.com/examples'.
+
+Reset generation
+----------------
+
+Two options are available for automatically generating a reset signal. The
+first option is to attach an IP-XACT singleShotDriver to a port on the
+platform IP-XACT component. The second option is to create parameters with
+the equivalent names and definitions as the singleShotDriver on the
+platform IP-XACT component:
+
+parameter 'resetPort':
+	* This paramater contains the name of the port where to attach the
+	  reset signal.
+
+parameter 'singleShotValue':
+	* This parameter contains the assert value of the reset signal (0
+	  or 1).
+
+parameter 'singleShotDuration':
+	* This parameter contains the duration of the reset signal.
+
+parameter 'singleShotOffset':
+	* This parameter contains the offset from the start of simulation
+	  time when the reset pulse is generated.
+
+parameter 'singleShotTimeUnit':
+	* This parameter contains the time unit of above two values and
+	  can be 'ps', 'ns', 'us' or 'ms' (translated to the SystemC
+	  counter parts SC_PS, SC_NS, SC_US, SC_MS).
+
+Example platforms using and configuring above parameters can be found
+under 'libsystemctlm-soc/packages/ipxact/xilinx.com/examples'.
+
+Signal tracing
+--------------
+
+All generated signals are traced and the output trace file named
+'trace.vcd' is placed in pysimgen's working directory (if running the
+simulation through pysimgen, else it is placed in the working directory of
+the launched 'sc_sim').
+
+Simulation run time
+-------------------
+
+The default is to run the simulation until the user explictly stops it
+with a signal as SIGINT (no duration is passed to sc_start). If it is
+desired to pass a duration to sc_start two parameters can be added to the
+IP-XACT platform description.
+
+parameter 'runTime':
+	* This paramater contains the duration passed to sc_start (in
+	  below time unit).
+
+parameter 'runTimeTimeUnit':
+	* This parameter contains the time unit of above value and
+	  can be 'ps', 'ns', 'us' or 'ms' (translated to the SystemC
+	  counter parts SC_PS, SC_NS, SC_US, SC_MS).
+
+Example platforms using and configuring above parameters can be found
+under 'libsystemctlm-soc/packages/ipxact/xilinx.com/examples'.
+
+QEMU launch
+-----------
+
+A QEMU launch is generated when translating an IP-XACT platform design
+containing an instantiation of libsystemctlm-soc's xilinx_zynqmp
+component.
+
+The path of the QEMU binary executed can be explicitly set by configuring
+the instance's 'EMULATOR' parameter (using 'configurableElementValues' in
+the IP-XACT design). Another option is to make sure the PATH environment
+finds the desired 'qemu-system-aarch64' first.
+
+The arguments passed to the launched QEMU are configured through the
+instance's 'EMULATOR_ARGS' parameter (also using
+'configurableElementValues' in the design).
+
+systemctlm-cosim-demo, [2], contains a demo with an IP-XACT platform using
+the xilinx_zynqmp component.
+
+Creating a SystemC IP-XACT component
+------------------------------------
+
+pysimgen generates the C++ type name using the IP-XACT component's
+(componentInstantiation) 'moduleName' and typed 'moduleParameters'. Typed
+'moduleParameters' are translated into C++ template parameters. If
+'moduleName' is not found the component VLNV name is used instead.
+
+The first constructor parameter generated for the C++ instance is the
+sc_module_name of the SystemC class and will match the instance name in
+the IP-XACT design. Other C++ constructor parameters are IP-XACT component
+non typed module parameters and are generated in the same order as they
+are specified in the IP-XACT component. Below is an example of the
+translation:
+
+[IP-XACT component]
+...
+<ipxact:moduleName>my_testmodule</ipxact:moduleName>
+<ipxact:moduleParameters>
+ <ipxact:moduleParameter dataType="int" parameterId="X" usageType="typed">
+  <ipxact:name>X</ipxact:name>
+  <ipxact:value>10</ipxact:value>
+ </ipxact:moduleParameter>
+ <ipxact:moduleParameter dataType="uint64_t" parameterId="sync">
+  <ipxact:name>sync</ipxact:name>
+ <ipxact:value>30</ipxact:value>
+ </ipxact:moduleParameter>
+ <ipxact:moduleParameter dataType="double" parameterId="other">
+  <ipxact:name>other</ipxact:name>
+ <ipxact:value>40</ipxact:value>
+ </ipxact:moduleParameter>
+</ipxact:moduleParameters>
+...
+
+If an IP-XACT design contains an instantiation of above component named
+'my_testmodule_0' pysimgen will generate and add the following
+instantiation to SC_MODULE(Top):
+
+SC_MODULE(Top)
+{
+...
+	my_testmodule<10> my_testmodule_0;
+....
+
+pysimgen will also add the following initializer to SC_MODULE(Top)'s
+constructor's initializer list:
+
+Top(..):
+	...
+	my_testmodule_0("my_testmodule_0", 30, 40),
+	...
+{}
+
+
+pysimgen translates component ports using the IP-XACT component port
+names. For example if above component, 'my_testmodule', contains a port
+named 'irq' that an IP-XACT design connects with 'adHocConnection' as
+below:
+
+[IP-XACT design]
+...
+<ipxact:adHocConnection>
+ <ipxact:name>irq_signal</ipxact:name>
+ <ipxact:portReferences>
+  <ipxact:internalPortReference componentRef="my_testmodule_0" portRef="irq"/>
+  ...
+ </ipxact:portReferences>
+</ipxact:adHocConnection>
+
+pysimgen will generate the following signal and signal connection and add
+it to SC_MODULE(Top):
+
+SC_MODULE(Top)
+{
+...
+sc_signal<bool> irq_signal;
+...
+Top(..):
+...
+{
+...
+	my_testmodule_0.irq(irq_signal);
+...
+}
+...
+
+Component ports connected with design 'interconnections' through
+'busInterfaces' and 'abstractionDefinitions' are translated in a similar
+fashion by pysimgen. Below is an example of an interconnection:
+
+<ipxact:interconnection>
+ <ipxact:name>tg_to_tlm2axi</ipxact:name>
+ <ipxact:activeInterface componentRef="TLMTrafficGenerator_0" busRef="tlm_init"/>
+ <ipxact:activeInterface componentRef="tlm2axi_bridge_0" busRef="tlm_target"/>
+</ipxact:interconnection>
+
+Since the TLMTrafficGenerator maps above 'busInterface' (busRef)
+'abstractionDefinition' 'portMap' to it's transactional (initiator socket)
+port named 'socket' and similarly the tlm2axi_bridge to it's transactional
+(target socket) port 'tgt_socket' pysimgen translates above
+'interconnection' into the following code and adds it to SC_MODULES(Top)'s
+constructor:
+
+...
+TLMTrafficGenerator_0.socket(tlm2axi_bridge_0.tgt_socket);
+...
+
+Include files in the IP-XACT component 'fileSet' are added to the
+generated 'sc_sim.cc'. SystemC source files not marked as include files
+are built and linked into the final simulation output binary (named
+'sc_sim'). File depenedencies are added to the CXXFLAGS / CFLAGS in the
+generated Makefile.
+
+To note is that pysimgen currently only supports one view on the IP-XACT
+components. Also all sc_signals generated are of type bool (1 bit signals)
+or type sc_bv.
+
+Creating a C++ IP-XACT component
+------------------------------------
+
+If the language of the IP-XACT component instance is specified as C++, no
+sc_module_name is generated for the instance constructor by pysimgen.
+Template parameters for the type name and other constructor parameters are
+generated in the same manner as for SystemC modules.
+
+Creating a verilog IP-XACT component
+------------------------------------
+
+pysimgen generates the C++ type name using the IP-XACT component's
+(componentInstantiation) 'moduleName' and prefixing it with a capital 'V'
+(for matching the verilator translation to SystemC). If the 'moduleName'
+is not found the component VLNV name is used and prefixed instead. Below
+is an example of the translation:
+
+[IP-XACT component]
+...
+<ipxact:language>Verilog</ipxact:language>
+<ipxact:moduleName>axifull_dev</ipxact:moduleName>
+...
+
+If an IP-XACT design contains an instantiation of above component named
+'axifull_dev_0' pysimgen will generate and add the following
+instantiation to SC_MODULE(Top):
+
+SC_MODULE(Top)
+{
+...
+	Vaxifull_dev axifull_dev_0;
+....
+
+pysimgen will also add the following initializer to SC_MODULE(Top)'s
+constructor's initializer list:
+
+Top(..):
+	...
+	axifull_dev_0("axifull_dev_0"),
+	...
+{}
+
+pysimgen generates component port names in the same manner as with the
+SystemC modules.
+
+The files in the IP-XACT component 'fileSet' must be specified in the
+order which they must be given to 'verilator' (pysimgen passes the files
+to verilator in the specified order when translating the component to
+SystemC). Rules are generated into the output Makefile building the
+verilator output and linking it with the ouput simulation binary (named
+'sc_sim').
+
+To note is that pysimgen currently only supports one view in the IP-XACT
+components. Also port signals map to become sc_signals of type bool (1 bit
+signals) or sc_bv ('--pins-bv 2' is passed as an argument to verilator
+when translating the component to SystemC). Another limitiation is that
+'moduleParameters' are currently not supported (will be ignored).
+
+Example 1 - Translate the rtl_axi4 example
+-------------------------------------------------------------
+$ cd libsystemctlm-soc
+$ ./tools/pysimgen/pysimgen \
+  -p packages/ipxact/xilinx.com/examples/rtl_axi4/1.0/rtl_axi4.1.0.xml \
+  -l packages/ipxact/ \
+  -o /tmp/rtl_axi4
+
+Example 1 - Translate the traffic_axi4 example
+-----------------------------------------------------------------
+$ cd libsystemctlm-soc
+$ ./tools/pysimgen/pysimgen \
+  -p packages/ipxact/xilinx.com/examples/traffic_axi4/1.0/traffic_axi4.1.0.xml \
+  -l packages/ipxact/ \
+  -o /tmp/traffic_axi4/
+
+Example 3 - Translate, build and run the rtl_axi4 example
+--------------------------------------------------
+$ cd libsystemctlm-soc
+$ ./tools/pysimgen/pysimgen \
+  -p packages/ipxact/xilinx.com/examples/rtl_axi4/1.0/rtl_axi4.1.0.xml \
+  -l packages/ipxact/ \
+  -o /tmp/rtl_axi4 \
+  --build \
+  --run
+$ gtkwave trace.vcd
+
+References
+----------
+ [1] kactus2, https://github.com/kactus2/kactus2dev
+
+ [2] systemctlm-cosim-demo,
+	https://github.com/Xilinx/systemctlm-cosim-demo
