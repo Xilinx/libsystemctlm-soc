@@ -72,3 +72,4 @@ $(SUBDIRS:%=%-clean):
 	$(MAKE) -C $(@:-clean=) clean
 
 clean: $(SUBDIRS:%=%-clean)
+	$(RM) -r pysimgen

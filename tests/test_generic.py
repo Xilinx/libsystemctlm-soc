@@ -2,6 +2,7 @@ import pytest
 import os
 import fnmatch
 import subprocess
+import shutil
 
 tg_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/traffic-generators/axi/"), '*-tg-test')
 testnames_axi = ['./traffic-generators/axi/{0}'.format(i) for i in tg_axi_testnames]
@@ -131,3 +132,38 @@ def test_tg_chi_tests(filename):
 def test_checker_chi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
+
+def get_ipxact_tests():
+	ex_path = os.path.dirname(__file__)
+	ex_path += '/../packages/ipxact/xilinx.com/examples/'
+	tests = []
+
+	for ex in os.listdir(ex_path):
+		for ver in os.listdir(ex_path + '/' + ex):
+			plat  = ex_path + '/' + ex + '/' + ver + '/'
+			plat += ex + '.1.0.xml'
+			plat = os.path.normpath(plat)
+
+			out = os.path.dirname(__file__)
+			for d in ['/pysimgen', ex, ver]:
+				out += '/' + d
+				if not os.path.exists(out):
+					os.makedirs(out)
+
+			tests += [(plat, out)]
+	return tests
+
+@pytest.mark.parametrize("platform, outdir", get_ipxact_tests())
+def test_pysimgen_tests(platform, outdir):
+	path_exe = os.path.dirname(__file__)
+	path_exe += '/../tools/pysimgen/pysimgen'
+	path_exe = os.path.normpath(path_exe)
+	libs = os.path.normpath(os.path.dirname(__file__) + '/../')
+
+	cfg = os.path.normpath(os.path.dirname(__file__) + '/../.config.mk')
+	if os.path.exists(cfg):
+		shutil.copy(cfg, outdir)
+
+	pysimgen = [ path_exe, '-p', platform, '-l', libs ]
+	pysimgen += [ '-o', outdir, '--build', '--run', '-q' ]
+	assert(subprocess.call(pysimgen, cwd = outdir) == 0)

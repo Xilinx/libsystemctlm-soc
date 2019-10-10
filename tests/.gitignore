@@ -5,3 +5,4 @@ __pycache__
 report.html
 report.zip
 *.vcd
+pysimgen
