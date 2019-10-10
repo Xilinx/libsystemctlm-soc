@@ -1,0 +1,206 @@
+#!/usr/bin/python
+"""
+Copyright (c) 2019 Xilinx Inc.
+Written by Francisco Iglesias.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
+import os
+import sys
+import argparse
+import xml.etree.ElementTree as ET
+import subprocess
+from registry import *
+from sc_generator import SC_Generator
+from mk_generator import MK_Generator
+
+def parse_args():
+	d  = 'Translate an IP-XACT platform description into a SystemC '
+	d += 'simulation (or QEMU / SystemC co-simulation).'
+
+	parser = argparse.ArgumentParser(description=d)
+
+	parser.add_argument('--systemc-path',
+		default='/usr/local/systemc-2.3.2',
+		help='Path to the SystemC library (default: ' +
+			'/usr/local/systemc-2.3.2).')
+
+	parser.add_argument('--verilator',
+		default='verilator',
+		help='The verilator command to use (default: ' +
+			'verilator).')
+
+	parser.add_argument('-p', '--platform', type=str,
+		help='The platform IP-XACT component (XML file) to generate ' +
+			'a simulation for.')
+
+	parser.add_argument('-l', '--libraries', nargs='+', required=True,
+		help='Directories to scan for IP-XACT objects (XML files).')
+
+	parser.add_argument('-o', '--outdir', required=True,
+		help='The output directory.')
+
+	parser.add_argument('--global-quantum', type=int, default=10000,
+		help='Generated global quantum in SC_NS ' +
+			'(default 10000 SC_NS).')
+
+	parser.add_argument('--sc-time-resolution', type=int, default=1,
+		help='Generated SystemC time resolution in SC_PS ' +
+			'(default 1 SC_PS).')
+
+	parser.add_argument('--build', action='store_true',
+		help='Build the generated SystemC simulator.')
+
+	parser.add_argument('--run', action='store_true',
+		help='Run the generated SystemC simulator.')
+
+	parser.add_argument('--run-args', nargs='*', default=[],
+		help='Arguments passed to the generated SystemC simulator ' +
+			'when the run flag has been specified.')
+
+	parser.add_argument('-v', '--verbose', action='count',
+		help='Verbose mode (increases with multiple flags).')
+
+	parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
+		help='Quiet mode (no output on the console).')
+
+	return parser.parse_args()
+
+def get_platform(platform):
+	with open(platform) as file:
+		tree = ET.parse(file)
+		return IpxactObject(tree)
+
+def get_first_view_design_cfg_vlnv(platform):
+	m = platform.root.find('ipxact:model', ns)
+	vs = m.find('ipxact:views', ns)
+	v = vs.find('ipxact:view', ns)
+
+	d_cfg_inst_ref = v.find(
+			'ipxact:designConfigurationInstantiationRef', ns)
+
+	ins = m.find('ipxact:instantiations', ns)
+
+	d_cfg_inst_tag = 'ipxact:designConfigurationInstantiation'
+	d_cfg_ref_tag = 'ipxact:designConfigurationRef'
+
+	for d_cfg_inst in ins.findall(d_cfg_inst_tag, ns):
+		n = d_cfg_inst.find('ipxact:name', ns)
+		if n.text == d_cfg_inst_ref.text:
+			d_cfg_ref = d_cfg_inst.find(d_cfg_ref_tag, ns)
+			return to_vlnv(d_cfg_ref.attrib)
+	return None
+
+def get_first_view_design_vlnv(platform):
+	m = platform.root.find('ipxact:model', ns)
+	vs = m.find('ipxact:views', ns)
+	v = vs.find('ipxact:view', ns)
+
+	d_inst_ref = v.find('ipxact:designInstantiationRef', ns)
+	ins = m.find('ipxact:instantiations', ns)
+
+	if d_inst_ref is not None:
+		d_inst_tag = 'ipxact:designInstantiation'
+		d_ref_tag = 'ipxact:designRef'
+
+		for d_inst in ins.findall(d_inst_tag, ns):
+			n = d_inst.find('ipxact:name', ns)
+			if n.text == d_inst_ref.text:
+				d_ref = d_inst.find(d_ref_tag, ns)
+				return to_vlnv(d_ref.attrib)
+	return None
+
+def get_design_vlnv_from_design_cfg(design_cfg):
+	d_ref = design_cfg.root.find('ipxact:designRef', ns)
+	return to_vlnv(d_ref.attrib)
+
+def main():
+	args = parse_args()
+	reg = Registry(args.libraries, args.verbose)
+
+	if args.platform is None:
+		print 'No platform given, exiting...'
+		sys.exit()
+
+	#
+	# Get platform ipxact component
+	#
+	platform = get_platform(args.platform)
+
+	#
+	# Extract design from the platform
+	#
+	design_vlnv = get_first_view_design_vlnv(platform)
+	design_cfg = None
+
+	if design_vlnv is None:
+		design_cfg_vlnv = get_first_view_design_cfg_vlnv(platform)
+		if design_cfg_vlnv is not None:
+			design_cfg = reg.get_ipxact_object(design_cfg_vlnv)
+			design_vlnv = get_design_vlnv_from_design_cfg(
+						design_cfg)
+
+	if design_vlnv is not None:
+		design = reg.get_ipxact_object(design_vlnv)
+	else:
+		print 'No design or design configuration found!'
+		sys.exit(1)
+
+	#
+	# Create output dir
+	#
+	if args.outdir[0] != '/':
+		outdir = os.getcwd() + '/' + args.outdir
+		args.outdir = outdir
+
+	if not os.path.exists(args.outdir):
+		os.makedirs(args.outdir)
+
+	#
+	# Generate sc_sim.cc
+	#
+	sc_gen = SC_Generator(reg, platform, design, design_cfg, args)
+	sc_gen.gen_sc_sim()
+
+	#
+	# Generate the Makefile
+	#
+	mk_gen = MK_Generator(args, sc_gen)
+	mk_gen.gen_makefile()
+
+	if args.build == True:
+		if args.verbose:
+			print '[Building the simulator]'
+
+		mk_cmd = ['make', '-C', args.outdir]
+		rc = subprocess.call(mk_cmd)
+		if rc != 0:
+			sys.exit(rc)
+
+	if args.run == True:
+		if args.verbose:
+			print '[Running the simulator]'
+
+		sc_sim_exec = [ args.outdir + '/sc_sim' ]
+		sc_sim_exec += args.run_args
+		sys.exit(subprocess.call(sc_sim_exec))
+
+if __name__ == '__main__':
+	main()
