@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// Copyright (c) 2019 Xilinx Inc.
+// Written by Francisco Iglesias.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+-->
+<ipxact:component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+	<ipxact:vendor>xilinx.com</ipxact:vendor>
+	<ipxact:library>libsystemctlm-soc</ipxact:library>
+	<ipxact:name>RandomTraffic</ipxact:name>
+	<ipxact:version>1.0</ipxact:version>
+	<ipxact:busInterfaces>
+		<ipxact:busInterface>
+			<ipxact:name>TrafficDesc</ipxact:name>
+			<ipxact:busType vendor="xilinx.com" library="libsystemctlm-soc" name="TrafficDesc" version="1.0"/>
+			<ipxact:abstractionTypes>
+				<ipxact:abstractionType>
+					<ipxact:abstractionRef vendor="xilinx.com" library="libsystemctlm-soc" name="TrafficDesc.absDef" version="1.0"/>
+					<ipxact:portMaps>
+						<ipxact:portMap>
+						<ipxact:logicalPort>
+							<ipxact:name>TrafficDesc</ipxact:name>
+						</ipxact:logicalPort>
+						<ipxact:physicalPort>
+							<ipxact:name>TrafficDesc</ipxact:name>
+						</ipxact:physicalPort>
+						</ipxact:portMap>
+					</ipxact:portMaps>
+				</ipxact:abstractionType>
+			</ipxact:abstractionTypes>
+			<ipxact:master/>
+		</ipxact:busInterface>
+	</ipxact:busInterfaces>
+	<ipxact:model>
+		<ipxact:views>
+			<ipxact:view>
+				<ipxact:name>SystemC</ipxact:name>
+				<ipxact:componentInstantiationRef>systemc_implementation</ipxact:componentInstantiationRef>
+			</ipxact:view>
+		</ipxact:views>
+		<ipxact:instantiations>
+			<ipxact:componentInstantiation>
+				<ipxact:name>systemc_implementation</ipxact:name>
+				<ipxact:language>C++</ipxact:language>
+				<ipxact:moduleName>RandomTraffic</ipxact:moduleName>
+				<ipxact:moduleParameters>
+					<ipxact:moduleParameter dataType="uint64_t" parameterId="minAddress" resolve="user">
+						<ipxact:name>minAddress</ipxact:name>
+						<ipxact:value>0</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="uint64_t" parameterId="maxAddress" resolve="user">
+						<ipxact:name>maxAddress</ipxact:name>
+						<ipxact:value>512</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="uint64_t" parameterId="addressMask" resolve="user">
+						<ipxact:name>addressMask</ipxact:name>
+						<ipxact:value>1008</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="uint32_t" parameterId="minDataLen" resolve="user">
+						<ipxact:name>minDataLen</ipxact:name>
+						<ipxact:value>1</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="uint32_t" parameterId="maxDataLen" resolve="user">
+						<ipxact:name>maxDataLen</ipxact:name>
+						<ipxact:value>512</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="uint32_t" parameterId="maxByteEnablesLen" resolve="user">
+						<ipxact:name>maxByteEnablesLen</ipxact:name>
+						<ipxact:value>512</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="uint32_t" parameterId="numTransfers" resolve="user">
+						<ipxact:name>numTransfers</ipxact:name>
+						<ipxact:value>20</ipxact:value>
+					</ipxact:moduleParameter>
+					<ipxact:moduleParameter dataType="unsigned int seed" parameterId="seed" resolve="user">
+						<ipxact:name>seed</ipxact:name>
+						<ipxact:value>0</ipxact:value>
+					</ipxact:moduleParameter>
+				</ipxact:moduleParameters>
+				<ipxact:fileSetRef>
+					<ipxact:localName>sc_fileset</ipxact:localName>
+				</ipxact:fileSetRef>
+			</ipxact:componentInstantiation>
+		</ipxact:instantiations>
+		<ipxact:ports>
+			<ipxact:port>
+				<ipxact:name>TrafficDesc</ipxact:name>
+				<ipxact:transactional>
+					<ipxact:initiative>requires</ipxact:initiative>
+				</ipxact:transactional>
+			</ipxact:port>
+		</ipxact:ports>
+	</ipxact:model>
+	<ipxact:fileSets>
+		<ipxact:fileSet>
+			<ipxact:name>sc_fileset</ipxact:name>
+			<ipxact:file>
+				<ipxact:name>../../../../../../traffic-generators/random-traffic.h</ipxact:name>
+				<ipxact:fileType>systemCSource</ipxact:fileType>
+				<ipxact:isIncludeFile>true</ipxact:isIncludeFile>
+				<ipxact:dependency>../../../../../..</ipxact:dependency>
+			</ipxact:file>
+		</ipxact:fileSet>
+	</ipxact:fileSets>
+</ipxact:component>

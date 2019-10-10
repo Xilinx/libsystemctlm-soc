@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// Copyright (c) 2019 Xilinx Inc.
+// Written by Francisco Iglesias.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+-->
+<ipxact:component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:kactus2="http://kactus2.cs.tut.fi" xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+	<ipxact:vendor>xilinx.com</ipxact:vendor>
+	<ipxact:library>examples</ipxact:library>
+	<ipxact:name>traffic_axi4</ipxact:name>
+	<ipxact:version>1.0</ipxact:version>
+	<ipxact:model>
+		<ipxact:views>
+			<ipxact:view>
+				<ipxact:name>hierarchical</ipxact:name>
+				<ipxact:designConfigurationInstantiationRef>traffic_axi4.designcfg_1.0</ipxact:designConfigurationInstantiationRef>
+			</ipxact:view>
+		</ipxact:views>
+		<ipxact:instantiations>
+			<ipxact:designConfigurationInstantiation>
+				<ipxact:name>traffic_axi4.designcfg_1.0</ipxact:name>
+				<ipxact:designConfigurationRef vendor="xilinx.com" library="examples" name="traffic_axi4.designcfg" version="1.0"/>
+			</ipxact:designConfigurationInstantiation>
+		</ipxact:instantiations>
+		<ipxact:ports>
+			<ipxact:port>
+				<ipxact:name>clk</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>in</ipxact:direction>
+					<ipxact:wireTypeDefs>
+						<ipxact:wireTypeDef>
+							<ipxact:typeName>bool</ipxact:typeName>
+						</ipxact:wireTypeDef>
+					</ipxact:wireTypeDefs>
+				</ipxact:wire>
+				<ipxact:vendorExtensions>
+					<kactus2:adHocVisible/>
+				</ipxact:vendorExtensions>
+			</ipxact:port>
+			<ipxact:port>
+				<ipxact:name>rst_n</ipxact:name>
+				<ipxact:wire>
+					<ipxact:direction>in</ipxact:direction>
+					<ipxact:wireTypeDefs>
+						<ipxact:wireTypeDef>
+							<ipxact:typeName>bool</ipxact:typeName>
+						</ipxact:wireTypeDef>
+					</ipxact:wireTypeDefs>
+				</ipxact:wire>
+				<ipxact:vendorExtensions>
+					<kactus2:adHocVisible/>
+				</ipxact:vendorExtensions>
+			</ipxact:port>
+		</ipxact:ports>
+	</ipxact:model>
+	<ipxact:parameters>
+		<ipxact:parameter parameterId="uuid_fcb2a984_af47_4455_bd7a_2e5f7d201eb7" resolve="immediate">
+			<ipxact:name>clockPort</ipxact:name>
+			<ipxact:value>clk</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_85b5fdd4_3c29_49fc_a380_e7af75fd5aae" resolve="immediate" type="int">
+			<ipxact:name>clockPeriod</ipxact:name>
+			<ipxact:value>20</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_e7c605f8_c1d0_4b76_884a_b766bda8e372" resolve="immediate" type="int">
+			<ipxact:name>clockPulseDuration</ipxact:name>
+			<ipxact:value>10</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_572d1ad3_ce02_41c7_bd55_df87dca8fbc8" resolve="immediate">
+			<ipxact:name>clockTimeUnit</ipxact:name>
+			<ipxact:value>us</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_d031df4a_193b_4119_94b0_3c06ee20b31c" resolve="immediate">
+			<ipxact:name>resetPort</ipxact:name>
+			<ipxact:value>rst_n</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_93befdca_ee14_4449_911a_6b3a19ab76cd" resolve="immediate" type="int">
+			<ipxact:name>singleShotDuration</ipxact:name>
+			<ipxact:value>4</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_e76dc71a_acc7_4095_913d_348fa7461c6f" resolve="immediate" type="int">
+			<ipxact:name>singleShotValue</ipxact:name>
+			<ipxact:value>0</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_8fbd9f76_e13d_4ccc_9f40_61dabf7a9022" resolve="immediate" type="int">
+			<ipxact:name>singleShotOffset</ipxact:name>
+			<ipxact:value>0</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_dad76222_eb1a_464f_b804_49f842dbc83d" resolve="immediate">
+			<ipxact:name>singleShotTimeUnit</ipxact:name>
+			<ipxact:value>us</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_0f1977b8_1771_45b9_8315_22ee26fc50f1">
+			<ipxact:name>runTime</ipxact:name>
+			<ipxact:value>1000</ipxact:value>
+		</ipxact:parameter>
+		<ipxact:parameter parameterId="uuid_418d1cab_036a_4cc5_87f2_d7632e9a59cf">
+			<ipxact:name>runTimeTimeUnit</ipxact:name>
+			<ipxact:value>ms</ipxact:value>
+		</ipxact:parameter>
+	</ipxact:parameters>
+</ipxact:component>

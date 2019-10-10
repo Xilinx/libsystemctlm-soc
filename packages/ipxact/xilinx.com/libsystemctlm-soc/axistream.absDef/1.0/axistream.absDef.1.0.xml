@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// Copyright (c) 2019 Xilinx Inc.
+// Written by Francisco Iglesias.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+-->
+<ipxact:abstractionDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+	<ipxact:vendor>xilinx.com</ipxact:vendor>
+	<ipxact:library>libsystemctlm-soc</ipxact:library>
+	<ipxact:name>axistream.absDef</ipxact:name>
+	<ipxact:version>1.0</ipxact:version>
+	<ipxact:busType vendor="xilinx.com" library="libsystemctlm-soc" name="axistream" version="1.0"/>
+	<ipxact:ports>
+		<ipxact:port>
+			<ipxact:logicalName>tready</ipxact:logicalName>
+			<ipxact:description>tready indicates that the slave can accept a transfer in the
+current cycle.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tdata</ipxact:logicalName>
+			<ipxact:description>tdata is the primary payload that is used to provide the data
+that is passing across the interface. The width of the data
+payload is an integer number of bytes.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>64</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>64</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tstrb</ipxact:logicalName>
+			<ipxact:description>tstrb is the byte qualifier that indicates whether the content
+of the associated byte of TDATA is processed as a data byte or
+a position byte.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>8</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>8</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tkeep</ipxact:logicalName>
+			<ipxact:description>tkeep is the byte qualifier that indicates whether the content
+of the associated byte of TDATA is processed as part of the data
+stream.
+Associated bytes that have the TKEEP byte qualifier deasserted
+are null bytes and can be removed from the data stream.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>4</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>4</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tlast</ipxact:logicalName>
+			<ipxact:description>tlast indicates the boundary of a packet.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tid</ipxact:logicalName>
+			<ipxact:description>tid is the data stream identifier that indicates different streams
+of data.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>8</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>8</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tdest</ipxact:logicalName>
+			<ipxact:description>tdest provides routing information for the data stream.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>4</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>4</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tuser</ipxact:logicalName>
+			<ipxact:description>tuser is user defined sideband information that can be
+transmitted alongside the data stream.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+		<ipxact:port>
+			<ipxact:logicalName>tvalid</ipxact:logicalName>
+			<ipxact:description>tvalid indicates that the master is driving a valid transfer.
+A transfer takes place when both TVALID and TREADY are
+asserted.</ipxact:description>
+			<ipxact:wire>
+				<ipxact:onMaster>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>out</ipxact:direction>
+				</ipxact:onMaster>
+				<ipxact:onSlave>
+					<ipxact:presence>optional</ipxact:presence>
+					<ipxact:width>1</ipxact:width>
+					<ipxact:direction>in</ipxact:direction>
+				</ipxact:onSlave>
+			</ipxact:wire>
+		</ipxact:port>
+	</ipxact:ports>
+</ipxact:abstractionDefinition>

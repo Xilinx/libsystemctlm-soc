@@ -1,0 +1,6 @@
+Backwards compatibility
+-----------------------
+
+The structure of the subdirectories containing IP-XACT objects might
+change in the future. Also the content in the IP-XACT objects might be
+updated. The result of above might be affected backward compatibilty.

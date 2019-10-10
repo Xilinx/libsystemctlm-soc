@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// Copyright (c) 2019 Xilinx Inc.
+// Written by Francisco Iglesias.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+-->
+<ipxact:design xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:kactus2="http://kactus2.cs.tut.fi" xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+	<ipxact:vendor>xilinx.com</ipxact:vendor>
+	<ipxact:library>examples</ipxact:library>
+	<ipxact:name>rtl_axi4.design</ipxact:name>
+	<ipxact:version>1.0</ipxact:version>
+	<ipxact:componentInstances>
+		<ipxact:componentInstance>
+			<ipxact:instanceName>TLMTrafficGenerator_0</ipxact:instanceName>
+			<ipxact:componentRef vendor="xilinx.com" library="libsystemctlm-soc" name="TLMTrafficGenerator" version="1.0"/>
+			<ipxact:vendorExtensions>
+				<kactus2:uuid>{7112055c-9c0c-4ee0-8d6a-12901bac731e}</kactus2:uuid>
+				<kactus2:portPositions>
+					<kactus2:portPosition busRef="datatransfer_slave" x="110" y="130"/>
+					<kactus2:portPosition busRef="tlm_init" x="110" y="150"/>
+					<kactus2:portPosition busRef="TrafficDesc" x="-110" y="100"/>
+				</kactus2:portPositions>
+				<kactus2:position x="280" y="60"/>
+			</ipxact:vendorExtensions>
+		</ipxact:componentInstance>
+		<ipxact:componentInstance>
+			<ipxact:instanceName>tlm2axi_bridge_0</ipxact:instanceName>
+			<ipxact:componentRef vendor="xilinx.com" library="libsystemctlm-soc" name="tlm2axi_bridge" version="1.0">
+				<ipxact:configurableElementValues>
+					<ipxact:configurableElementValue referenceId="ADDR_WIDTH">10</ipxact:configurableElementValue>
+				</ipxact:configurableElementValues>
+			</ipxact:componentRef>
+			<ipxact:vendorExtensions>
+				<kactus2:uuid>{1e1d5fbe-b30a-4d10-82b5-d5ba17944c41}</kactus2:uuid>
+				<kactus2:portPositions>
+					<kactus2:portPosition busRef="AXI4Master" x="110" y="180"/>
+					<kactus2:portPosition busRef="tlm_target" x="-110" y="150"/>
+				</kactus2:portPositions>
+				<kactus2:adHocVisibilities>
+					<kactus2:adHocVisible portName="resetn" x="-110" y="100"/>
+					<kactus2:adHocVisible portName="clk" x="-110" y="70"/>
+				</kactus2:adHocVisibilities>
+				<kactus2:position x="630" y="60"/>
+			</ipxact:vendorExtensions>
+		</ipxact:componentInstance>
+		<ipxact:componentInstance>
+			<ipxact:instanceName>axifull_dev_0</ipxact:instanceName>
+			<ipxact:componentRef vendor="xilinx.com" library="libsystemctlm-soc" name="axifull_dev" version="1.0"/>
+			<ipxact:vendorExtensions>
+				<kactus2:uuid>{61cf61d6-7d1c-4a42-8cfa-3e51914fc085}</kactus2:uuid>
+				<kactus2:portPositions>
+					<kactus2:portPosition busRef="AXI4Slave" x="-110" y="180"/>
+				</kactus2:portPositions>
+				<kactus2:adHocVisibilities>
+					<kactus2:adHocVisible portName="s00_axi_aclk" x="-110" y="100"/>
+					<kactus2:adHocVisible portName="s00_axi_aresetn" x="-110" y="70"/>
+				</kactus2:adHocVisibilities>
+				<kactus2:position x="1030" y="60"/>
+			</ipxact:vendorExtensions>
+		</ipxact:componentInstance>
+		<ipxact:componentInstance>
+			<ipxact:instanceName>RandomTraffic_0</ipxact:instanceName>
+			<ipxact:componentRef vendor="xilinx.com" library="libsystemctlm-soc" name="RandomTraffic" version="1.0"/>
+			<ipxact:vendorExtensions>
+				<kactus2:uuid>{01638b0d-1de2-49df-98cd-ffa927d7389c}</kactus2:uuid>
+				<kactus2:portPositions>
+					<kactus2:portPosition busRef="TrafficDesc" x="-110" y="70"/>
+				</kactus2:portPositions>
+				<kactus2:position x="280" y="260"/>
+			</ipxact:vendorExtensions>
+		</ipxact:componentInstance>
+	</ipxact:componentInstances>
+	<ipxact:interconnections>
+		<ipxact:interconnection>
+			<ipxact:name>TLMTrafficGenerator_0_tlm_init_to_tlm2axi_bridge_0_tlm_target</ipxact:name>
+			<ipxact:activeInterface componentRef="TLMTrafficGenerator_0" busRef="tlm_init"/>
+			<ipxact:activeInterface componentRef="tlm2axi_bridge_0" busRef="tlm_target"/>
+		</ipxact:interconnection>
+		<ipxact:interconnection>
+			<ipxact:name>tlm2axi_bridge_0_AXI4Master_to_memory_0_AXI4Slave</ipxact:name>
+			<ipxact:activeInterface componentRef="tlm2axi_bridge_0" busRef="AXI4Master"/>
+			<ipxact:activeInterface componentRef="axifull_dev_0" busRef="AXI4Slave"/>
+		</ipxact:interconnection>
+		<ipxact:interconnection>
+			<ipxact:name>RandomTraffic_0_TrafficDesc_to_TLMTrafficGenerator_0_TrafficDesc</ipxact:name>
+			<ipxact:activeInterface componentRef="RandomTraffic_0" busRef="TrafficDesc"/>
+			<ipxact:activeInterface componentRef="TLMTrafficGenerator_0" busRef="TrafficDesc"/>
+		</ipxact:interconnection>
+	</ipxact:interconnections>
+	<ipxact:adHocConnections>
+		<ipxact:adHocConnection>
+			<ipxact:name>tlm2axi_bridge_0_clk_to_clk</ipxact:name>
+			<ipxact:portReferences>
+				<ipxact:internalPortReference componentRef="tlm2axi_bridge_0" portRef="clk"/>
+				<ipxact:externalPortReference portRef="clk"/>
+			</ipxact:portReferences>
+		</ipxact:adHocConnection>
+		<ipxact:adHocConnection>
+			<ipxact:name>tlm2axi_bridge_0_resetn_to_rst_n</ipxact:name>
+			<ipxact:portReferences>
+				<ipxact:internalPortReference componentRef="tlm2axi_bridge_0" portRef="resetn"/>
+				<ipxact:externalPortReference portRef="rst_n"/>
+			</ipxact:portReferences>
+		</ipxact:adHocConnection>
+		<ipxact:adHocConnection>
+			<ipxact:name>memory_0_s00_axi_aclk_to_clk</ipxact:name>
+			<ipxact:portReferences>
+				<ipxact:internalPortReference componentRef="axifull_dev_0" portRef="s00_axi_aclk"/>
+				<ipxact:externalPortReference portRef="clk"/>
+			</ipxact:portReferences>
+		</ipxact:adHocConnection>
+		<ipxact:adHocConnection>
+			<ipxact:name>memory_0_s00_axi_aresetn_to_rst_n</ipxact:name>
+			<ipxact:portReferences>
+				<ipxact:internalPortReference componentRef="axifull_dev_0" portRef="s00_axi_aresetn"/>
+				<ipxact:externalPortReference portRef="rst_n"/>
+			</ipxact:portReferences>
+		</ipxact:adHocConnection>
+	</ipxact:adHocConnections>
+	<ipxact:vendorExtensions>
+		<kactus2:columnLayout>
+			<kactus2:column name="IO" contentType="0" allowedItems="1" minWidth="119" width="119" x="0"/>
+			<kactus2:column name="Buses" contentType="1" allowedItems="12" minWidth="319" width="379" x="440"/>
+			<kactus2:column name="Components" contentType="2" allowedItems="2" minWidth="319" width="419" x="820"/>
+			<kactus2:column name="IO" contentType="0" allowedItems="1" minWidth="119" width="119" x="1240"/>
+			<kactus2:column name="Components" contentType="2" allowedItems="2" minWidth="319" width="319" x="120"/>
+		</kactus2:columnLayout>
+		<kactus2:routes>
+			<kactus2:route kactus2:connRef="TLMTrafficGenerator_0_tlm_init_to_tlm2axi_bridge_0_tlm_target" kactus2:offPage="false">
+				<kactus2:position x="390" y="210"/>
+				<kactus2:position x="520" y="210"/>
+			</kactus2:route>
+			<kactus2:route kactus2:connRef="tlm2axi_bridge_0_AXI4Master_to_memory_0_AXI4Slave" kactus2:offPage="false">
+				<kactus2:position x="740" y="240"/>
+				<kactus2:position x="920" y="240"/>
+			</kactus2:route>
+			<kactus2:route kactus2:connRef="tlm2axi_bridge_0_clk_to_clk" kactus2:offPage="false">
+				<kactus2:position x="60" y="110"/>
+				<kactus2:position x="500" y="110"/>
+				<kactus2:position x="500" y="130"/>
+				<kactus2:position x="520" y="130"/>
+			</kactus2:route>
+			<kactus2:route kactus2:connRef="tlm2axi_bridge_0_resetn_to_rst_n" kactus2:offPage="false">
+				<kactus2:position x="60" y="70"/>
+				<kactus2:position x="490" y="70"/>
+				<kactus2:position x="490" y="160"/>
+				<kactus2:position x="520" y="160"/>
+			</kactus2:route>
+			<kactus2:route kactus2:connRef="memory_0_s00_axi_aclk_to_clk" kactus2:offPage="false">
+				<kactus2:position x="60" y="110"/>
+				<kactus2:position x="900" y="110"/>
+				<kactus2:position x="900" y="160"/>
+				<kactus2:position x="920" y="160"/>
+			</kactus2:route>
+			<kactus2:route kactus2:connRef="memory_0_s00_axi_aresetn_to_rst_n" kactus2:offPage="false">
+				<kactus2:position x="60" y="70"/>
+				<kactus2:position x="890" y="70"/>
+				<kactus2:position x="890" y="130"/>
+				<kactus2:position x="920" y="130"/>
+			</kactus2:route>
+			<kactus2:route kactus2:connRef="RandomTraffic_0_TrafficDesc_to_TLMTrafficGenerator_0_TrafficDesc" kactus2:offPage="false">
+				<kactus2:position x="170" y="330"/>
+				<kactus2:position x="150" y="330"/>
+				<kactus2:position x="150" y="160"/>
+				<kactus2:position x="170" y="160"/>
+			</kactus2:route>
+		</kactus2:routes>
+		<kactus2:adHocVisibilities>
+			<kactus2:adHocVisible portName="clk" x="60" y="110"/>
+			<kactus2:adHocVisible portName="rst_n" x="60" y="70"/>
+		</kactus2:adHocVisibilities>
+	</ipxact:vendorExtensions>
+</ipxact:design>
