@@ -3,6 +3,7 @@ import os
 import fnmatch
 import subprocess
 import shutil
+import errno
 
 tg_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/traffic-generators/axi/"), '*-tg-test')
 testnames_axi = ['./traffic-generators/axi/{0}'.format(i) for i in tg_axi_testnames]
@@ -147,8 +148,11 @@ def get_ipxact_tests():
 			out = os.path.dirname(__file__)
 			for d in ['/pysimgen', ex, ver]:
 				out += '/' + d
-				if not os.path.exists(out):
+				try:
 					os.makedirs(out)
+				except OSError as e:
+					if e.errno != errno.EEXIST:
+						raise e
 
 			tests += [(plat, out)]
 	return tests
