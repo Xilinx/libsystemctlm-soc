@@ -170,6 +170,7 @@ ACEPCConfig checker_config()
 	ACEPCConfig cfg;
 
 	cfg.enable_all_checks();
+	cfg.check_ace_handshakes(true, 300);
 
 	return cfg;
 }
