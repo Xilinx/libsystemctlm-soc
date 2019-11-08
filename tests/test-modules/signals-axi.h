@@ -103,51 +103,51 @@ public:
 		signal_connect(&dev, prefix, awready);
 		signal_connect(&dev, prefix, awaddr);
 		signal_connect(&dev, prefix, awprot);
-		signal_connect(&dev, prefix, awuser);
-		signal_connect(&dev, prefix, awregion);
-		signal_connect(&dev, prefix, awqos);
+		signal_connect_optional(&dev, prefix, awuser);
+		signal_connect_optional(&dev, prefix, awregion);
+		signal_connect_optional(&dev, prefix, awqos);
 		signal_connect(&dev, prefix, awcache);
 		signal_connect(&dev, prefix, awburst);
 		signal_connect(&dev, prefix, awsize);
-		signal_connect(&dev, prefix, awlen);
-		signal_connect(&dev, prefix, awid);
-		signal_connect(&dev, prefix, awlock);
+		signal_connect_optional(&dev, prefix, awlen);
+		signal_connect_optional(&dev, prefix, awid);
+		signal_connect_optional(&dev, prefix, awlock);
 
 		signal_connect_optional(&dev, prefix, wid);
 		signal_connect(&dev, prefix, wvalid);
 		signal_connect(&dev, prefix, wready);
 		signal_connect(&dev, prefix, wdata);
 		signal_connect(&dev, prefix, wstrb);
-		signal_connect(&dev, prefix, wuser);
-		signal_connect(&dev, prefix, wlast);
+		signal_connect_optional(&dev, prefix, wuser);
+		signal_connect_optional(&dev, prefix, wlast);
 
 		signal_connect(&dev, prefix, bvalid);
 		signal_connect(&dev, prefix, bready);
 		signal_connect(&dev, prefix, bresp);
-		signal_connect(&dev, prefix, buser);
-		signal_connect(&dev, prefix, bid);
+		signal_connect_optional(&dev, prefix, buser);
+		signal_connect_optional(&dev, prefix, bid);
 
 		signal_connect(&dev, prefix, arvalid);
 		signal_connect(&dev, prefix, arready);
 		signal_connect(&dev, prefix, araddr);
 		signal_connect(&dev, prefix, arprot);
-		signal_connect(&dev, prefix, aruser);
-		signal_connect(&dev, prefix, arregion);
-		signal_connect(&dev, prefix, arqos);
+		signal_connect_optional(&dev, prefix, aruser);
+		signal_connect_optional(&dev, prefix, arregion);
+		signal_connect_optional(&dev, prefix, arqos);
 		signal_connect(&dev, prefix, arcache);
 		signal_connect(&dev, prefix, arburst);
 		signal_connect(&dev, prefix, arsize);
-		signal_connect(&dev, prefix, arlen);
-		signal_connect(&dev, prefix, arid);
-		signal_connect(&dev, prefix, arlock);
+		signal_connect_optional(&dev, prefix, arlen);
+		signal_connect_optional(&dev, prefix, arid);
+		signal_connect_optional(&dev, prefix, arlock);
 
 		signal_connect(&dev, prefix, rvalid);
 		signal_connect(&dev, prefix, rready);
 		signal_connect(&dev, prefix, rdata);
 		signal_connect(&dev, prefix, rresp);
-		signal_connect(&dev, prefix, ruser);
-		signal_connect(&dev, prefix, rid);
-		signal_connect(&dev, prefix, rlast);
+		signal_connect_optional(&dev, prefix, ruser);
+		signal_connect_optional(&dev, prefix, rid);
+		signal_connect_optional(&dev, prefix, rlast);
 	}
 
 	template<typename T>
@@ -165,12 +165,14 @@ public:
 			dev->awregion(awregion);
 			dev->awqos(awqos);
 		}
-		dev->awcache(awcache);
-		dev->awburst(awburst);
-		dev->awsize(awsize);
-		dev->awlen(awlen);
-		dev->awid(awid);
-		dev->awlock(awlock);
+		if (m_version == V_AXI4 || m_version == V_AXI3) {
+			dev->awcache(awcache);
+			dev->awburst(awburst);
+			dev->awsize(awsize);
+			dev->awlen(awlen);
+			dev->awid(awid);
+			dev->awlock(awlock);
+		}
 
 		/* Write data channel.  */
 		if (m_version == V_AXI3) {
@@ -183,7 +185,9 @@ public:
 		if (m_version == V_AXI4 && WUSER_WIDTH) {
 			dev->wuser(wuser);
 		}
-		dev->wlast(wlast);
+		if (m_version == V_AXI4 || m_version == V_AXI3) {
+			dev->wlast(wlast);
+		}
 
 		/* Write response channel.  */
 		dev->bvalid(bvalid);
@@ -192,7 +196,9 @@ public:
 		if (m_version == V_AXI4 && BUSER_WIDTH) {
 			dev->buser(buser);
 		}
-		dev->bid(bid);
+		if (m_version == V_AXI4 || m_version == V_AXI3) {
+			dev->bid(bid);
+		}
 
 		/* Redev address channel.  */
 		dev->arvalid(arvalid);
@@ -206,12 +212,15 @@ public:
 			dev->arregion(arregion);
 			dev->arqos(arqos);
 		}
-		dev->arcache(arcache);
-		dev->arburst(arburst);
-		dev->arsize(arsize);
-		dev->arlen(arlen);
-		dev->arid(arid);
-		dev->arlock(arlock);
+
+		if (m_version == V_AXI4 || m_version == V_AXI3) {
+			dev->arcache(arcache);
+			dev->arburst(arburst);
+			dev->arsize(arsize);
+			dev->arlen(arlen);
+			dev->arid(arid);
+			dev->arlock(arlock);
+		}
 
 		/* Redev data channel.  */
 		dev->rvalid(rvalid);
@@ -221,8 +230,10 @@ public:
 		if (m_version == V_AXI4 && RUSER_WIDTH) {
 			dev->ruser(ruser);
 		}
-		dev->rid(rid);
-		dev->rlast(rlast);
+		if (m_version == V_AXI4 || m_version == V_AXI3) {
+			dev->rid(rid);
+			dev->rlast(rlast);
+		}
 	}
 
 	void Trace(sc_trace_file *f)

@@ -63,6 +63,7 @@ enum {
 enum AXIVersion {
 	V_AXI4,
 	V_AXI3,
+	V_AXI4LITE,
 };
 
 enum {
