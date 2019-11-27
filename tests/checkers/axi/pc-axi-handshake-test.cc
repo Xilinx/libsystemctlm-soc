@@ -107,11 +107,13 @@ SIGGEN_TESTSUITE(TestSuite)
 
 		wvalid.write(true);
 		wready.write(true);
+		wlast.write(true);
 
 		wait(clk.posedge_event());
 
 		wvalid.write(false);
 		wready.write(false);
+		wlast.write(false);
 
 		bvalid.write(true);
 		bready.write(true);
@@ -161,6 +163,7 @@ SIGGEN_TESTSUITE(TestSuite)
 
 		wvalid.write(true);
 		wready.write(true);
+		wlast.write(true);
 
 		wait(clk.posedge_event());
 
@@ -180,6 +183,7 @@ SIGGEN_TESTSUITE(TestSuite)
 
 		wvalid.write(false);
 		wready.write(false);
+		wlast.write(false);
 
 		wait(clk.posedge_event());
 
@@ -258,11 +262,13 @@ SIGGEN_TESTSUITE(TestSuite)
 
 		wvalid.write(true);
 		wready.write(true);
+		wlast.write(true);
 
 		wait(clk.posedge_event());
 
 		wvalid.write(false);
 		wready.write(false);
+		wlast.write(false);
 
 		bvalid.write(true);
 		bready.write(true);
@@ -290,11 +296,13 @@ SIGGEN_TESTSUITE(TestSuite)
 		// Clean up
 		wvalid.write(true);
 		wready.write(true);
+		wlast.write(true);
 
 		wait(clk.posedge_event());
 
 		wvalid.write(false);
 		wready.write(false);
+		wlast.write(false);
 
 		bvalid.write(true);
 		bready.write(true);
@@ -317,11 +325,13 @@ SIGGEN_TESTSUITE(TestSuite)
 
 		wvalid.write(true);
 		wready.write(true);
+		wlast.write(true);
 
 		wait(clk.posedge_event());
 
 		wvalid.write(false);
 		wready.write(false);
+		wlast.write(false);
 
 		for (int i = 0; i < 200; i++) {
 			wait(clk.posedge_event());
