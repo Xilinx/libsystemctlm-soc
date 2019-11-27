@@ -199,6 +199,13 @@ private:
 		uint32_t get_arlen() { return 0; }
 		uint32_t get_awlen() { return 0; }
 		bool get_wlast() { return true; }
+
+		uint32_t get_awid() { return 0; }
+		uint32_t get_wid() { return 0; }
+		uint32_t get_bid() { return 0; }
+
+		bool is_axi3() { return false; }
+		bool is_axi4lite() { return true; }
 	};
 
 	void axi_handshakes_check()

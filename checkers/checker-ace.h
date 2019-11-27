@@ -294,6 +294,13 @@ private:
 		}
 		uint32_t get_awlen() { return to_uint(m_pc.awlen); }
 		bool get_wlast() { return m_pc.wlast.read(); }
+
+		uint32_t get_awid() { return to_uint(m_pc.awid); }
+		uint32_t get_wid() { return to_uint(m_pc.wid); }
+		uint32_t get_bid() { return to_uint(m_pc.bid); }
+
+		bool is_axi3() { return false; }
+		bool is_axi4lite() { return false; }
 	private:
 		PC& m_pc;
 	};

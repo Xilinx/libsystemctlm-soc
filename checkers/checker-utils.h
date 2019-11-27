@@ -29,6 +29,7 @@
 #include <tlm-bridges/amba-ace.h>
 #include "config-axi.h"
 #include "config-axilite.h"
+#include <list>
 
 #define AXI_CHECKER(name)					\
 template<typename T, typename CFG = __AXIPCConfig>		\
@@ -370,11 +371,16 @@ public:
 		sc_in<bool >& clk = p.clk;
 		sc_in<bool >& resetn = p.resetn;
 		uint32_t m_rt = 0;
-		uint32_t m_wd = 0;
+		int m_wd = 0;
 		uint32_t m_b = 0;
+		uint32_t m_aw = 0;
+		uint32_t m_wlast = 0;
+		bool is_axi3 = axlen.is_axi3();
+		bool use_ids = !axlen.is_axi4lite(); // AXI4Lite doesn't use ids
 
 		while (true) {
 			bool inc_rvalid = m_rt > 0;
+			bool inc_awvalid = m_wd < 0;
 			bool inc_wvalid = m_wd > 0;
 			bool inc_bvalid = m_b > 0;
 
@@ -388,6 +394,12 @@ public:
 				m_rt = 0;
 				m_wd = 0;
 				m_b = 0;
+
+				m_aw = 0;
+				m_wlast = 0;
+				m_awids.clear();
+				m_wids.clear();
+				m_bids.clear();
 
 				wait_for_reset_release();
 				continue;
@@ -413,7 +425,7 @@ public:
 			//
 			// aw, w and b channels
 			//
-			if (aw_channel.run()) {
+			if (aw_channel.run(inc_awvalid)) {
 				//
 				// aw signals received, now expect num_beats wd
 				// handshakes (or if in ACE mode and it is a
@@ -421,8 +433,35 @@ public:
 				//
 				if (!axlen.hasData()) {
 					m_b++;
-				} else {
+
+					assert(use_ids);
+					m_bids.push_back(axlen.get_awid());
+
+				} else if (use_ids) {
+					uint32_t awid = axlen.get_awid();
+					bool id_in_wids = (is_axi3) ?
+							in_list(m_wids, awid) :
+							true;
+
 					m_wd += axlen.get_awlen() + 1;
+
+					//
+					// wlast for the txn came before aw
+					//
+					if (id_in_wids && m_wlast > m_aw) {
+						m_b++;
+						m_wlast--;
+
+						if (is_axi3) {
+							remove(m_wids, awid);
+						}
+						m_bids.push_back(awid);
+					} else {
+						m_aw++;
+						m_awids.push_back(awid);
+					}
+				} else {
+					m_wd++;
 				}
 			}
 			if (w_channel.run(inc_wvalid)) {
@@ -432,11 +471,59 @@ public:
 				// expect bvalid
 				//
 				if (axlen.get_wlast()) {
-					m_b++;
+					if (use_ids) {
+						uint32_t wid = axlen.get_wid();
+						bool id_in_awids = (is_axi3) ?
+							in_list(m_awids, wid) :
+							true;
+						//
+						// aw for the txn came before
+						// wlast
+						//
+						if (id_in_awids &&
+							m_aw > m_wlast) {
+
+							m_b++;
+							m_aw--;
+
+							if (is_axi3) {
+								remove(m_awids,
+									wid);
+								m_bids.push_back(
+									wid);
+							} else {
+								uint32_t id;
+
+								assert(!m_awids.empty());
+
+								id = m_awids.front();
+
+								m_awids.pop_front();
+								m_bids.push_back(id);
+							}
+						} else {
+							m_wlast++;
+							if (is_axi3) {
+								m_wids.push_back(
+									wid);
+							}
+						}
+					} else {
+						m_b++;
+					}
 				}
 			}
 			if (b_channel.run(inc_bvalid)) {
-				m_b--;
+				if (use_ids) {
+					uint32_t bid = axlen.get_bid();
+
+					if (in_list(m_bids, bid)) {
+						remove(m_bids, bid);
+						m_b--;
+					}
+				} else {
+					m_b--;
+				}
 			}
 		}
 	}
@@ -532,6 +619,34 @@ private:
 		uint32_t m_ready_wait;
 		uint64_t m_max_clks;
 	};
+
+	bool in_list(std::list<uint32_t>& l, uint32_t id)
+	{
+		for (typename std::list<uint32_t>::iterator it = l.begin();
+			it != l.end(); it++) {
+
+			if ((*it) == id) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void remove(std::list<uint32_t>& l, uint32_t id)
+	{
+		for (typename std::list<uint32_t>::iterator it = l.begin();
+			it != l.end(); it++) {
+
+			if ((*it) == id) {
+				l.erase(it);
+				return;
+			}
+		}
+	}
+
+	std::list<uint32_t> m_awids;
+	std::list<uint32_t> m_wids;
+	std::list<uint32_t> m_bids;
 };
 
 template<typename SAMPLE_TYPE>
