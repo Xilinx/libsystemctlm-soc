@@ -72,6 +72,9 @@ SIGGEN_TESTSUITE(TestSuite)
 		TESTCASE_NEG(test_aw_w_b_ch_no_bvalid);
 
 		TESTCASE_NEG(test_arvalid_toggle_before_arready);
+
+		TESTCASE(test_w_before_aw_ch);
+		TESTCASE_NEG(test_w_before_aw_ch_no_awvalid);
 	}
 
 	void test_ar_rr_channel_handshakes()
@@ -373,6 +376,82 @@ SIGGEN_TESTSUITE(TestSuite)
 		rvalid.write(false);
 		rready.write(false);
 
+		wait(clk.posedge_event());
+
+		reset_toggle();
+	}
+
+	void test_w_before_aw_ch()
+	{
+		wvalid.write(true);
+		wready.write(true);
+		wlast.write(true);
+
+		wait(clk.posedge_event());
+
+		wvalid.write(false);
+		wready.write(false);
+		wlast.write(false);
+
+		awvalid.write(true);
+		awready.write(true);
+
+		wait(clk.posedge_event());
+
+		awvalid.write(false);
+		awready.write(false);
+
+		bvalid.write(true);
+		bready.write(true);
+
+		wait(clk.posedge_event());
+
+		bvalid.write(false);
+		bready.write(false);
+
+		reset_toggle();
+	}
+
+	void test_w_before_aw_ch_no_awvalid()
+	{
+		wvalid.write(true);
+		wready.write(true);
+		wlast.write(true);
+
+		wait(clk.posedge_event());
+
+		wvalid.write(false);
+		wready.write(false);
+		wlast.write(false);
+
+		for (int i = 0; i < 200; i++) {
+			wait(clk.posedge_event());
+		}
+
+		awvalid.write(true);
+		awready.write(true);
+
+		wait(clk.posedge_event());
+
+		awvalid.write(false);
+		awready.write(false);
+
+		bvalid.write(true);
+		bready.write(true);
+
+		wait(clk.posedge_event());
+
+		bvalid.write(false);
+		bready.write(false);
+
+		reset_toggle();
+	}
+
+	void reset_toggle()
+	{
+		resetn.write(false);
+		wait(clk.posedge_event());
+		resetn.write(true);
 		wait(clk.posedge_event());
 	}
 };
