@@ -537,11 +537,11 @@ private:
 		inline bool GetE() { return m_AxLock == AXI_LOCK_EXCLUSIVE; }
 		bool Done() { return m_beat > m_numBeats; }
 
-		bool CheckWstrb(sc_in<sc_bv<T::DATA_W/8> >& wstrb,
+		bool CheckWstrb(sc_bv<T::DATA_W/8>& wstrb,
 				bool allow_gaps)
 		{
 			uint64_t alignedAddress = align(m_AxAddr, m_numberBytes);
-			uint32_t data_bus_bytes = wstrb.read().length();
+			uint32_t data_bus_bytes = wstrb.length();
 			unsigned int lower_byte_lane;
 			unsigned int upper_byte_lane;
 			unsigned int i;
@@ -568,7 +568,7 @@ private:
 
 			// Verify wstrb zeros upp to the first enabled lane
 			for (i = 0; i < lower_byte_lane; i++) {
-				if (wstrb.read().bit(i)) {
+				if (wstrb.bit(i)) {
 					return false;
 				}
 			}
@@ -590,7 +590,7 @@ private:
 					// lower_byte_lane lane must always be
 					// enabled (else a gap is identified).
 					//
-					if (!wstrb.read().bit(i++)) {
+					if (!wstrb.bit(i++)) {
 						return false;
 					}
 
@@ -599,7 +599,7 @@ private:
 					// zero is found (by breaking here)
 					//
 					for (; i <= upper_byte_lane; i++) {
-						if (!wstrb.read().bit(i)) {
+						if (!wstrb.bit(i)) {
 							break;
 						}
 					}
@@ -610,7 +610,7 @@ private:
 					// enabled
 					//
 					for (; i <= upper_byte_lane; i++) {
-						if (!wstrb.read().bit(i)) {
+						if (!wstrb.bit(i)) {
 							return false;
 						}
 					}
@@ -625,7 +625,7 @@ private:
 
 			// Verify wstrb zeros til the end of the data bus width
 			for (; i < data_bus_bytes; i++) {
-				if (wstrb.read().bit(i)) {
+				if (wstrb.bit(i)) {
 					return false;
 				}
 			}
@@ -685,6 +685,40 @@ private:
 		AXIVersion m_version;
 	};
 
+	class WData {
+	public:
+		WData(uint32_t wid,
+			sc_in<sc_bv<T::DATA_W/8> >& wstrb,
+			bool wlast) :
+			m_wid(wid),
+			m_wlast(wlast),
+			m_wt(NULL)
+		{
+			m_wstrb = wstrb.read();
+		}
+
+		~WData()
+		{
+			delete m_wt;
+			m_wt = NULL;
+		}
+
+		bool IsWLast() { return m_wlast; }
+		uint32_t GetWID() { return m_wid; }
+
+		sc_bv<T::DATA_W/8> &GetWstrb() { return m_wstrb; }
+
+		void SetTransaction(Transaction *wt) { m_wt = wt; }
+		Transaction *GetTransaction() { return m_wt; }
+
+	private:
+		uint32_t m_wid;
+		sc_bv<T::DATA_W/8> m_wstrb;
+		bool m_wlast;
+
+		Transaction *m_wt;
+	};
+
 	Transaction* SampleAWSignals()
 	{
 		return new Transaction(awaddr.read().to_uint64(),
@@ -700,6 +734,12 @@ private:
 					m_pc.GetVersion());
 	}
 
+	WData* SampleWDataSignals()
+	{
+		// AXI4 ignores WID
+		return new WData(to_uint(wid), wstrb, wlast.read());
+	}
+
 	Transaction *GetFirst(std::list<Transaction*>& trList,
 				uint32_t id)
 	{
@@ -709,6 +749,30 @@ private:
 
 			if (t && t->GetID() == id) {
 				return t;
+			}
+		}
+		return NULL;
+	}
+
+	WData *GetFirst(std::list<WData*>& trList,
+				uint32_t id)
+	{
+		for (typename std::list<WData*>::iterator it = trList.begin();
+			it != trList.end(); it++) {
+			WData *wd = (*it);
+
+			if (wd) {
+				if (m_pc.GetVersion() == V_AXI3) {
+					if (wd->GetWID() == id) {
+						return wd;
+					}
+				} else {
+					Transaction *t = wd->GetTransaction();
+
+					if (t && t->GetID() == id) {
+						return wd;
+					}
+				}
 			}
 		}
 		return NULL;
@@ -772,7 +836,7 @@ private:
 	{
 		uint8_t resp = to_uint(bresp);
 
-		if (tr->GetE()) {
+		if (tr && tr->GetE()) {
 			// Accept AXI_OKAY as non error
 			return resp == AXI_EXOKAY || resp == AXI_OKAY;
 		}
@@ -789,13 +853,189 @@ private:
 		l.clear();
 	}
 
+	void ClearList(std::list<WData*>& l)
+	{
+		for (typename std::list<WData*>::iterator it = l.begin();
+			it != l.end(); it++) {
+			WData *t = (*it);
+			delete t;
+		}
+		l.clear();
+	}
+
+	void process_aw_w_axi4()
+	{
+		while (!m_wtList.empty() && !m_wdataList.empty()) {
+			Transaction *wt = GetNext();
+			WData *wd =  m_wdataList.front();
+
+			if (m_cfg.en_wstrb_check()) {
+				bool allow_gaps = m_cfg.allow_wstrb_gaps();
+
+				if(!wt->CheckWstrb(wd->GetWstrb(),
+							allow_gaps)) {
+					std::ostringstream msg;
+
+					msg << "wstrb not following "
+						<< "expected format";
+
+					wt->ReportError(msg);
+				}
+			}
+
+			wt->IncBeat();
+
+			if (wd->IsWLast()) {
+				//
+				// Check that wlast matches Done()
+				//
+				if (m_cfg.en_wr_bursts_check()) {
+					std::ostringstream msg;
+
+					msg << "Error on data burst length "
+						<< "or wlast identified "
+						<< "on write data channel";
+
+					if (!wt->Done()) {
+						wt->ReportError(msg);
+					}
+				}
+
+				//
+				// Transaction done (AW signals) but
+				// keep for error output
+				//
+				m_wtList.remove(wt);
+				wd->SetTransaction(wt);
+
+				//
+				// aw / w phase done,
+				// move WData with wlast to the response list
+				//
+				m_wdataList.remove(wd);
+
+				if (m_respList.size() < m_cfg.max_depth()) {
+					m_respList.push_back(wd);
+				} else {
+					SC_REPORT_ERROR(WR_TX_ERROR,
+							"Maximum outstanding "
+							"transactions reached");
+				}
+			} else {
+				//
+				// WData (without wlast) done
+				//
+				m_wdataList.remove(wd);
+				delete wd;
+			}
+		}
+	}
+
+	void process_aw_w_axi3()
+	{
+		for (typename
+			std::list<Transaction*>::iterator it = m_wtList.begin();
+			it != m_wtList.end();) {
+			Transaction *wt = (*it);
+			WData *wd = GetFirst(m_wdataList, wt->GetID());
+			bool done = false;
+
+			while (wd != NULL) {
+				if (m_cfg.en_wstrb_check()) {
+					std::ostringstream msg;
+					bool allow_gaps =
+						m_cfg.allow_wstrb_gaps();
+
+					msg << "wstrb not following expected "
+						<< "format";
+
+					if(!wt->CheckWstrb(wd->GetWstrb(),
+								allow_gaps)) {
+
+						wt->ReportError(msg);
+					}
+				}
+
+				wt->IncBeat();
+
+				if (wd->IsWLast()) {
+					//
+					// Check that wlast matches Done()
+					//
+					if (m_cfg.en_wr_bursts_check()) {
+						std::ostringstream msg;
+
+						msg << "Error on data burst "
+							<< "length or wlast "
+							<< "identified on "
+							<< "write data "
+							<< "channel";
+
+						if (!wt->Done()) {
+							wt->ReportError(msg);
+						}
+					}
+
+					//
+					// Transaction done (AW signals) but
+					// keep for error output
+					//
+					wd->SetTransaction(wt);
+					it = m_wtList.erase(it);
+
+					//
+					// aw / w phase done,
+					// move WData with wlast to the
+					// response list
+					//
+					m_wdataList.remove(wd);
+
+					if (m_respList.size() <
+						m_cfg.max_depth()) {
+						m_respList.push_back(wd);
+					} else {
+						SC_REPORT_ERROR(WR_TX_ERROR,
+							"Maximum outstanding "
+							"transactions reached");
+					}
+
+					done = true;
+					break;
+				} else {
+					//
+					// WData (without wlast) done
+					//
+					m_wdataList.remove(wd);
+					delete wd;
+
+					// Get next WData
+					wd = GetFirst(m_wdataList,
+							wt->GetID());
+				}
+			}
+
+			if (!done) {
+				it++;
+			}
+		}
+	}
+
 	void wr_check()
 	{
+		uint32_t max_wdata_depth = m_cfg.max_depth();
+
+		if (m_pc.GetVersion()) {
+			max_wdata_depth *= AXI3_MAX_BURSTLENGTH;
+		} else {
+			max_wdata_depth *= AXI4_MAX_BURSTLENGTH;
+		}
+
 		while (true) {
 			wait(clk.posedge_event() | resetn.negedge_event());
 
 			if (reset_asserted()) {
 				ClearList(m_wtList);
+				ClearList(m_wdataList);
 				ClearList(m_respList);
 				wait_for_reset_release();
 				continue;
@@ -812,69 +1052,33 @@ private:
 			}
 
 			if (wvalid.read() && wready.read()) {
-				Transaction *wt = GetNext();
-
-				if (wt) {
-
-					if (m_cfg.en_wstrb_check()) {
-						bool allow_gaps = m_cfg.allow_wstrb_gaps();
-
-						if(!wt->CheckWstrb(wstrb, allow_gaps)) {
-							std::ostringstream msg;
-
-							msg << "wstrb not following "
-								<< "expected format";
-
-							wt->ReportError(msg);
-						}
-					}
-
-					wt->IncBeat();
-
-					if (m_cfg.en_wr_bursts_check()) {
-						if (wlast.read() != wt->Done()) {
-							std::ostringstream msg;
-
-							msg << "Error on data burst length "
-								<< "or wlast identified "
-								<< "on write data channel";
-
-							wt->ReportError(msg);
-						}
-					}
-
-					if (wlast.read()) {
-						//
-						// Wr tx data phase done,
-						// move tx to response list
-						//
-						m_wtList.remove(wt);
-
-						if (m_respList.size() < m_cfg.max_depth()) {
-							m_respList.push_back(wt);
-						} else {
-							SC_REPORT_ERROR(WR_TX_ERROR,
-									"Maximum outstanding "
-									"transactions reached");
-						}
-					}
-
+				if (m_wdataList.size() < max_wdata_depth) {
+					m_wdataList.push_back(
+						SampleWDataSignals());
 				} else {
 					std::ostringstream msg;
 
-					msg << "Unexpected data identified "
-						<< "on write data channel";
+					msg << "Maximum outstanding (wdata) "
+						<< "transactions reached";
 
 					SC_REPORT_ERROR(WR_TX_ERROR,
 							msg.str().c_str());
 				}
 			}
 
+			if (m_pc.GetVersion() == V_AXI4) {
+				process_aw_w_axi4();
+			} else {
+				process_aw_w_axi3();
+			}
+
 			if (bvalid.read() && bready.read()) {
-				Transaction *wt = GetFirst(m_respList,
+				WData *wd = GetFirst(m_respList,
 							   to_uint(bid));
 
-				if (wt) {
+				if (wd) {
+					Transaction *wt = wd->GetTransaction();
+
 					if (m_cfg.en_resp_check()) {
 						if (!check_axi_resp(wt)) {
 							std::ostringstream msg;
@@ -884,13 +1088,20 @@ private:
 							<< "0x" << std::hex
 							<< to_uint(bresp);
 
-							wt->ReportError(msg);
+							if (wt) {
+								wt->ReportError(
+									msg);
+							} else {
+								SC_REPORT_ERROR(
+									WR_TX_ERROR,
+									msg.str().c_str());
+							}
 						}
 					}
 
 					// Transaction done
-					m_respList.remove(wt);
-					delete wt;
+					m_respList.remove(wd);
+					delete wd;
 				} else {
 					std::ostringstream msg;
 
@@ -907,7 +1118,8 @@ private:
 	}
 
 	std::list<Transaction*> m_wtList;
-	std::list<Transaction*> m_respList;
+	std::list<WData*> m_wdataList;
+	std::list<WData*> m_respList;
 };
 
 AXI_CHECKER(check_addr_alignment)
