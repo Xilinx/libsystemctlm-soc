@@ -9,6 +9,10 @@ def usage(err):
 	sys.exit(err)
 
 def match_axi_version(f):
+	m = re.match('axilite', f)
+	if m:
+		print("-D__AXI_VERSION_AXILITE__")
+
 	m = re.match('axi(\d+)', f)
 	if m:
 		print("-D__AXI_VERSION_AXI" + m.group(1) + "__")
