@@ -159,7 +159,8 @@ public:
 		connect(&dev);
 	}
 
-	AXILiteSignals(sc_core::sc_module_name name) :
+	AXILiteSignals(sc_core::sc_module_name name,
+			AXIVersion version = V_AXI4LITE) :
 		awvalid("awvalid"),
 		awready("awready"),
 		awaddr("awaddr"),
