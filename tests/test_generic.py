@@ -55,6 +55,9 @@ pc_chi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/checkers/chi/"), '*-test')
 tests_pc_chi = ['./checkers/chi/{0}'.format(i) for i in pc_chi_tests]
 
+hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/"), '*-test-pcie-master')
+hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/"), '*-test-pcie-slave')
+hwb_axi_tests = ['./rtl-bridges/{0}'.format(i) for i in hwb_axi_testnames]
 
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
@@ -171,3 +174,9 @@ def test_pysimgen_tests(platform, outdir):
 	pysimgen = [ path_exe, '-p', platform, '-l', libs ]
 	pysimgen += [ '-o', outdir, '--build', '--run', '-q' ]
 	assert(subprocess.call(pysimgen, cwd = outdir) == 0)
+
+@pytest.mark.hw_bridge
+@pytest.mark.parametrize("filename", hwb_axi_tests)
+def test_hwb_axi_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
