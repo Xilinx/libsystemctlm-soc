@@ -1,0 +1,813 @@
+
+------------------------------------
+AXI Master Bridge Micro-Architecture 
+-------------------------------------
+
+System Level view and connections with AXI Bridges in FPGA
+
+AXI Master Bridge use-model with AXI Slave Device Under Test (DUT) and PCIe Sub-system
+
+                             _______________________________________________
+    ______________          |          ___________________________          |         ______________
+   |              |         |        |                           |          |        |              |         
+   |              |         |        |                           |          |------->|CLK           |
+   |         M_AXI|---------)------->|S_AXI                      |                   |              |
+   |              |         |        |                  USR_M_AXI|------------------>|S_AXI         |
+   |       AXI_CLK|---------+------->|AXI_ACLK                   |                   |              |
+   |              |                  |                 USR_RESETN|------------------>|RSTN          |
+   |     AXI_RST_N|----------------->|AXI_ARESET_N               |                   |              |
+   |              |                  |                           |                   |              |
+   |              |                  |                           |                   |              |
+   |   PCIe Core  |                  |                           |                   |              |          
+   |       &      |                  |        AXI MASTER         |                   |  AXI SLAVE   | 
+   |    AXI-MM    |                  |         BRIDGE            |                   |     DUT      |
+   |    Bridge    |                  |                           |                   |              |
+   |              |                  |                           |                   |              |
+   |              |                  |               H2C_INTR_OUT|------------------>|INTR_IN       |
+   |         S_AXI|<-----------------|M_AXI                      |                   |              |
+   |              |                  |                C2H_INTR_IN|<------------------|INTR_OUT      |
+   |        IRQ_IN|<-----------------|IRQ_OUT                    |                   |              |
+   |              |                  |                C2H_GPIO_IN|<------------------|GPIO          |
+   |       IRQ_ACK|----------------->|IRQ_ACK                    |                   |              |
+   |              |                  |                           |                   |              |
+   |______________|                  |___________________________|                   |______________|
+
+
+
+1. Introduction 
+-----------------------------------
+
+This document covers the micro architecture details of the AXI Master
+bridge. The AXI Master Bridge is referred to as "Master Bridge" from here
+on for simplicity. The Master bridge communicates with x86 Host via PCIe
+Controller and associated AXI-MM Bridge. The AXI-MM Bridge converts the PCIe
+transaction layer packets into AXI-MM protocol to communicate with user design
+components in the FPGA. The master bridge needs to be mapped to PCIe BAR-0 (Base
+Address Register) and at an offset of 0x0. The Device Under Test's (DUT) AXI
+Slave is connected to the Master AXI port of the Master bridge.
+
+Features supported:
+
+Protocol support - AXI3, AXI4 and AXI4-Lite
+AXI Data widths - 32, 64 and 128-bit 
+Slave AXI interface to configure bridge registers - 32-bit AXI4 Lite slave
+Multiple outstanding requests - Max 16 reads/writes
+
+Two modes of operation : Mode_0 and Mode_1
+
+
+Features not supported:
+
+WUSER for each beat of a transaction : 
+Software can program only single value per descriptor into the Master Bridge.
+Master Bridge will keep WUSER Constant throughout single transfer for
+corresponding descriptor.
+
+RUSER for each beat of a transaction : 
+Master Bridge will always provide RUSER corresponding to RLAST.  intermediate
+RUSER will be ignore/Not stored.  MSI and MSI-X interrupts towards x86 
+
+
+2. Top level block diagram:
+-----------------------------------
+
+
+                        +-----------------------------------------------------------------------------------+
+                        |                                                                                   |
+                        | +------------------------------------------------------+   +-------------------+  |
+                        | |                                                      |   |  User Master      |  |usr_reset_n
+                        | | +--------+ +---------------------------------------+ |   |    Control        |  +------------->
+              axi_aclk  | | |  AXI   | |           Registers                   | |   |                   |  |
+           +------------> | | Slave  | +---------------------------------------+ |   | +-------+ +-------+  |
+            axi_arestn  | | |  and   | +---------------------------------------+ |   | |       | |      ||  |
+           +------------> | | Address| |            RAM Controller             | |   | |       | |      ||  |
+                S_AXI   | | | Decoder| | +---------+  +---------+  +--------+  | |   | |Control| | AXI  ||  |M_AXI_USR
+              AXI4lite  | | |        | | |  Read   |  |  Write  |  |  Wstrb |  | <---> |Logic  | |Master||  <------------->
+            <-----------> | +--------+ | | DataRAM |  | DataRAM |  |   RAM  |  | |   | |       | |      ||  |128b/
+                32b     | | +-------+  | +---------+  +---------+  +--------+  | |   | |       | |      ||  |64b/
+                        | | | Contro|  +---------------------------------------+ |   | +-------+ +-------+  |32b
+                        | | | Logic |                     ^                      |   |                   |  |
+                        | | |       +<--------------------+                      |   |                   |  |
+                        | | +-------+                                            |   |                   |  |
+                        | +------------------------------------------------------+   +-------------------+  |
+                        |          +----------------------------+                                           |
+                        |          |  Host Master Control       |                                           |
+                        |          |                            |                                           |
+                        |          |  +--------+   +--------+   |  +------------+                           | h2c_intr_out 128b
+                        |          |  |        |   |        |   |  | Interrupt  +------------------------------------------>
+               M_AXI    |          |  |  AXI   |   | Control|   |  | Handler    |                           |
+             <---------------------+  |Master  |   | Logic  |   |  |            |                           | c2h_intr_in 64b
+               128b     |          |  |        |   |        |   |  |            +<------------------------------------------+
+                        |          |  |        |   |        |   |  +------------+                           |
+                        |          |  +--------+   +--------+   |       |    ^                              |
+                        |          |                            |       |    |                              |  c2h_gpio_in 256b
+                        |          |                            |       |    |                              <---------------+
+               irq_out  |          +----------------------------+       |    |                              |  h2c_gpio_out 256b
+             <----------------------------------------------------------+    |                              +---------------->
+              irq_ack   |                                                    |                              |
+            +----------------------------------------------------------------+                              |
+                        +-----------------------------------------------------------------------------------+
+
+
+3. RTL file hierarchy and organization:
+---------------------------------------
+
+   axi_master.v (top level file)
+      |--> axi4_master.v / axi4_lite_master.v / axi3_master.v (Based on AXI3/4/Lite mode)
+      |---->|--> axi_master_common.v
+      |          |--> host_master_m.v
+      |          |    |--> axi_master_control.v
+      |          |    |    |--> arid_store.v
+      |          |              |--> grant_controller_master.v (g1)
+      |          |    |    |--> awid_store.v
+      |          |              |--> grant_controller_master.v (g1)
+      |          |    |    |--> sync_fifo.v (bresp_fifo)
+      |          |    |    |--> descriptor_allocator_uc_master.v
+      |          |    |    |--> sync_fifo.v (rdata_fifo) 
+      |          |    |    |--> wdata_channel_control_uc_master.v (wdata_control) 
+      |          |--> intr_handler_master.v (intr_handler_master_inst)
+      |          |--> regs_master.v (regs_master_inst)
+      |          |    |--> data_ram.v (u_rdata_ram)
+      |          |    |--> data_ram.v (u_wdata_ram)
+      |          |    |--> strb_ram.v (u_wstrb_ram)
+      |          |--> user_master_control.v (user_master_control_inst)
+      |          |    |--> axi_master_control.v
+      |          |         |--> arid_store.v
+      |          |              |--> grant_controller_master.v (g1)
+      |          |         |--> awid_store.v
+      |          |              |--> grant_controller_master.v (g1)
+      |          |         |--> sync_fifo.v (bresp_fifo)
+      |          |         |--> descriptor_allocator_uc_master.v
+      |          |         |--> sync_fifo.v (rdata_fifo) 
+      |          |         |--> wdata_channel_control_uc_master.v (wdata_control) 
+      |          |--> intr_handler_master.v (intr_handler_master_inst)
+      |          |--> regs_master.v (regs_master_inst)
+      |          |    |--> data_ram.v (u_rdata_ram)
+      |          |    |--> data_ram.v (u_wdata_ram)
+      |          |    |--> strb_ram.v (u_wstrb_ram)
+
+
+
+4. Port Description
+---------------------------------------
+
+|-----------------------------------------------------------------------------------------------------|
+|Name	      |  Width/Interface	|   I/O   |	Description                                   |
+|-----------------------------------------------------------------------------------------------------|
+|axi_aclk     |    [0:0]	        |   I	  |  Clock Signal                                     |
+|axi_aresetn  |	  [0:0]	                |   I	  |  Active -Low reset                                |
+|usr_resetn   |  [USR_RST_NUM-1:0]	|   O	  |  Active -Low reset                                |
+|usr_clk      |    [0:0]	        |   O	  |  User clock signal                                |
+|irq_out      |    [0:0]	        |   O	  |  Interrupt to XDMA                                |
+|irq_ack      |    [0:0]	        |   I	  |  Interrupt acknowledgement from XDMA              |
+|h2c_intr_out |	  [127:0]	        |   O	  |  Host to Card interrupt                           |
+|c2h_intr_in  |	  [63:0]	        |   I	  |  Card to Host interrupt                           |
+|c2h_gpio_in  |	  [255:0]	        |   I	  |  Card to Host control signals                     |
+|c2h_gpio_out |	  [255:0]	        |   O	  |  Host to Card control signals                     |
+|m_axi_usr_*  |	M_AXI_USR	        |   -	  |  AXI3/AXI4/AXI4-lite Master interface towards DUT.|
+|s_axi_*      |    S_AXI	        |   -	  |  AXI4 Slave Interface towards XDMA.               |
+|m_axi_*      |    M_AXI	        |   -	  |  AXI4 Master Interface towards XDMA.              |
+|-----------------------------------------------------------------------------------------------------|
+
+4-a Clock
+
+The Bridge IP uses a single clock axi_aclk. This clock is typically connected
+from PCIe controller's user clock domain. For Xilinx FPGA solutions, it is
+XDMA IP's axi_aclk.
+
+All the interfaces of the master bridge operate on the same clock domain. User
+needs to take care of clock conversions if needed to convert to a different
+clock domain. 
+
+4-b Resets
+
+axi_aresetn: Bridge uses only one ACTIVE_LOW reset. This reset is synchronized
+with axi_aclk.  Typically this is connected to axi_aresetn port of XDMA IP for
+Xilinx use case.
+
+usr_resetn[USR_RST_NUM-1:0]: Software can issue a soft reset to the user logic
+by setting bits DUT_SRST  in RESET_REG.  usr_resetn is generated by ANDing
+axi_aresetn & corresponding DUT_SRST bit of RESET_REG.
+
+5. Hardware Block Description
+------------------------------
+
+5-a. Register Block
+--------------------
+	        +-----------------------------------------------------------------------------------+
+                |                                                                                   |
+                |                                                                                   |
+                |                                  Register Block                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |      +-----------+  +-----------+                     +----------------+          |
+                |      |           |  |           |                     |                |          |
+                |      |           |  |           |                     |                |          |
+                |      |           |  |           +--------------------->    Regisers    <-------------------------->
+                |      |           |  |           |                     |                |          | Register Access
+                |      |           |  |           |                     |                |          | to UC & HM
+                |      |           |  |           |                     |                |          |
+                |      |           |  |           |                     +----------------+          |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |              +-------------------------+        |
+                |      |           |  |           |              |                         |        |
+                |      |   AXI     |  |  Address  +-------------->                         |        |
+       AXI4_LITE|      |   Slave   |  |  Decoder  |              |Write    WRDATA      Read|        |
+                |      |   FSM     |  |           |              |port     RAM         port+---------------------------------------->
+<---------------------->           |  |           |              |                         |        |  Read Access to only UC Block
+                |      |           |  |           |      +------->                         |        |
+                |      |           |  |           |       From HM+-------------------------+        |
+                |      |           |  |           |       (mode-1)                                  |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |               +------------------------+        |
+                |      |           |  |           |               |                        |        |
+                |      |           |  |           +--------------->                        |        |
+                |      |           |  |           |               |Write    WSTRB      Read+--------------------------------------->
+                |      |           |  |           |               |port     RAM        port|        |  Read Access to only UC Block
+                |      |           |  |           |      +-------->                        |        |
+                |      |           |  |           |       From HM +------------------------+        |
+                |      |           |  |           |       (mode-1)                                  |
+                |      |           |  |           |               +-------------------------+       |
+                |      |           |  |           |               |                         |       |
+                |      |           |  |           |               |                         |       |
+                |      |           |  |           <---------------+Read      RD DATA   Write+---------------------------------------->
+                |      |           |  |           |               |port      RAM       port |       |   Write Access to only UC Block
+                |      |           |  |           |      <--------+                         |       |
+                |      +-----------+  +-----------+       To HM   +-------------------------+       |
+                |                                         (mode-1)                                  |
+                |                                                                                   |
+                |                                                                                   |
+                +-----------------------------------------------------------------------------------+
+
+
+Address Decoder: The address decoder block converts the AXI4Lite transactions
+into register reads and writes. The AXI4Lite transactions are targeted to one of
+the following regions of the register space.
+
+Registers: The Master Bridge contains the following type of registers
+
+General Registers: Contain many control and status registers of the bridge
+carrying general information pertaining to a bridge and are independent of the
+protocol.  
+
+Descriptors: The descriptors contain information/attributes for
+generating AXI transactions. The Host software programs the DESC_N* registers to
+inform the HW bridge on the nature of AXI transaction to be generated. The
+number of descriptors signify the number of outstanding transactions that it can
+generate.
+
+Protocol Specific registers: Contain control and status registers which
+pertain to a specific protocol. For AXI Bridge, these registers carry
+information pertaining to AXI protocol like ID WIDTH, DATA WIDTH etc.,
+
+WR DataRAM: The WDATA (Write data) of the AXI Transactions is saved in WR
+DataRAM. This will be a Simple Dual PORT RAM, one port for WRITE, one port for
+READ. In the current bridge design, the size of the Write DataRAM is 16KB.
+
+WSTRB RAM: The WSTRB (Write strobe) of the AXI Transactions is saved in WSTRB
+RAM. This will be a Simple Dual PORT RAM, one port for WRITE, one port for READ.
+In the current bridge design, the size of the WSTRB RAM is 2KB.
+
+RD DataRAM The RDATA (Read data, which is response for a read request) of the
+AXI Transactions is saved in RD DataRAM. This will be a Simple Dual PORT RAM,
+one port for WRITE, one port for READ. In the current bridge design, the size of
+the RD DataRAM is 16KB.
+
+	The register block implements the register space required as per
+Bridge's requirements. The register block is accessible via an 32-bit AXI4 Lite
+interface. The Bridge register space can be mapped to one of the PCIe Base
+Address Registers (BARs). The overall addressing requirement for Bridge depends
+mainly on size of the Data RAM. Currently, the size of the Data RAM is 16KB and
+the number of descriptors is 16, then overall bridge memory requirement will be
+128KB. The software driver implements a bridge discovery mechanism to identify
+the bridge capabilities and requires the bridge to be mapped to BAR0 at an
+offset of 0. If the user design needs multiple master bridge instances,  then
+the software bridge discovery mechanism requires the first bridge instance to be
+at BAR0 + 0 . The other bridge instances have to be at 128KB offset and the last
+bridge instance needs to set a parameter in the RTL "LAST_BRIDGE" to 1 to
+indicate the software to stop discovering further.
+
+
+Following are the DataRAM access rules: 
+
+In Mode 0: Register Block can only write to the WR DataRAM (no read access)
+& only Read from RD DataRAM (no write access).
+
+In Mode 1: Register block cannot access DataRAMs. The host master control block
+(described in following sections)  has Write access to WR DataRAM and Read
+access to RD DataRAM.
+
+
+
+
+5-b User Master Control  
+------------------------
+
+   
+                                +-------------------------------------------------------------------------+
+                                |                                                                         |
+                                |                                                                         |
+                                |                                                                         |
+                                |                                            +-------------------+        |
+                                |                                            | AXI_Master_Control|        |
+                                |                                            |                   |        |
+                                |                                            +-------------------+        |
+                                |                          +---------+                                    |
+                                |                          |         +-------------Bresp/bid--------------+
+                                |                   +------> Bresp   |                                    |
+                                |                   |      |Control  +--------Wdata,Wid,Wstrb,Wlast------->
+                                |                   |      |         +--+                                 |
+                                |                   |      +---------+  |                                 |
+                                |                   |                   |                                 |
+                                |    +------------+ |      +---------+  |                                 |
+                                |    |            | |      |         |  |   +----------+                  |
+                                |    |            | | +---->W_Control|  |   |          |                  |
+                                +-+  |            | | |    |         |  +-->+AWID Store+------+           |
+                                | |  |    FIFO    | | |    |         |      |          |      |           | AXI-4/AXI-3 Lite/AXI-3(128/64/32 Bit Data Width)
+   Register/RAM Interface       | |  | Descriptor +-+ |    +----^----+      +----------+      |           <------------------------------------------------->
+<------------------------------>+ +-->  Allocator |   |         |                             |           |
+                                |    |            |   |         +-----------------------------+           |
+                                |    |            |   |        +------------Rdata,Rlast,Rvalid------------+
+                                |    |            |   |        |                                          |
+                                |    +----+-------+   |    +---v-----+                                    |
+                                |         |           |    |         |      +-----------+                 |
+                                |         |           |    |R_Control|      |           |                 |
+                                |         |           +---->         +------> ARID Store+----+            |
+                                |         |           |    |         |      |           |    |            |
+                                |         |           |    +----^----+      +-----------+    |            |
+                                |         |           |         |                            |            |
+                                |         |           |         +----------------------------+            |
+                                |         |           |                                                   |
+                                |         |           |    +----------+                                   |
+                                |         |           |    |   AXI    |       AXID,AXADDR,AXUSER          |
+                                |         |           +----> Attribute+-------AXLEN,AXPROT,AXCACHE+------->
+                                |         |                | Selection|                                   |
+                                |         |                +----------+                                   |
+                                |         |                                                               |
+                                |         |                +----------+                                   |
+                                |         |                |   AXI    +---AXVALID/AXREADY/XVALID/XREADY--->
+                                |         +--------------->+ Control  |                                   |
+                                |                          | Signals  |                                   |
+                                |                          +----------+                                   |
+                                +-------------------------------------------------------------------------+
+
+
+	User Master Control Block interfaces with DUT over the M_AXI_USR
+interface. Main functionality of this block is to transfer data from WR DataRam
+as WDATA of the M_AXI_USR interface for AXI write transactions. For AXI Read
+transactions, transfer RDATA received from DUT into the RD DataRAM.
+
+AXI WR transaction:
+
+Mode-0:
+
+	The software driver configures the master bridge DESC registers with
+attributes required to generate AXI Write transactions and then intimate the
+master bridge by setting the respective bits for each descriptor in
+OWNERSHIP_FLIP register.  Upon getting OWNERSHIP_FLIP for one or more
+Descriptors from SW, the descriptors will be pushed into the DESC FIFO.  Once
+the DESC FIFO is non-empty, AXI Master finite state machine (FSM) produces AW
+channel on the M_AXI_USR interface of the bridge for the corresponding
+descriptor.
+
+WR Control FSM Reads Data from WR DataRAM and provides as WDATA to AXI Master
+FSM in order to produce W channel of the M_AXI_USR interface. WR control FSM
+also generates entries into ID to DESC mapping table which is used after the
+responses arrive for the requests sent out from the bridge. 
+
+Upon receiving response from DUT, using the ID to DESC mapping table entries,
+the User Master control block flips the corresponding OWNERSHIP bit and set the
+corresponding COMPLETION bit to indicate that transfer of a transaction
+pertaining to that Descriptor is complete.
+
+AXI RD transaction:
+
+Mode-0:
+
+	The software driver configures the master bridge DESC registers with
+attributes required to generate AXI Write transactions and then intimate the
+master bridge by setting the respective bits for each descriptor in
+OWNERSHIP_FLIP register.  Upon getting OWNERSHIP_FLIP for one or more
+Descriptors from SW, the descriptors will be pushed into the DESC FIFO.  Once
+the DESC FIFO is non-empty, AXI Master finite state machine (FSM) produces AR
+channel on the M_AXI_USR interface of the bridge for the corresponding
+descriptor.
+
+Upon receiving the response for the read request, using ID to DESC mapping, the
+RD Control FSM writes RDATA into RD DataRAM. When complete data for
+a transaction is filled into RD DataRAM. The read side FSM can detect an
+incorrect RLAST assertion from the DUT and assert a status bit to inform the
+software driver about the violation.   User Master control will flip the
+corresponding OWNERSHIP bit and set the corresponding COMPLETION bit to indicate
+to SW that the particular Descriptor is complete. 
+
+During Outstanding Read requests, each read request will have different Offset
+Address for RD DataRAM and there can be Out of Order Read responses as well. To
+handle such cases, there is 'current offset address' counter per descriptor
+which maintains the offset address at which previous data from the same
+Descriptor ID ( By Looking at RID ) was stored before. 
+
+
+
+Mode-1:
+
+AXI WR: Apart from the configuration in Mode-0, SW driver fills WDATA in its
+memory and programs the address pointing to the host buffer. Once User Master
+gets Ownership, it will trigger Host Master Control to fetch WDATA from Host
+Buffers and place it in WR DataRAM. After the data transfer is done it will
+continue its operation as Mode-0.
+
+AXI RD: Apart from the configuration in Mode-0, SW driver allocates a buffer in
+its memory to store RDATA and programs the address pointing to the host buffer.
+Once User Master gets Ownership, it will issue a read request, and upon getting
+response, the Host Master Control block issues a write request to write RDATA
+from RD DataRAM into Host buffers and once transfer is done it will continue its
+operation as Mode-0.
+
+                                      
+5-c Descriptor Allocator                                    
+-------------------------
+
+                            +---------------------------------------------------------------------+
+                            |                                                                     |
+                 aclk       |                                                                     |
+         +------------------>    +---------------------+                                          |
+                            |    |                     |                                          |
+                aresetn     |    | Ownership Allocator |                                          |
+         +----------------->+    |                     |                                          |
+                            |    +---------+-----------+                                          |
+                 arnext     |              |                                                      |
+         +----------------->+              |                                                      |
+                            |    +---------v-----------+                                          |
+                 awnext     |    |                     |                                          |
+         +----------------->+    |Descriptor Allocator |                                          |
+                            |    |                     |                                          |
+          Desc_n_txn_type   |    +-------+----+--------+                                          |
+         +----------------->+            |    |                                                   |
+                            |            |    |                                                   |  Write_request_id
+     WData_pending_fifo_full|            |    |    +--------------+          +--------------+     +----------------->
+         +------------------>            |    |    |              |          |     Write    |     |
+                            |            |    +--->+ WR Desc Fifo +---------->    Request   |     |
+WR/RD_Allocation_in_progress|            |         |              |          |    Generator |     |  Write_request_en
+         +----------------->+            |         +--------------+          +--------------+     +------------------>
+                            |            |                                                        |
+         Uc2rb_ownership_reg|            +-----------------+                                      |
+         +------------------>                              |                                      |  Read_request_id
+                            |                      +-------v------+          +---------------+    +------------------->
+                            |                      |              |          |     Read      |    |
+                            |                      | RD Desc Fifo +---------->    Request    |    |   Read_request_en
+                            |                      |              |          |   Generator   |    +------------------->
+                            |                      +--------------+          +--- -----------+    |
+                            |                                                                     |
+                            +---------------------------------------------------------------------+
+
+
+	Descriptor allocator monitors ownership_reg changes by scanning from
+DESC_0 to DESC_15 ownership bits. DESC_0 gets the highest priority and DESC_15
+the lowest. When software gives the ownership of any descriptor(s) to hardware,
+the ownership detector block detects the change in ownership from software to
+hardware and sends DESC_ID to descriptor allocator, which will push it into
+either WR Descriptor fifo or RD Descriptor fifo depending on the transaction
+type of corresponding descriptor. Once any of the Fifos are non-empty,
+Write/Read request generator block pops the Descriptor ID from Fifo and sends to
+next blocks for further processing.
+
+5-d. AXIID Store
+-----------------
+
+                 +--------------------------------------------------------------------------------------+
+                |                                                                                      |
+                |   +-----------------------+                                                          |
+                |   | +------------------------+                                                       |
+                |   | | +------------------------+                                                     |
+                |   | | | +--------------------------+                                                 |
+                |   | | | |                          |                                                 |
+                |   +-+ | |                          |                                                 |
+                |     | | |                          |                                                 |
+                |     +-+ |  FIFO_ID_Reg[Max_Desc]   <------+                                          |
+                |       | |                          |      |                                          |
+    Axi_Aclk    |       +-+                          |      |                                          |
++--------------->         +--------------+-----------+      |                                          |
+                |                        |                  |                                          |
+  Axi_aresetn   |            +-----------+           +------+------+                                   |
++--------------->            |                       |             |                                   | Desc_allocation_in_progress
+                |            |                       |             |         +----------------+        +----------------------------->
+      axnext    |   +--------v-----+         +------->             |         | +----------------+      |
++--------------->   |              |         |       |   Allocate  +----+    | | +-----------------+   |
+                |   |              |         |       |    New ID   |    |    | | | +-----------------+ | Axid_response_id[MAX_DESC]
+ M_Axi_usr_Axid |   |              +---------+       |             |    |    | | | |                 | +----------------------------->
++--------------->   |              |                 |             |    +----> | | |                 | |
+                |   |              |                 +-------------+         | | | |                 | |
+   Axid_read_en |   |  AXID Compare|                                         | | | |    AXID Fifo    | | Fifo_id_reg_Valid
++--------------->   |              +---------+       +-------------+    +----> | | |    [MAX_DESC]   | +----------------------------->
+                |   |              |         |       |             |    |    +-+ | |                 | |
+   Desc_req_id  |   |              |         |       |             |    |      +-+ |                 | |
++--------------->   |              |         |       |    Push     |    |        +-+                 | | Fifo_id_reg[MAX_DESC]
+                |   +--------------+         +-------> Existing ID +----+          +-----------------+ +----------------------------->
+                |                                    |             |                                   |
+                |                                    |             |                                   |
+                |                                    |             |                                   |
+                |                                    +-------------+                                   |
+                +--------------------------------------------------------------------------------------+
+
+
+	The purpose of AXID_Store module is to store AXI IDs which are
+active/pending on AXI BUS, ( i.e AXI ID request went on bus and waiting for
+response ). The number of FIFOs is equal to the parameter MAX_DESC, to enable
+MAX_DESC outstanding requests with unique AWID/ARID on bus. Each Fifo has an
+associated register "fifo_id_reg". It stores AXI ID associated to corresponding
+fifo, so DESC_ID of all request with similar AXI IDs are stored in single Fifo.
+AXID_Store block takes input from AXI BUS, It monitors AXVALID & AXREADY
+assertion on AXI BUS. When AXVALID & AXREADY is asserted, the pulse triggers axi
+id compare logic. If AXI ID is new, a new fifo_id_reg will be populated with new
+AXI ID and the corresponding DESC_ID will be stored into the Fifo. If AXI ID
+already existed ( i.e there was already a request with same ID on bus and
+response hasn't arrived yet ), compare logic will find fifo_id_reg which matches
+with AXI ID. Then, it pushes the DESC_ID into corresponding Fifo. Same logic is
+used for AXI Write and AXI Read Requests.
+
+
+5-e. BRESP Control
+-------------------
+
+                                 +-------------------------------------------+
+                                 |                                           |
+                                 |        +-------------------------+        |
+                                 |        |                         |        |
+                    bid          |        |                         |        |
+ +------------------------------->        |                         |        |
+                                 |        |       Bresp_Fifo        |        |
+                                 |        |                         |        |
+                                 |        |                         |        |
+                   bresp         |        +-------------------------+        |
++-------------------------------->                                           |
+                                 |        +-------------------------+        |
+                                 |        |                         |        | Awid_read_en[MAX_DESC+1:0]
+   Axid_response_id[MAX_DESC+1:0]|        |                         |        +--------------------------->
+                                 |        |                         |        |
++-------------------------------->        |       BID Compare       |        |
+                                 |        |                         |        |
+                                 |        |                         |        |   Bid error
+        Fifo_id_reg[MAX_DESC+1:0]|        +-------------------------+        |
+                                 |                                           +--------------------------->
++-------------------------------->        +-------------------------+        |
+                                 |        |                         |        |
+                                 |        |                         |        |
+                                 |        |                         |        |
+                                 |        | Invalid BID Dtection &  |        |
+                                 |        |        reporting        |        |
+                                 |        |                         |        |
+                                 |        |                         |        |
+                                 |        +-------------------------+        |
+                                 |                                           |
+                                 +-------------------------------------------+
+
+	Bresp control block monitors bvalid/bready handshake. Upon receiving
+BRESP (BVALID and BREADY being high) from the AXI slave, this block will place
+the corresponding BID, BRESP, BUSER into a Fifo. Once Fifo is non-empty,
+requests will be popped one by one and compared with AXI ID entries stored by
+the  AWID_Store block. If the received BID matches with any of the AWIDs, it is
+treated as valid response. The corresponding Fifo will be popped from AWID_store
+block and BID is matched against DESC_* assigned to it. This triggers ownership
+back to software for that descriptor. If the received BID does not match with
+any entries in the AWID_store FIFOs, it is reported as an Error
+
+
+5-f. WDATA Control
+-------------------
+
+
+                   Use_mode      +---------------------------------------------------------------+
++-------------------------------->                                                               |
+                                 |                                                               |
+                   awnext        |       +----------------------+                                |
++-------------------------------->       |                      |                                |
+                                 |       |                      |                                |
+                   wnext         |       | Wdata_pending_FIFO   |                                |
++-------------------------------->       |                      |                                |
+                                 |       |                      |                                |
+             Write_request_awaddr|       |                      |                                |
++-------------------------------->       +----------+-----------+                                |
+                                 |                  |                                            |   Uc2rb_rd_addr
+             Write_request_awsize|                  |                                            +-------------------->
++-------------------------------->                  |                                            |
+                                 |       +----------v-----------+                                |
+             Write_request_awlen |       |                      |                                |      wdata
++-------------------------------->       |                      +-------+                        +-------------------->
+                                 |       | Wdata_request_addr   |       |                        |
+              Write_request_id   |       |      generation      |       |    +----------------+  |
++-------------------------------->       |                      |       |    |                |  |      wstrb
+                                 |       |                      |       |    |                |  +--------------------->
+    Desc_n_txn_type[MAX_DESC-1:0]|       +----------+-----------+       +---->                |  |
++-------------------------------->                  |                        |                |  |
+                                 |                  |                   +---->     W_Fifo     |  | First_wdata_Wvalid
+    Desc_n_txn_size[MAX_DESC-1:0]|                  |                   |    |                |  +--------------------->
++-------------------------------->       +----------v-----------+       |    |                |  |
+                                 |       |                      |       |    |                |  |
+ Desc_n_offset_addr[MAX_DESC-1:0]|       |     Wstrb_align      +-------+    |                |  |       wlast
++-------------------------------->       |                      |            +---------^------+  +--------------------->
+                                 |       +----------------------+                      |         |
+                  Rb2uc_rd_Wstrb |                                                     |         |
++-------------------------------->                                                     |         |
+                                 |       +----------------------+                      |         |
+                  Rb2uc_rd_data  |       |                      |                      |         |
++-------------------------------->       |                      |                      |         |
+                                 |       |        wuser         +----------------------+         |
+                                 |       |                      |                                |
+                                 |       +----------------------+                                |
+                                 |                                                               |
+                                 |                                                               |
+                                 +---------------------------------------------------------------+
+
+	WDATA Control block is used for AXI Write channel. Its main function is
+to fetch WDATA from WDATA_RAM and send on the M_AXI_USR whenever there is any
+AXI Write request. The block triggers when there is any AWVALID Assertion on AXI
+bus. The corresponding DESC_ID will be pushed into a Wdata_pending_fifo.
+Wdata_pending_fifo indicates what all requests have been initiated on AXI BUS by
+AW Channel but yet to be served by Wdata Channel. Along with DESC_ID, it stores
+WUSER , AWADDR, AWLEN & AWSIZE. 
+
+	Upon popping a new request from Wdata_pending_Fifo, corresponding
+WDATA_RAM Address will be fetched from registers and It will be shifted as per
+the data width. The address is then sent to WDATA_RAM, which responds on
+rb2uc_rd_data after some delay. Depending upon request size & WR_STRB bit, wstrb
+align logic will align or keep wstrb fixed to all 1's. 
+
+	All fetched data from WDATA_RAM & WSTRB_RAM is stored into a W_fifo.
+From then on, there will be a pulse "first_wdata_wvalid" which will be
+responsible for popping the very first beat of data by asserting WVALID high.
+After that, the control of fetching new WDATA will be given on WREADY signal
+from Slave. ( i.e READ_EN of Fifo will be then controlled by WREADY directly,
+except when there is WLAST, in which case it will be driven to Zero. The whole
+sequence repeats again for new request. )
+
+
+5-g. Read RDATA Control
+------------------------
+
+                       +-------------------------------------------------------------------------------------------+
+                       |                                                                                           |
+                       |                                                           +--------------------+          |
+                       |                                                           |                    |          |
+                       |                                                           | Rdata_counter(Per  |          |
+                       |                                                +---------->  Descriptor)       |          |
+                       |                                                |          |                    |          |
+                       |                                                |          |                    |          |
+                       |          +-----------+                         |          +--------------------+          |
+                       |          |           |                         |                                          |
+                       |          |           |                         |          +--------------------+          |
+                       |          |           |                         |          |                    |          |
+       Rdata_in        |          |           |                         |          |   Offset_address   |          |
++---------------------->          |           |                         +---------->    Generator(Per   |          | Arid_read_en[MAX_DESC-1:0]
+                       |          |           |                         |          |     Descriptor)    |          +---------------------->
+        Rid_in         |          |           |                         |          |                    |          |
++---------------------->          |           |      +--------------+   |          +--------------------+          |   Rid_not_found
+                       |          |           |      |              +---+                                          +---------------------->
+       Ruser_in        |          |           |      |              |   |          +---------------------+         |
++---------------------->          |           |      |              +---+          |                     |         |   Rlast_early_error
+                       |          |           |      |              |              |   Rresp_checker &   |         +---------------------->
+       Rresp_in        |          |           |      |              +-----+        |      reporting      |         |
++---------------------->          |           |   +-->  RID_Compa   |     +-------->                     |         |   Rlast_late_error
+                       |          |  R_Fifo   |   |  |     rator    |              |                     |         +---------------------->
+        rvalid         |          |           +---+  |              |              +---------------------+         |
++---------------------->          |           |      |              +---+                                          |     Rresp_update
+                       |          |           |      |              |   |          +---------------------+         +---------------------->
+       rready          |          |           |      |              +---+          |                     |         |
++---------------------->          |           |      |              |   |          |     Invalid RID     |         |        Rdata
+                       |          |           |      +--------------+   |          |     Detection &     |         +---------------------->
+                       |          |           |                         +---------->      reporting      |         |
+                       |          |           |                         |          |                     |         |        Ruser
+                       |          |           |                         |          +---------------------+         +---------------------->
+                       |          |           |                         |                                          |
+                       |          |           |                         |          +---------------------+         |
+                       |          |           |                         |          |                     |         |
+                       |          +-----------+                         |          |                     |         |
+                       |                                                +---------->      Invalid RLAST  |         |
+                       |                                                           |      Detection &    |         |
+                       |                                                           |       reporting     |         |
+                       |                                                           +---------------------+         |
+                       +-------------------------------------------------------------------------------------------+
+	
+	Rdata Control block is responsible for handling RDATA coming from slave.
+Along with RDATA, it also handles RUSER, RRESP & RID. Whenever there is ARVALID
+request on bus, there are rdata_counter[MAX_DESC], will be initialized with
+ARLEN + 1. Whenever there is any RVALID on the bus & RREADY is also high
+( RREADY is driven from R_Fifo's "almost_full" signal, which indicates that Fifo
+doesn't have enough space to store more data ), R_Fifo will be populated with
+RDATA, RUSER, RUSER, RID. Later, RID_Comparator logic will keep popping data one
+by one from R_Fifo and it will check if any of the RID matches with AXI IDs
+stored in ARID_Store block. If any of the ID matches, It will read the output of
+Fifo ( It will read it without popping it. There is an output called "dout_pre".
+Its the output that is going to come on "dout" if READ_EN is asserted. It is
+used to decrement rdata_counter of each descriptor while still keeping DESC_ID
+in Fifo ). Once counter reaches to Zero, corresponding Fifo will be popped and
+ownership will be given to Software.
+
+5-h. Host Master Control
+-------------------------
+
+                   +-----------------------------------------------------------------------------------------+
+                   |                                                                                         |
+                   |        +----------------------------------------------------------------------+         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+                   |        |             Ownership Control & Data Packing/Unpacking               |         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+       RDATA       |        |                                                                      |         |
++------------------>        |                                                                      |         |
+                   |        +----------------------------------------------------------------------+         |   AXI4-128 Bit data width
+       WDATA       |                                                                                         <----------------------------->
+<------------------+                                                                                         |
+                   |            +-------------------------------------------------------------+              |
+       WSTRB       |            |                                                             |              |
+<------------------+            |                                                             |              |
+                   |            |                                                             |              |
+Registers Interface|            |                                                             |              |
+<------------------>            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                      AXI_Master_Control                     |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            +-------------------------------------------------------------+              |
+                   |                                                                                         |
+                   +-----------------------------------------------------------------------------------------+
+			   
+
+	HOST Master Control Block is used only in Mode-1 operation of the
+bridge. The bridge uses M_AXI interface to drive read/write requests towards x86
+host via the PCIe controller and AXI-MM logic. 
+
+AXI WR transactions: 
+
+	In Mode-1, SW driver fills WDATA and WSTRB in its memory and programs
+the addresses pointing to the host buffer. Once User Master gets Ownership, it
+will trigger Host Master Control to fetch WDATA and WSTRB from Host Buffers and
+place it in WR DataRAM and WR StrbRAMs respectively. After the data transfer is
+done it will continue its operation as Mode-0. 
+
+	In case user sets WSTRB bit in register to be "1", Host Master Control
+will issue two reads, one for WDATA and second for WSTRB. After fetching
+WDATA/WSTRB, Host Master Control will place it in the WDATA RAM and WSTRB RAM.
+From then on, User Master Control will initiate its normal Mode-0 Operation of
+waiting for response of Write request & completing ownership.
+
+AXI RD transactions:
+
+	In Mode-1, SW driver allocates a buffer in its memory to store RDATA and
+programs the address pointing to the host buffer. Once User Master gets
+Ownership, it will issue a read request, and upon getting response, the Host
+Master Control block issues a write request to write RDATA from RD DataRAM into
+Host buffers and once transfer is done it will continue its operation as Mode-0.
+
+NOTE: Host address should always be 4KB aligned
+
+
+5-g. Interrupt Handler 
+-----------------------
+
+	For propagating interrupts from x86 Host to DUT in the FPGA and
+vice-versa, the Master Bridge has provision for generating interrupts.
+Interrupts from Host to the FPGA DUT are called Host to Card (H2C) interrupts
+and from FPGA DUT to x86 Host are called Card to Host (C2H) interrupts.
+
+	The H2C interrupts generated by Host can be connected to DUT by using
+h2c_irq_out ports. The software driver needs to program C2H_INTR_REG to
+generate C2H interrupts. The DUT generated interrupts should be connected to
+c2h_irq_in ports. These interrupts can be translated to Legacy/MSI or MSI-X
+interrupts over PCIe controller to Host.
+
+	The Bridge also generates interrupts to Host for indicating
+transaction completions. The interrupt handler block streamlines the C2H
+interrupts and its own completion interrupts and forwards to PCIe controller
+solution. The bridge uses "irq_out" to generate interrupts and waits for an
+acknowledgement "irq_ack" before sending the next interrupt. The "irq_ack" is
+sent by the PCIe controller after the "irq_out" translates to a PCIE Legacy
+interrupt Message TLP on the PCIe link. 
+	The interrupt clear and mask registers control enablement and
+disablement of the interrupts as per software's discretion.
+
+
+6. Error Handling/Reporting
+----------------------------
+
+Bridge generates Errors in case of following protocol violations. 
+
+Incorrect RID/BID :
+If DUT Provides incorrect BID/RID in the response Incorrect.
+
+RLAST Assertion :
+If DUT Asserts incorrect RLAST. ( i.e RLAST is earlier than actual last cycle
+or No RLAST )

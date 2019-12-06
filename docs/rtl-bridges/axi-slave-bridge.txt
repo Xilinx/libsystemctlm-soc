@@ -1,0 +1,862 @@
+
+-----------------------------------
+AXI Slave bridge Micro-Architecture 
+-----------------------------------
+
+AXI Slave Bridge use-model with AXI Master Device Under Test (DUT) and PCIe Sub-system
+                             _______________________________________________
+    ______________          |          ___________________________          |         ______________
+   |              |         |        |                           |          |        |              |         
+   |              |         |        |                           |          |------->|CLK           |
+   |         M_AXI|---------)------->|S_AXI                      |                   |              |
+   |              |         |        |                  USR_S_AXI|<------------------|M_AXI         |
+   |       AXI_CLK|---------+------->|AXI_ACLK                   |                   |              |
+   |              |                  |                 USR_RESETN|------------------>|RSTN          |
+   |     AXI_RST_N|----------------->|AXI_ARESET_N               |                   |              |
+   |              |                  |                           |                   |              |
+   |              |                  |                           |                   |              |
+   |   PCIe Core  |                  |                           |                   |              |          
+   |       &      |                  |        AXI SLAVE          |                   |  AXI MASTER  | 
+   |    AXI-MM    |                  |         BRIDGE            |                   |     DUT      |
+   |    Bridge    |                  |                           |                   |              |
+   |              |                  |                           |                   |              |
+   |              |                  |               H2C_INTR_OUT|------------------>|INTR_IN       |
+   |         S_AXI|<-----------------|M_AXI                      |                   |              |
+   |              |                  |                C2H_INTR_IN|<------------------|INTR_OUT      |
+   |        IRQ_IN|<-----------------|IRQ_OUT                    |                   |              |
+   |              |                  |                C2H_GPIO_IN|<------------------|GPIO          |
+   |       IRQ_ACK|----------------->|IRQ_ACK                    |                   |              |
+   |              |                  |                           |                   |              |
+   |______________|                  |___________________________|                   |______________|
+
+
+1. Introduction
+----------------
+
+This document covers the micro architecture details of the AXI Slave
+bridge. The AXI Slave Bridge is referred to as "Slave Bridge" from here on
+for simplicity. The Slave bridge communicates with x86 Host via PCIe Controller
+  and associated AXI-MM Bridge. The AXI-MM Bridge converts the PCIe transaction
+  layer packets into AXI-MM protocol to communicate with user design components
+  in the FPGA. The slave bridge needs to be mapped to PCIe BAR-0 (Base Address
+  Register) and at an offset of 0x0. The Device Under Test's (DUT) AXI Master
+  interface is connected to the Slave AXI port of the Master bridge.
+
+Features supported:
+
+Protocol support - AXI3, AXI4 and AXI4-Lite
+AXI Data widths - 32, 64 and 128-bit 
+Slave AXI interface to configure bridge registers - 32-bit AXI4 Lite slave
+Multiple outstanding requests - Max 16 reads/writes
+
+Two modes of operation : Mode_0 and Mode_1
+
+Interrupt support :
+- Legacy PCIe only
+
+
+Features not supported:
+
+AWUSER, BUSER, ARUSER supported. But value of WUSER for only last wdata cycle is
+captured in registers and only constant values of RUSER for all rdata cycles
+will be provided to DUT. 
+
+MSI and MSI-X interrupts towards x86  
+
+2. Top level block diagram:
+-----------------------------------
+
+
+                 +-----------------------------------------------------------------------------------+
+                 | +------------------------------------------------------+   +--------------------+ |
+                 | |                                                      |   | User Slave Control | |
+                 | |                     Register Block                   |   |                    | | usr_resetn
+                 | | +--------+ +---------------------------------------+ |   | +-------+ +------+ | +------------->
+       axi_aclk  | | |  AXI   | |           Registers                   | |   | |       | |      | | |
+    +------------> | | Slave  | +---------------------------------------+ |   | |       | |      | | |
+     axi_arestn  | | |  and   | +---------------------------------------+ |   | |Control| | AXI  | | |
+    +------------> | | Addres | |            RAM Controller             | |   | | Logic | |Slave | | |
+         S_AXI   | | | Decoder| | +---------+  +---------+  +--------+  | |   | |       | |      | | | S_AXI_USR
+       AXI4lite  | | |        | | |  Read   |  |  Write  |  |  Wstrb |  | <---> |       | |      | | <------------->
+     <-----------> | +--------+ | | DataRAM |  | DataRAM |  |   RAM  |  | |   | +-------+ +------+ | |128b/
+         32b     | | +-------+  | +---------+  +---------+  +--------+  | |   | +----------------+ | |64b/
+                 | | | Contro|  +---------------------------------------+ |   | |   Descriptor   | | |32b
+                 | | | Logic |                     ^                      |   | |  Allocator and | | |
+                 | | |       +<--------------------+                      |   | |  RAM address   | | |
+                 | | +-------+                                            |   | |    allocator   | | |
+                 | +--------------------------------------^---------------+   | +----------------+ | |
+                 |          +------------------------+    |                   +--------------------+ |
+                 |          |  Host Master Control   |    |                                          |
+                 |          |                        |    |                                          |
+                 |          |  +------+ +-------+    |    | +------------+                           | h2c_intr_out 128b
+                 |          |  |      | |       |    |    | | Interrupt  +------------------------------------------>
+    M_AXI        |          |  |  AXI | |Control|    |    | | Handler    |                           |
+<--------------------------->  |Master| | Logic |    <----+ |            |                           | c2h_intr_in 64b
+           128b  |          |  |      | |       |    |      |            +<------------------------------------------+
+                 |          |  |      | |       |    |      +----+----+--+                           |
+                 |          |  +------+ +-------+    |           |    ^                              |
+                 |          |                        |           |    |                              |  c2h_gpio_in 256b
+                 |          |                        |           |    |                              <---------------+
+        irq_out  |          +------------------------+           |    |                              |	h2c_gpio_out 256b
+      <----------------------------------------------------------+    |                              +--------------->
+       irq_ack   |                                                    |                              |
+     +----------------------------------------------------------------+                              |
+                 +------------------------------------------v----------------------------------------+
+
+
+3. rtl file hierarchy and organization:
+---------------------------------------
+
+   axi_slave.v
+      |--> axi4_slave.v/axi4lite_slave.v/axi3_slave.v
+      |    |--> axi_slave_allprot.v (i_axi_slave_allprot)
+      |          |--> host_master_s.v (host_control_slave_inst)
+      |          |    |--> axi_master_control.v (axi_master_control_inst_host)
+      |          |    |    |--> arid_store.v
+      |          |              |--> grant_controller_master.v (g1)
+      |          |    |    |--> awid_store.v
+      |          |              |--> grant_controller_master.v (g1)
+      |          |    |    |--> sync_fifo_master.v (bresp_fifo)
+      |          |    |    |--> descriptor_allocator_uc_master.v
+      |          |    |    |--> sync_fifo_master.v (rdata_fifo) 
+      |          |    |    |--> wdata_channel_control_uc_master.v (wdata_control) 
+      |          |--> intr_handler_slave.v (intr_handler_slave_inst)
+      |          |--> regs_slave.v (regs_slave_inst)
+      |          |    |--> data_ram.v (u_rdata_ram)
+      |          |    |--> data_ram.v (u_wdata_ram)
+      |          |    |--> strb_ram.v (u_wstrb_ram)
+      |          |--> user_slave_control.v (user_slave_control_inst)
+      |          |    |--> user_slave_control_field.v (i_user_slave_control_field)
+      |          |         |--> slave_inf.v (i_slave_inf)
+      |          |         |--> txn_allocator.v (i_txn_allocator)
+      |          |              |--> sync_fifo.v (DESC_fifo) 
+      |          |              |--> grant_controller.v (i_grant_controller)
+      |          |              |--> addr_allocator.v (rd_addr_allocator)
+      |          |              |--> addr_allocator.v (wr_addr_allocator)
+
+
+
+4. Port Description
+---------------------------------------
+
+Port Description
+	  
+|-----------------------------------------------------------------------------------------------------|
+|Name	          |  Width/Interface	|   I/O   |	Description                                   |                  
+|-----------------------------------------------------------------------------------------------------|
+|axi_aclk         |    [0:0] 	        |   I	  |  Clock Signal                                     |
+|axi_aresetn      |    [0;0]            |   I	  |  Active -Low reset                                |
+|usr_resetn	  |    [USR_RST_NUM-1:0]|   O	  |  Active -Low reset                                |
+|usr_clk	  |    [0:0]	        |   O	  |  User clock signal                                |
+|irq_out	  |    [0:0]	        |   O	  |  Interrupt to XDMA                                |
+|irq_ack	  |    [0:0]	        |   I	  |  Interrupt acknowledgement from XDMA              |
+|h2c_intr_out     |    [127:0]	        |   O	  |  Host to Card interrupt                           |
+|c2h_intr_in      |    [63:0]	        |   I	  |  Card to Host interrupt                           |
+|c2h_gpio_in      |    [255:0]	        |   I	  |  Card to Host control signals                     |
+|h2c_gpio_out     |    [255:0]	        |   O	  |  Host to Card control signals                     |
+|s_axi_usr_*      |    S_AXI_USR	|   -	  |  AXI3/AXI4/AXI4-lite Master interface towards DUT.|
+|s_axi_*	  |    S_AXI	        |   -	  |  AXI4 Slave Interface towards XDMA.               |
+|m_axi_*	  |    M_AXI	        |   -	  |  AXI4 Master Interface towards XDMA.              |
+|-----------------------------------------------------------------------------------------------------|
+
+
+5. Clocks
+---------------------
+
+The Bridge IP uses a single clock axi_aclk. This clock typically is connected
+from PCIe controller's user clock domain. For Xilinx FPGA solutions, it is XDMA
+IP's axi_aclk.
+
+All the interfaces of the master bridge operate on the same clock domain. User
+needs to take care of clock conversions if needed to convert to a different
+clock domain.
+
+|---------------------------------------|
+|Clock Name   |	Associated Interface 	|
+|---------------------------------------|
+|axi_aclk     |  S_AXI                  |
+|             |  M_AXI                  |
+|             |  S_AXI_USR              |
+|---------------------------------------|
+
+
+6. Resets
+---------------------
+
+The below table contains information about the resets used in the design.
+
+|---------------------------------------|
+|Clock Name   |	Associated Interface 	|
+|---------------------------------------|
+|axi_aresetn  |  S_AXI                  |
+|             |  M_AXI                  |
+|             |  S_AXI_USR              |
+|---------------------------------------|
+|usr_resetn   |  -                      |
+|---------------------------------------|
+
+axi_aresetn:
+Design uses only one ACTIVE_LOW reset. This reset is synchronised with axi_aclk.
+Typically this is connected to axi_aresetn port of XDMA IP for Xilinx use case.
+
+usr_resetn:
+ACTIVE_LOW user soft reset.  
+Software can issue a soft reset to the user logic by setting bits DUT_SRST  in
+RESET_REG.  
+usr_resetn is generated by ANDing axi_aresetn & corresponding DUT_SRST bit of
+RESET_REG.
+
+
+7. Transaction Ordering Mechanism
+----------------------------------
+
+The bridge supports 16 descriptors shared between RD and WR channel.
+
+7-a. Request Ordering
+----------------------
+
+Requirement: 
+AXI Read and write channels are independent. The ordering information of
+incoming requests for read and write channel should be known by SW. 
+
+Solution: 
+Request ordering can be achieved by controlling ownership of descriptors.
+For new transactions, SW must always flip ownership to all descriptors(0xFFFF)
+at a time. In other words, for new transactions, SW must flip ownership to all
+descriptors(0xFFFF) when STATUS_BUSY_REG has value 0x0000 and OWNERSHIP_REG has
+value 0x0000.
+
+By this, SW can always assume the order in which HW-bridge got transactions to
+be LSB to MSB.
+
+7-b. Request Ordering Example 
+----------------------------------
+
+For example, SW writes 0xFFFF to OWNERSHIP_FLIP_REG for new transactions.
+
+Hw-bridge got transactions as follows
+
+|------------------------------------------|
+|Time	        |  T1  |  T2  |  T3  |  t4 |
+|------------------------------------------|
+|RD-channel     |  -   |  Ra  |  Rb  |  -  |
+|WR-channel     |  Wa  |  -   |  Wb  |  Wc |
+|------------------------------------------|
+
+
+HW-bridge will allocate descriptors as  follows
+
+NOTE : When write and read transactions arrive to Hw-bridge at the same time,
+it gives priority to read for descriptor allocation.
+
+|------------------------------------------|
+|WR Transaction |  Descriptor Number       |
+|------------------------------------------|
+|Wa	        |  0                       |
+|Wb	        |  3                       |
+|Wc	        |  4                       |
+|------------------------------------------|
+
+
+|------------------------------------------|
+|RD Transaction |  Descriptor Number       |
+|------------------------------------------|
+|Ra	        |  1                       |
+|Rb	        |  2                       |
+|------------------------------------------|
+
+
+
+Thus, INTR_TXN_AVAIL_STATUS_REG will be 0x1F(and STATUS_BUSY_REG will be 0x1F
+and OWNERSHIP_REG will be 0xFFE0) . SW serves one or multiple txn_avail and flip
+the ownership to generate the response towards DUT. (At this point,
+OWNERSHIP_REG is 0xFFFF and STATUS_BUSY_REG is 0x1F)
+
+After HW-bridge actually generates the response towards DUT, gives ownership
+back to SW indicating transaction completion (along with INTR_COMP_STATUS_REG).
+At this point, OWNERSHIP_REG holds value of 0xFFE0 and STATUS_BUSY_REG is
+0x0000.
+
+Now, when SW wants to flip ownership to HW for generating new transactions, it
+must wait till STATUS_BUSY_REG has value 0x0000 and OWNERSHIP_REG has value
+0x0000 and then flip OWNERSHIP_FLIP_REG as 0xFFFF.
+
+
+7-c. RESP_ORDER_REG
+--------------------
+
+This register is used to convey the order in which bridge will issue RD/WR
+responses to DUT-Master.
+
+The register is used to push a descriptor to FIFO. Hw-bridge will clear this
+register after N-clock cycles. Which means read to this register will always
+return 0.
+
+Upon, non-empty condition of FIFO, Bridge will provide response to DUT.
+
+                  +---------+
+                  |         |
+                  |         |
+                  |         |
+                  |         |
+Write access(SW)  |         |  Read access(HW)
+   +-------------->   FIFO  +------------>
+                  |         |
+                  |         |
+                  |         |
+                  |         |
+                  |         |
+                  |         |
+                  +---------+
+
+For Example,
+To push desc-2, SW will write 0x8000_0002 to this register.
+
+7-d. RESP_FIFO_FREE_LEVEL
+--------------------------
+
+Depth of the response FIFO is MAX_DESC(16 in our case). The register represents
+free space left in the FIFO at given time.
+
+7-d. Imm_bresp Mode
+--------------------------
+
+The mode of imm_bresp=1 is only applicable to write transactions.
+
+In this case, upon receiving wlast from DUT, Hw-bridge will automatically
+provide bresp to DUT.
+
+SW is not  supposed to push that desc_idx to response FIFO. ( Even if SW writes
+the WR-desc_idx to RESP_ORDER_REG, hw-bridge will ignore that desc_idx and will
+not push into a FIFO.)
+
+7-e. Cons
+----------
+
+If any of the descriptor is stuck (i.e. because of DUT is not giving
+bready/rready), OWNERSHIP_REG will never have value of 0x0000 and thus SW cannot
+flip it to 0xFFFF and thus no new transaction will be accepted from DUT.
+
+8. Hardware Block Description
+------------------------------
+
+8-a. Register Block
+--------------------
+
+                +-----------------------------------------------------------------------------------+
+                |                                                                                   |
+                |                                                                                   |
+                |                                  Register Block                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |                                                                                   |
+                |      +-----------+  +-----------+                     +----------------+          |
+                |      |           |  |           |                     |                |          |
+                |      |           |  |           |                     |                |          |
+                |      |           |  |           +--------------------->    Regisers    <-------------------------->
+                |      |           |  |           |                     |                |          | Register Access
+                |      |           |  |           |                     |                |          | to UC & HM
+                |      |           |  |           |                     |                |          |
+                |      |           |  |           |                     +----------------+          |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |              +-------------------------+        |
+                |      |           |  |           |              |                         |        |
+                |      |   AXI     |  |  Address  +-------------->                         |        |
+       AXI4_LITE|      |   Slave   |  |  Decoder  |              |Write    RD DATA     Read|        |
+                |      |   FSM     |  |           |              |port     RAM         port+---------------------------------------->
+<---------------------->           |  |           |              |                         |        |  Read Access to only UC Block
+                |      |           |  |           |      +------->                         |        |
+                |      |           |  |           |       From HM+-------------------------+        |
+                |      |           |  |           |       (mode-1)                                  |
+                |      |           |  |           |                                                 |
+                |      |           |  |           |               +------------------------+        |
+                |      |           |  |           |               |                        |        |
+                |      |           |  |           <---------------+                        |        |
+                |      |           |  |           |               |Read     WSTRB     Write<---------------------------------------+
+                |      |           |  |           |               |port     RAM        port|        | Write Access to only UC Block
+                |      |           |  |           |      <--------+                        |        |
+                |      |           |  |           |          To HM+------------------------+        |
+                |      |           |  |           |       (mode-1)                                  |
+                |      |           |  |           |               +-------------------------+       |
+                |      |           |  |           |               |                         |       |
+                |      |           |  |           |               |                         |       |
+                |      |           |  |           <---------------+Read      WR DATA   Write<----------------------------------------+
+                |      |           |  |           |               |port      RAM       port |       |   Write Access to only UC Block
+                |      |           |  |           |      <--------+                         |       |
+                |      +-----------+  +-----------+       To HM   +-------------------------+       |
+                |                                         (mode-1)                                  |
+                |                                                                                   |
+                |                                                                                   |
+                +-----------------------------------------------------------------------------------+
+
+
+The register block implements the register space required as per Bridge's
+requirements. The register block is accessible via an 32-bit AXI4 Lite
+interface. The Bridge register space can be mapped to one of the PCIe Base
+Address Registers (BARs). The overall addressing requirement for Bridge depends
+mainly on size of the Data RAM. Currently, the size of the Data RAM is 16KB and
+the number of descriptors is 16, then overall bridge memory requirement will be
+128KB. The software driver implements a bridge discovery mechanism to identify
+the bridge capabilities and requires the bridge to be mapped to BAR0 at an
+offset of 0. If the user design needs multiple master bridge instances,  then
+the software bridge discovery mechanism requires the first bridge instance to be
+at BAR0 + 0 . The other bridge instances have to be at 128KB offset and the last
+bridge instance needs to set a parameter in the RTL "LAST_BRIDGE" to 1 to
+indicate the software to stop discovering further.
+
+Information on detailed register address map is here: Memory map
+
+Address Decoder 
+The address decoder block converts the AXI4Lite transactions
+into register reads and writes. The AXI4Lite transactions are targeted to one of
+the following regions of the register space.
+
+Registers:
+
+The Slave Bridge contains the following type of registers
+
+General Registers: 
+Contain many control and status registers of the bridge
+carrying general information pertaining to a bridge and are independent of the
+protocol.  
+Descriptors: The descriptors contain information/attributes for
+generating AXI transactions. The Host software programs the DESC_N* registers to
+inform the HW bridge on the nature of AXI transaction to be generated. The
+number of descriptors signify the number of outstanding transactions that it can
+generate.  
+Protocol Specific registers: Contain control and status registers
+which pertain to a specific protocol. For AXI Bridge, these registers carry
+information pertaining to AXI protocol like AXI_BRIDGE_CONFIG_REG,
+STATUS_RESP_REG etc.
+
+
+WR DataRAM: 
+The WDATA (Write data) of the AXI Transactions is saved in WR
+DataRAM. This will be a Simple Dual PORT RAM, one port for WRITE, one port for
+READ. In the current bridge design, the size of the Write DataRAM is 16KB.
+
+WSTRB RAM:
+The WSTRB (Write strobe) of the AXI Transactions is saved in WSTRB
+RAM. This will be a Simple Dual PORT RAM, one port for WRITE, one port for READ.
+In the current bridge design, the size of the WSTRB RAM is 2KB
+
+RD DataRAM:
+The RDATA (Read data, which is response for a read request) of the
+AXI Transactions is saved in RD DataRAM. This will be a Dual PORT RAM, one port
+for WRITE, one port for READ. In the current bridge design, the size of the RD
+ DataRAM is 16KB.
+
+DataRAM Access:
+Following is the DataRAM access rules: 
+
+In Mode 0: Software driver can only read from the WR DataRAM (no write access) &
+only Write into the RD DataRAM (no read access).
+In Mode 1: Software cannot access DataRAMs. The host master control block
+(described in following sections) has read access to WR DataRAM and Write access
+to RD DataRAM.
+
+8-b. User Slave Control 
+-----------------------
+
+User Slave Control Block interfaces with DUT over the S_AXI_USR interface. Main
+functionality of this block is to transfer data from WR DataRam as WDATA of the
+S_AXI_USR interface for AXI write transactions. For AXI Read transactions, read
+data from RD DataRAM and present as RDATA on S_AXI_USR.
+
+Looking at the availibility of decriptor & memory in RD & WR DataRam, TXN
+allocator block decides to accept transactions from DUT.  Upon receiving
+transaction from DUT, it allocates descriptor number and offset address of
+internal RAM.
+
+8-c. AXI WR transaction
+-----------------------
+
+                      +------------------------------------------------------------------------+
+                     | User Slave Write Path                                                  |
+                     |                                                                        |
+                     |                   +----------+                                         |
+                     |                   |          |                                         |
+                     |                   |          |                                         |
+                     |                   |          |                                         |
+                     |                   |          |                                         | S_AXi_USR(w-channel)
+                     |       +-----------+   W_Fifo <------------------------------------------------------->
+Write to WR DATA RAM |       |           |          |                                         |
+    & WSTRB RAM      |       |           |          |                                         |
+       <---------------------+           |          |                                         |
+                     |       |           |          |                                         |
+                     |       |           |          |                                         |
+                     |       |           |          |                                         |
+                     |       |           +----------+                                         |
+                     |       |                                                                |
+                     |       |                                                                |
+         Registers   |       |           +----------+                                         |
+       <---------------------+           |          |                                         |
+                     |       |           |          |                                         |
+                     |       |           |          |                                         |
+                     |       |           |          +<---+                                    |
+                     |       |           |AW_W_Fifo |    |                                    |
+                     |       |           |          |    |                                    |
+                     |       +-----------+          |    |           +----------+             |
+                     |                   |          |    |           |          |             |
+                     |                   |          |    |           |          |             |
+                     |                   |          |    |           |          |             |
+                     |                   +----------+    |           |          |             |
+                     |                                   +-----------+   TXN    |             | S_AXi_USR(aw-channel)
+                     |                                               | Allocator<---------------------------->
+                     |                   +----------+                |          |             |
+                     |                   |          |                |          |             |
+                     |                   |          |                |          |             |
+                     |                   |          |                |          |             |
+         Registers   |                   |          |                |          |             |
+      +---------------------------------->WR_RESP_  |                +----------+             |
+                     |                   |Order_fifo|                                         |
+                     |                   |          |                                         |
+                     |                   |          |                                         |
+                     |                   |          |                                         |
+                     |                   |          |                                         |
+                     |                   +----+-----+                                         |
+                     |                        |                                               |
+                     |                        |                                               |
+                     |                        v                                               |
+                     |                   +----+-----+                  +---------+            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            | S_AXi_USR(b-channel)
+                     |                   |BIDX_fifo +------------------> B_fifo  +<--------------------------->
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   |          |                  |         |            |
+                     |                   +----------+                  +---------+            |
+                     |                                                                        |
+                     |                                                                        |
+                     +------------------------------------------------------------------------+
+
+Upon getting OWNERSHIP for one or more descriptors from SW, it waits for write
+request to arrive from DUT. Once a request arrives, the TXN allocator block
+alloocates descriptor and corresponding offset address. These descriptors are
+stored in AW_W_fifo for transaction ordering. 
+
+All AXI W channel signals including WDATA, WSTRB and sidebands are stored into
+W_fifo. 
+
+In Mode-0, the descriptor number is popped from AW_W_fifo and data from W_fifo
+goes to WDATA and WSTRB RAMs and corresponding TXN_AVAIL bit is raised to SW.
+
+In Mode-1, instead of generating TXN_AVAIL bit, it signals (via "uc2hm_trig"
+control signal)  Host master control; which will write the WSTRB/WDATA into host
+buffers. Upon receiving "hm2uc_done" from Host master control, the corresponding
+TXN_AVAIL is asserted.
+
+When SW writes to RESP_ORDER_REG, the write-descriptor is stored into
+WR_RESP_ORDER_fifo. When OWNERSHIP for one or more descriptors is passed from SW
+when the descriptor is BUSY and is of type write, write response should be
+provided to DUT. Thus, descriptor is popped out from WR_RESP_ORDER_fifo and
+stored into BIDX_fifo, else it waits for SW to pass OWNERSHIP which matches to
+the last element of fifo.
+
+Later, descriptor number is popped from BIDX_fifo and corresponding b-channel
+signals are stored into B_fifo. The signals are popped from B_fifo and write
+response is generated towards DUT and corresponding BUSY bit is de-asserted.
+
+NOTE :
+Depth of AW_W_fifo is MAX_DESC to accommodate all descriptors. 
+
+
+
+8-d. AXI RD transacction
+-------------------------
+
+                      +-------------------------------------------------------------------------------------+
+                      |                                                                                     |
+                      |  User Slave Read Path                                                               |
+                      |                                                            +--------------+         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |    TXN       |         |
+          Registers   |                                                            | Allocator    |         | S_AXI_USR(ar-channel)
+      <----------------------------------------------------------------------------+              +<------------------------------>
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            |              |         |
+                      |                                                            +--------------+         |
+                      |                                                                                     |
+                      |                                                                                     |
+                      |                                                                                     |
+                      |                                                            +---------------+        |
+                      |                                                            |               |        |
+                      |                                                            |               |        |
+                      |               +------------+     +-----------+             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+         Registers    |               |  RD_RESP   |     | RIDX_fifo |             |    R_fifo     |        | S_AXI_USR(r-channel)
+    +---------------------------------> ORDER_fifo +----->           +------------>+               +<-------------------------------->
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+                      |               |            |     |           |             |               |        |
+Read from RD DATA RAM |               +------------+     +-----------+             |               |        |
+     +---------------------------------------------------------------------------->+               |        |
+                      |                                                            +---------------+        |
+                      |                                                                                     |
+                      |                                                                                     |
+                      +-------------------------------------------------------------------------------------+
+
+
+
+Upon getting OWNERSHIP for one or more descriptors from SW, it waits for read
+request to arrive from DUT. Once a request arrives, the TXN allocator block will
+calculate descriptor and corresponding offset address. Also, corresponding
+TXN_AVAIL bit is raised to SW.
+
+When SW writes to RESP_ORDER_REG, the read-descriptor is stored into
+RD_RESP_ORDER_fifo. 
+
+For mode-0, OWNERSHIP for one or more descriptors is passed from SW when the
+descriptor is BUSY and is of type read, read response should be provided to
+DUT. 
+
+For mode-1, OWNERSHIP for one or more descriptors is passed from SW when the
+descriptor is BUSY and is of type read, "uc2hm_trig" control signal to Host
+master control is generated. Upon receiving "hm2uc_done" from Host master
+control, read response for corresponding descriptor should be generated.
+
+For OWNERSHIP(mode-0) or "hm2uc_done"(mode-1), if the descriptor number is last
+element to be popped from RD_RESP_ORDER_fifo, then it is popped out and stored
+into RIDX_fifo, else it waits for SW to pass OWNERSHIP which matches to one of
+their last elements.
+
+Later, descriptor number is popped from RIDX_fifo and corresponding rdata is
+read out from RDATA RAM. All r-channel signals are stored into R_fifo. The
+signals are popped from R_fifo and read response is generated towards DUT. Upon
+rlast, corresponding BUSY bit de-asserted.
+
+8-e. AXI TXN Allocator
+-------------------------
+
+                 +---------------------------------------------------------------------------------------------------------------+
+                 |                                                                                                               |
+                 |  User Slave TXN Allocator                                                                                     |
+                 |                                                                                                               |
+                 |                                                                                                               |
+                 |       +--------------------------------------------------------------------+      +------------------+        |
+                 |       |                     Descriptor Allocator                           |      |                  |        |
+                 |       |                         +------------+                             |      |                  |        |
+                 |       |                         |            |                             |      |                  |        |
+                 |       |                         |            |                             |      |                  |        |
+                 |       |                         |            |                             |      |                  |        |
+                 |       |                         |            |                             |      |                  |        |
+ WR & RD txn req |       |                         |            |                             +----->+                  |        |
+ --------------------+-->+                         | DESC_fifo  |                             |      |                  |        |
+                 |   |   |                         |            |                             |      |                  |        |
+                 |   |   |                         |            |                             |      |                  |        |
+                 |   |   |                         |            |                             |      |                  |        |
+                 |   |   |                         |            |                             |      |                  |        |
+                 |   |   |                         |            |                             |      |                  |        |
+                 |   |   |                         +------------+                             |      |                  |        |
+                 |   |   +--------------------------------------------------------------------+      |                  |        |
+                 |   |                                                                               |   Transaction    |        |
+                 |   |   +--------------------------------------------------------------------+      |    Allocator     |        |
+                 |   |   |                        Address Allocator                           |      |                  |        | WR & RD Allocattion
+                 |   |   | +-------------------------+          +---------------------------+ |      |                  +----------------------------->
+                 |   |   | |                         |          |                           | |      |                  |        |
+                 |   |   | |        WR Address       |          |          RD Address       | |      |                  |        |
+                 |   |   | |         Allocator       |          |           Allocator       | |      |                  |        |
+                 |   |   | |                         |          |                           | |      |                  |        |
+                 |   |   | |                         |          |                           | |      |                  |        |
+                 |   |   | |                         |          |                           | |      |                  |        |
+                 |   |   | |                         |          |                           | |      |                  |        |
+                 |   |   | |     +-----------------+ |          |      +-----------------+  | |      |                  |        |
+                 |   |   | |   +-----------------+ | |          |    +-----------------+ |  | |      |                  |        |
+                 |   |   | | +-----------------+ | | |          |  +-----------------+ | |  | |      |                  |        |
+                 |   |   | | |                 | | | |          |  |                 | | |  | +------>                  |        |
+                 |   +---> | |                 | | | |          |  |                 | | |  | |      |                  |        |
+                 |       | | |                 | | | |          |  |                 | | |  | |      |                  |        |
+                 |       | | |   Linked List   | | | |          |  |   Linked List   | | |  | |      |                  |        |
+                 |       | | |                 | | | |          |  |                 | | |  | |      |                  |        |
+                 |       | | |                 | | | |          |  |                 | | |  | |      |                  |        |
+                 |       | | |                 | +-+ |          |  |                 | +-+  | |      |                  |        |
+                 |       | | |                 +-+   |          |  |                 +-+    | |      |                  |        |
+                 |       | | +-----------------+     |          |  +-----------------+      | |      |                  |        |
+                 |       | |                         |          |                           | |      |                  |        |
+                 |       | +-------------------------+          +---------------------------+ |      |                  |        |
+                 |       +--------------------------------------------------------------------+      +------------------+        |
+                 |                                                                                                               |
+                 |                                                                                                               |
+                 +---------------------------------------------------------------------------------------------------------------+
+
+
+It comprises of 3 main blocks
+Descriptor allocator 
+Addresss allocator 
+Transaction allocator
+
+Descriptor Allocator:  
+MAX_DESC descriptors are shared between read and write
+channels. A descriptor number is pushed into DESC_fifo when SW gives ownership
+to HW for initiating new transaction (means when SW gives ownership to HW and
+descriptor is not busy) . This block allocates a new descriptor number to AW/AR
+request when at least one descriptor is available or when DESC_fifo is not
+empty. If write and read request occurs at the same time, descriptor number is
+assigned first to ar and then to AW based on descriptor availability.  
+
+
+Addresss Allocator: 
+There are separate internal RAMs for read data, write data
+and wstrb with same depth. Offset addresses for write data RAM and wstrb are RAM
+will be always same. Therefore, Address identical allocation block is used for
+write and read path. Each address allocation block implements a linked list of
+nodes which indicate busy/used regions of memory. Each node carries information
+of memory start and end offset, node index of its own in linked list and
+descriptor number. The memory start/end offset of these nodes are always in
+ascended sorting order. Linked list can have upto MAX_DESC number of nodes.
+
+Upon reset, linked list has no nodes or in other words linked list doesn't
+exist. Upon AXI request from DUT with length AXLEN, memory start address is
+computed and a new node is created with difference of memory start and end
+address(data fields) equal to AXLEN. This process repeats for further AXI
+requests as well. 
+
+When one or more descriptors are being freed up, the corresponding nodes will be
+removed from linked list. Thus, Linked list will always indicate only busy or in
+progress region of memory only.
+
+
+Transaction Allocator: 
+When both descriptor number and offset address of
+internal RAM is allocated to AR / AW requests, transaction allocation is
+completed. This block is important because number of logic cycles consumed by
+above both blocks may or may not be same as they depend on availability of
+descriptor and memory.
+
+
+8-f. Host Master Control
+-------------------------
+
+
+                   +-----------------------------------------------------------------------------------------+
+                   |                                                                                         |
+                   |                                                                                         |
+                   |                                                                                         |
+                   |        +----------------------------------------------------------------------+         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+                   |        |             Ownership Control & Data Packing/Unpacking               |         |
+                   |        |                                                                      |         |
+                   |        |                                                                      |         |
+       RDATA       |        |                                                                      |         |
+<------------------+        |                                                                      |         |
+                   |        +----------------------------------------------------------------------+         |   AXI4-128 Bit data width
+       WDATA       |                                                                                         <----------------------------->
++------------------>                                                                                         |
+                   |            +-------------------------------------------------------------+              |
+       WSTRB       |            |                                                             |              |
++------------------>            |                                                             |              |
+                   |            |                                                             |              |
+Registers Interface|            |                                                             |              |
+<------------------>            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                      AXI_Master_Control                     |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            |                                                             |              |
+                   |            +-------------------------------------------------------------+              |
+                   |                                                                                         |
+                   |                                                                                         |
+                   |                                                                                         |
+                   +-----------------------------------------------------------------------------------------+
+
+
+
+
+HOST Master Control Block is used only in Mode-1 operation of the bridge. The
+bridge uses M_AXI interface to drive read/write requests towards x86 host via
+the PCIe controller and AXI-MM logic. 
+
+AXI WR transaction: 
+Once User Slave Control receives a Write Request, after accepting WR Request and
+getting all data into the WR DATA RAM & WSTRB RAM, User Slave Control will
+trigger Host Master Control to push WDATA & WSTRB from WDATA RAM & WSTRB RAM to
+Host Buffers. Host Master Control will issue two write requests, one for WDATA
+and second for WSTRB at the Host Addresses provided in registers. After pushing
+WDATA & WSTRB is done, User Slave Control will initiate its normal Mode-0
+Operation of completing register updates and giving responses back.
+
+AXI RD transaction:
+Once User Slave Control gets a Read Request, after accepting RD Request, it will
+trigger Host Master Control to fetch RDATA from Host Buffers. Host Master
+Control will issue a read request to fetch RDATA from Host Address provided in
+registers. After fetching RDATA, Host Master Control will place it in the RDATA
+RAM. User Slave Control initiates its normal Mode-0 Operation of giving response
+of Read request.
+
+
+8-g. Interrupt Handler 
+-------------------------
+
+For propagating interrupts from x86 Host to DUT in the FPGA
+and vice-versa, the Master Bridge has provision for generating interrupts.
+Interrupts from Host to the FPGA DUT are called Host to Card (H2C) interrupts
+and from FPGA DUT tox86 Host are called Card to Host (C2H) interrupts.
+
+The H2C interrupts generated by Host can be connected to DUT by using
+h2c_irq_out ports. The software driver needs to program C2H_INTR_REG to generate
+C2H interrupts. The DUT generated interrupts should be connected to c2h_irq_in
+ports. These interrupts can be translated to Legacy/MSI or MSI-X interrupts over
+PCIe controller to Host.
+
+The Bridge also generates interrupts to Host for indicating transaction
+completions. The interrupt handler block streamlines the C2H interrupts and its
+own completion interrupts and forwards to PCIe controller solution. The bridge
+uses "irq_out" to generate interrupts and waits for an acknowledgement "irq_ack"
+before sending the next interrupt. The "irq_ack" is sent by the PCIe controller
+after the "irq_out" translates to a PCIE Legacy interrupt Message TLP on the
+PCIe link.
+
+The interrupt clear and mask registers control enablement and disablement of the
+interrupts as per software's discretion.
+
+
+8-h. Error Handling/Reporting
+-------------------------
+
+Bridge generates Errors in case of following protocol
+violations. 
+
+Incorrect BUSER,BRESP in imm_bresp mode:
+In imm_bresp mode, HW bridge provides BRESP of value 'b00' and BUSER of value of
+AWUSER to DUT immediately after WR request acceptance from DUT.  If SW provides
+the values of BRESP or BUSER other than above two, then HW bridge indicates
+error.  
+
+Incorrect WLAST Assertion:
+If DUT Asserts incorrect WLAST. ( i.e. for a WR transaction, number of wdata
+transfers does not match with awlen)
+
+
+
