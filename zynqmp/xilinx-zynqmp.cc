@@ -61,8 +61,9 @@ xilinx_mio_bank::xilinx_mio_bank(const char *name_in, const char *name_out,
 { }
 
 xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
-				Iremoteport_tlm_sync *sync)
-	: remoteport_tlm(name, -1, sk_descr, sync),
+				Iremoteport_tlm_sync *sync,
+				bool blocking_socket)
+	: remoteport_tlm(name, -1, sk_descr, sync, blocking_socket),
 	  rp_axi_hpm0_fpd("rp_axi_hpm0_fpd"),
 	  rp_axi_hpm1_fpd("rp_axi_hpm1_fpd"),
 	  rp_axi_hpm_lpd("rp_axi_hpm_lpd"),
