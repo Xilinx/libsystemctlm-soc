@@ -32,12 +32,11 @@ You'll then for example get a build of the example-rtl-axi4 example that include
 
 ## Dependencies
 
-You'll need to install a few packages before using this library. First of all, you need to install Accelleras SystemC implementation.
+You'll need to install the following packages:
+`apt-get install gcc g++ verilator libsystemc-dev gtkwave rapidjson-dev python-pytest python-pytest-xdist`
 
-This can be found here:http://www.accellera.org/downloads/standards/systemc
-
-You'll also need these packages:
-`apt-get install gcc g++ verilator gtkwave rapidjson-dev python-pytest python-pytest-xdist`
+On some distros, the libsystemc-dev package may not exist, in that case you'll need to install SystemC manually.
+The SystemC libraries can be found here:http://www.accellera.org/downloads/standards/systemc
 
 To be able to generate the HTML test reports, you'll need to install pytest-html. This may not be available on your distro but can be found with `pip:pip install pytest-html`
 
