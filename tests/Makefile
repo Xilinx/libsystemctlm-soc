@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-include ../.config.mk
+-include ../.config.mk
 
 SUBDIRS_EXAMPLES += example-rtl-axi4
 SUBDIRS_EXAMPLES += example-rtl-axi4lite
