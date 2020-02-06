@@ -567,7 +567,6 @@ public:
 	//
 	enum {
 		QoS_Width 	= Snp::QoS_Width,
-		TgtID_Width 	= NODEID_WIDTH,
 		SrcID_Width 	= NODEID_WIDTH,
 		TxnID_Width 	= Snp::TxnID_Width,
 		FwdNID_Width 	= NODEID_WIDTH,
@@ -585,7 +584,6 @@ public:
 		// Sum of above
 		FLIT_WIDTH =
 			QoS_Width +
-			TgtID_Width +
 			SrcID_Width +
 			TxnID_Width +
 			FwdNID_Width +
