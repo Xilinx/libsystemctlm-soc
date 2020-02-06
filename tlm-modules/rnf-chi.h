@@ -33,7 +33,7 @@ using namespace std;
 #include "traffic-generators/tg-tlm.h"
 #include "tlm-modules/cache-chi.h"
 
-template<int NODE_ID, int SZ_CACHE>
+template<int NODE_ID, int SZ_CACHE, int ICN_ID = 20>
 class RequestNode_F:
 	public sc_core::sc_module
 {
@@ -164,7 +164,7 @@ private:
 	};
 public:
 
-	typedef cache_chi<NODE_ID, SZ_CACHE> cache_chi_t;
+	typedef cache_chi<NODE_ID, SZ_CACHE, ICN_ID> cache_chi_t;
 
 	Port_RN_F port;
 
