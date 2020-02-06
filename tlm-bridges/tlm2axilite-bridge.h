@@ -252,6 +252,8 @@ private:
 	{
 		Transaction tr(trans);
 
+		m_mutex.lock();
+
 		// Since we're going todo waits in order to wiggle the
 		// AXI signals, we need to eliminate the accumulated
 		// TLM delay.
@@ -270,6 +272,8 @@ private:
 		} else {
 			trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
 		}
+
+		m_mutex.unlock();
 	}
 
 	bool read_address_phase(Transaction *rt)
@@ -613,6 +617,8 @@ private:
 
 	sc_fifo<Transaction*> wrDataFifo;
 	sc_fifo<Transaction*> wrResponses;
+
+	sc_mutex m_mutex;
 
 	tlm_aligner *aligner;
 	tlm_utils::simple_initiator_socket<tlm2axilite_bridge> *proxy_init_socket;
