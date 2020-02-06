@@ -262,7 +262,7 @@ public:
 
 	bool IsReqLCrdReturn()
 	{
-		return m_Opcode == Req::ReqLCrdReturn;
+		return m_Opcode == Req::ReqLCrdReturn && m_TxnID == 0;
 	}
 private:
 
@@ -498,6 +498,11 @@ public:
 
 	}
 
+	bool IsLCrdReturn()
+	{
+		return m_Opcode == Rsp::RespLCrdReturn && m_TxnID == 0;
+	}
+
 private:
 	template<typename T>
 	T Extract(sc_bv<FLIT_WIDTH>& flit, unsigned int width)
@@ -645,7 +650,7 @@ public:
 
 	bool IsLCrdReturn()
 	{
-		return m_Opcode == Snp::SnpLCrdReturn;
+		return m_Opcode == Snp::SnpLCrdReturn && m_TxnID == 0;
 	}
 
 	uint8_t GetOpcode() { return m_Opcode; }
@@ -855,6 +860,11 @@ public:
 			<< ", m_Poison: 0x" << static_cast<uint32_t>(m_Poison)
 
 			<< " } ";
+	}
+
+	bool IsLCrdReturn()
+	{
+		return m_Opcode == Dat::DataLCrdReturn && m_TxnID == 0;
 	}
 
 private:

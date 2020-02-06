@@ -1863,6 +1863,11 @@ private:
 		DatFlit_t dat(flit);
 		bool datHandled = false;
 
+		// Ignore L-Credit returns
+		if (dat.IsLCrdReturn()) {
+			return;
+		}
+
 		if (!dat.IsSnoopResponse()) {
 			ITxn *t = GetTxnWithIDs(dat.GetTgtID(), dat.GetTxnID());
 
@@ -1923,6 +1928,11 @@ private:
 		RspFlit_t rsp(flit);
 		bool rspHandled = false;
 
+		// Ignore L-Credit returns
+		if (rsp.IsLCrdReturn()) {
+			return;
+		}
+
 		if (!rsp.IsSnoopResponse()) {
 			ITxn *t = GetTxnWithIDs(rsp.GetTgtID(), rsp.GetTxnID());
 
@@ -1974,6 +1984,11 @@ private:
 		bool datHandled = false;
 		ITxn *t = m_txn[dat.GetTxnID()];
 
+		// Ignore L-Credit returns
+		if (dat.IsLCrdReturn()) {
+			return;
+		}
+
 		if (t) {
 			datHandled = t->HandleRxDat(dat);
 			if (t->Done()) {
@@ -2008,6 +2023,11 @@ private:
 		RspFlit_t rsp(flit);
 		bool rspHandled = false;
 		ITxn *t;
+
+		// Ignore L-Credit returns
+		if (rsp.IsLCrdReturn()) {
+			return;
+		}
 
 		//
 		// Ignore PCrdGrant
@@ -2624,6 +2644,12 @@ private:
 		sc_bv<T::TXREQ_FLIT_W> flit = txreqflit.read();
 		ReqFlit_t *req = new ReqFlit_t(flit);
 		uint8_t txnID = req->GetTxnID();
+
+		// Ignore L-Credit returns
+		if (req->IsReqLCrdReturn()) {
+			delete req;
+			return;
+		}
 
 		if (req->GetAllowRetry()) {
 			m_txn[txnID] = req;
