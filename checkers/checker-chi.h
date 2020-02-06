@@ -1263,6 +1263,9 @@ private:
 			bool rspHandled = false;
 
 			if (m_gotDBID == false && rsp.IsDBIDResp()) {
+
+				m_gotDBID = true;
+
 				// Store for WriteData
 				this->SetHomeNID(rsp.GetSrcID());
 				this->SetHomeNIDValid(true);
