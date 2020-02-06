@@ -148,7 +148,7 @@ namespace DVM
 	enum {
 		CmdShift = 12,
 		CmdMask = 0x7,
-		CompletionShift = 12,
+		CompletionShift = 15,
 
 		CompletionBit = 1 << CompletionShift,
 
