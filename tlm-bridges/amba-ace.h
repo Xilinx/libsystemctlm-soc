@@ -153,6 +153,7 @@ namespace DVM
 		CompletionBit = 1 << CompletionShift,
 
 		CmdBranchPredictorInv = 0x1,
+		CmdVirtInstCacheInv = 0x3,
 		CmdSync = 0x4,
 		CmdHint = 0x6,
 	};
