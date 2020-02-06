@@ -200,6 +200,7 @@ public:
 	void EnableDebug() { m_gen.enableDebug(); }
 
 	cache_chi_t& GetCache() { return m_cache; }
+	TLMTrafficGenerator& GetTrafficGenerator() { return m_gen; }
 
 private:
 	TLMTrafficGenerator m_gen;
