@@ -1707,9 +1707,10 @@ private:
 
 		m_genattr->set_secure(false);
 		m_genattr->set_modifiable(true);
-		m_genattr->set_barrier(true);
+		m_genattr->set_barrier(false);
 		m_genattr->set_domain(Domain::Inner);
 		m_genattr->set_snoop(AR::DVMComplete);
+		m_genattr->set_transaction_id(0xBB);
 
 		//
 		// m_dvm_complete_gp will delete genattr
