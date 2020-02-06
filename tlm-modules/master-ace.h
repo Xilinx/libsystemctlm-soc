@@ -128,6 +128,7 @@ public:
 		m_cache.create_nonshareable_region(start, len);
 	}
 
+	TLMTrafficGenerator& GetTrafficGenerator() { return m_gen; }
 private:
 	TLMTrafficGenerator m_gen;
 	BarrierProcesser m_barrier_processer;
