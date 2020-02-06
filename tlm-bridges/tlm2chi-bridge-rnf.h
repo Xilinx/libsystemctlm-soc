@@ -236,6 +236,11 @@ public:
 			m_RxSnpChannel.Deactivated();
 	}
 
+	void SetPortState(LinkState state)
+	{
+		m_PortState.SetState(state);
+	}
+
 private:
 
 	virtual void b_transport_txreq(tlm::tlm_generic_payload& trans,

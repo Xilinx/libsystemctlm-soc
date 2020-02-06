@@ -423,9 +423,15 @@ public:
 		txlinkactiveack(bridge->txlinkactiveack),
 		rxlinkactivereq(bridge->rxlinkactivereq),
 		rxlinkactiveack(bridge->rxlinkactiveack),
+		m_state(Run),
 		m_bridge(bridge)
 	{
 		SC_THREAD(state_thread);
+	}
+
+	void SetState(LinkState state)
+	{
+		m_state = state;
 	}
 
 private:
@@ -499,10 +505,16 @@ private:
 				//
 				// Always try to have link in run state
 				//
-				txlinkactivereq.write(true);
+				if (m_state == Run) {
+					txlinkactivereq.write(true);
+				}
 
 				break;
 			case Run:
+				if (m_state == Stop) {
+					deactivateTx = true;
+				}
+
 				if (deactivateTx) {
 					txlinkactivereq.write(false);
 					deactivateTx = false;
@@ -528,6 +540,8 @@ private:
 
 	sc_in<bool >&  rxlinkactivereq;
 	sc_out<bool >& rxlinkactiveack;
+
+	LinkState m_state;
 
 	T *m_bridge;
 };

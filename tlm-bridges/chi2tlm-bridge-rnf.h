@@ -233,6 +233,11 @@ public:
 			m_RxDatChannel.Deactivated();
 	}
 
+	void SetPortState(LinkState state)
+	{
+		m_PortState.SetState(state);
+	}
+
 private:
 
 	virtual void b_transport_txrsp(tlm::tlm_generic_payload& trans,
