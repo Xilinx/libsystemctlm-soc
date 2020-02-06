@@ -40,7 +40,7 @@ for VFIO usage. We'll need to pass the Device ID which you can find in
 the output of lspci:
 
 ```
-modprobe vfio-pci
+modprobe vfio-pci nointxmask=1
 echo 10ee 903f > /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
