@@ -105,11 +105,6 @@ public:
 private:
 	void tx_thread()
 	{
-		//
-		// Always asserted, 13.4 [1]
-		//
-		flitpend.write(true);
-
 		while (true) {
 
 			wait(clk.posedge_event() | resetn.negedge_event());
@@ -126,7 +121,6 @@ private:
 				continue;
 			}
 
-			flitpend.write(false);
 			flitv.write(false);
 
 			if (lcrdv.read()) {
@@ -138,6 +132,11 @@ private:
 				// Collect credits but do not transmit
 				//
 				continue;
+			} else if (GetLinkState() == Run) {
+				//
+				// Always asserted, 13.4 [1]
+				//
+				flitpend.write(true);
 			}
 
 			//
@@ -170,6 +169,10 @@ private:
 
 				flitv.write(true);
 				m_credits--;
+
+				if (m_credits == 0) {
+					flitpend.write(false);
+				}
 			}
 		}
 	}
