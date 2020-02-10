@@ -92,6 +92,17 @@ public:
 
 	ACEPort_M m_ace_port;
 
+	ACEMaster(sc_core::sc_module_name name,
+				WritePolicy write_policy = WriteBack) :
+		sc_module(name),
+		m_ace_port("m-ace-port"),
+		m_gen("gen", 1),
+		m_barrier_processer("barrier-processer"),
+		m_cache("ace-cache", write_policy)
+	{
+		ConnectSockets();
+	}
+
 	template<typename T>
 	ACEMaster(sc_core::sc_module_name name, T& transfers,
 				WritePolicy write_policy = WriteBack) :
@@ -104,14 +115,7 @@ public:
 		// Configure generator
 		m_gen.addTransfers(transfers, 0);
 
-		// TLMTrafficGenerator -> barrier processer
-		m_gen.socket.bind(m_barrier_processer.target_socket);
-
-		// barrier processer -> cache
-		m_barrier_processer.init_socket.bind(m_cache.target_socket);
-
-		// Connect the cache with the port
-		m_ace_port.bind_upstream(m_cache);
+		ConnectSockets();
 	}
 
 	template<typename T>
@@ -130,6 +134,19 @@ public:
 
 	TLMTrafficGenerator& GetTrafficGenerator() { return m_gen; }
 private:
+
+	void ConnectSockets()
+	{
+		// TLMTrafficGenerator -> barrier processer
+		m_gen.socket.bind(m_barrier_processer.target_socket);
+
+		// barrier processer -> cache
+		m_barrier_processer.init_socket.bind(m_cache.target_socket);
+
+		// Connect the cache with the port
+		m_ace_port.bind_upstream(m_cache);
+	}
+
 	TLMTrafficGenerator m_gen;
 	BarrierProcesser m_barrier_processer;
 	cache_ace<SZ_CACHE, SZ_CACHELINE> m_cache;
