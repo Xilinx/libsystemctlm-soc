@@ -162,11 +162,29 @@ private:
 		tlm_utils::simple_initiator_socket<Port_RN_F> m_rxdat_init_socket;
 		tlm_utils::simple_initiator_socket<Port_RN_F> m_rxsnp_init_socket;
 	};
+
+	void ConnectSockets()
+	{
+		// TLMTrafficGenerator -> cache
+		m_gen.socket.bind(m_cache.target_socket);
+
+		// Connect the cache with the port
+		port.bind_upstream(m_cache);
+	}
 public:
 
 	typedef cache_chi<NODE_ID, SZ_CACHE, ICN_ID> cache_chi_t;
 
 	Port_RN_F port;
+
+	RequestNode_F(sc_core::sc_module_name name) :
+		sc_module(name),
+		port("port-RN-F"),
+		m_gen("gen", 1),
+		m_cache("cache-chi")
+	{
+		ConnectSockets();
+	}
 
 	template<typename T>
 	RequestNode_F(sc_core::sc_module_name name, T& transfers) :
@@ -178,11 +196,7 @@ public:
 		// Configure generator
 		m_gen.addTransfers(transfers, 0);
 
-		// TLMTrafficGenerator -> cache
-		m_gen.socket.bind(m_cache.target_socket);
-
-		// Connect the cache with the port
-		port.bind_upstream(m_cache);
+		ConnectSockets();
 	}
 
 	template<typename T>
