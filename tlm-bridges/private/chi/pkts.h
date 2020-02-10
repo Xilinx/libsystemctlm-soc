@@ -142,6 +142,17 @@ public:
 	{
 		sc_bv<FLIT_WIDTH> tmp;
 
+		CreateFlit(tmp);
+
+		flit.write(tmp);
+
+		m_flitDone = true;
+	}
+
+	void CreateFlit(sc_bv<FLIT_WIDTH>& flit)
+	{
+		sc_bv<FLIT_WIDTH> tmp;
+
 		if (m_chiattr) {
 			assert(m_pos == 0);
 
@@ -187,9 +198,7 @@ public:
 			}
 		}
 
-		flit.write(tmp);
-
-		m_flitDone = true;
+		flit = tmp;
 	}
 
 	bool Done() { return m_flitDone; }
@@ -463,6 +472,17 @@ public:
 	{
 		sc_bv<FLIT_WIDTH> tmp;
 
+		CreateFlit(tmp);
+
+		flit.write(tmp);
+
+		m_flitDone = true;
+	}
+
+	void CreateFlit(sc_bv<FLIT_WIDTH>& flit)
+	{
+		sc_bv<FLIT_WIDTH> tmp;
+
 		if (m_chiattr) {
 			assert(m_pos == 0);
 
@@ -482,9 +502,7 @@ public:
 			Set(tmp, m_chiattr->GetTraceTag(), TraceTag_Width);
 		}
 
-		flit.write(tmp);
-
-		m_flitDone = true;
+		flit = tmp;
 	}
 
 	bool Done() { return m_flitDone; }
@@ -671,6 +689,17 @@ public:
 	{
 		sc_bv<FLIT_WIDTH> tmp;
 
+		CreateFlit(tmp);
+
+		flit.write(tmp);
+
+		m_flitDone = true;
+	}
+
+	void CreateFlit(sc_bv<FLIT_WIDTH>& flit)
+	{
+		sc_bv<FLIT_WIDTH> tmp;
+
 		if (m_chiattr) {
 			assert(m_pos == 0);
 
@@ -690,9 +719,7 @@ public:
 			Set(tmp, m_chiattr->GetTraceTag(), TraceTag_Width);
 		}
 
-		flit.write(tmp);
-
-		m_flitDone = true;
+		flit = tmp;
 	}
 
 	bool Done() { return m_flitDone; }
@@ -901,6 +928,24 @@ public:
 	{
 		sc_bv<FLIT_WIDTH> tmp;
 
+		CreateFlit(tmp);
+
+		flit.write(tmp);
+
+		m_sent += Data_Width / 8;
+
+		if (m_sent >= m_gp->get_data_length()) {
+			//
+			// All transmitted
+			//
+			m_flitDone = true;
+		}
+	}
+
+	void CreateFlit(sc_bv<FLIT_WIDTH>& flit)
+	{
+		sc_bv<FLIT_WIDTH> tmp;
+
 		if (m_chiattr) {
 			uint8_t dataID = m_sent / (Data_Width/8);
 
@@ -939,16 +984,7 @@ public:
 			}
 		}
 
-		flit.write(tmp);
-
-		m_sent += Data_Width / 8;
-
-		if (m_sent >= m_gp->get_data_length()) {
-			//
-			// All transmitted
-			//
-			m_flitDone = true;
-		}
+		flit = tmp;
 	}
 
 	bool Done()
