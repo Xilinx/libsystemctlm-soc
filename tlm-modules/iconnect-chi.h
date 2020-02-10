@@ -634,6 +634,16 @@ private:
 				tracker->ReceivedBytes(n);
 				tracker->SetResp(chiattr->GetResp());
 
+				//
+				// Consider data as received if all data (1
+				// cache line) has been collected from 1
+				// snooped RN-F.
+				//
+				if (tracker->ReceivedData()) {
+					m_gp->set_data_length(CACHELINE_SZ);
+					m_gp->set_byte_enable_length(CACHELINE_SZ);
+				}
+
 				if (chiattr->GetOpcode() ==
 					Dat::SnpRespDataPtl) {
 					m_isSnpDataPtl = true;
