@@ -737,7 +737,8 @@ template<
 	int NODEID_WIDTH,
 	int RSVDC_WIDTH,
 	int DATACHECK_WIDTH,
-	int POISON_WIDTH>
+	int POISON_WIDTH,
+	int DAT_OPCODE_WIDTH>
 class DatFlit
 {
 public:
@@ -750,7 +751,7 @@ public:
 		SrcID_Width 	= NODEID_WIDTH,
 		TxnID_Width 	= Dat::TxnID_Width,
 		HomeNID_Width 	= NODEID_WIDTH,
-		Opcode_Width 	= Dat::Opcode_Width,
+		Opcode_Width 	= DAT_OPCODE_WIDTH,
 		RespErr_Width 	= Dat::RespErr_Width,
 		Resp_Width 	= Dat::Resp_Width,
 

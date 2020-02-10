@@ -55,14 +55,16 @@ template<				\
 	int NODEID_WIDTH,		\
 	int RSVDC_WIDTH,		\
 	int DATACHECK_WIDTH,		\
-	int POISON_WIDTH>		\
+	int POISON_WIDTH,		\
+	int DAT_OPCODE_WIDTH>		\
 void SignalGen< 			\
 		DATA_WIDTH,		\
 		ADDR_WIDTH,		\
 		NODEID_WIDTH,		\
 		RSVDC_WIDTH,		\
 		DATACHECK_WIDTH,	\
-		POISON_WIDTH>::		\
+		POISON_WIDTH,		\
+		DAT_OPCODE_WIDTH>::		\
 run()					\
 {					\
 	TS<SigGenT> suite(this);	\
@@ -75,7 +77,8 @@ template<
 	int NODEID_WIDTH = 7,
 	int RSVDC_WIDTH = 32,
 	int DATACHECK_WIDTH = 64,
-	int POISON_WIDTH = 8>
+	int POISON_WIDTH = 8,
+	int DAT_OPCODE_WIDTH = Dat::Opcode_Width>
 class SignalGen : public sc_core::sc_module
 {
 public:
@@ -86,7 +89,8 @@ public:
 			NODEID_WIDTH,
 			RSVDC_WIDTH,
 			DATACHECK_WIDTH,
-			POISON_WIDTH> SigGenT;
+			POISON_WIDTH,
+			DAT_OPCODE_WIDTH> SigGenT;
 
 	enum {
 		DATA_W = DATA_WIDTH,
@@ -110,7 +114,8 @@ public:
 			NODEID_WIDTH,
 			RSVDC_WIDTH,
 			DATACHECK_WIDTH,
-			POISON_WIDTH> DatPkt_t;
+			POISON_WIDTH,
+			DAT_OPCODE_WIDTH> DatPkt_t;
 
 	enum {
 		TXREQ_FLIT_W = ReqPkt_t::FLIT_WIDTH,

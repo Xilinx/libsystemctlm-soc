@@ -43,7 +43,8 @@ template<
 	int NODEID_WIDTH = 7,
 	int RSVDC_WIDTH = 32,
 	int DATACHECK_WIDTH = 64,
-	int POISON_WIDTH = 8>
+	int POISON_WIDTH = 8,
+	int DAT_OPCODE_WIDTH = Dat::Opcode_Width>
 class CHIProtocolChecker : public sc_core::sc_module
 {
 public:
@@ -53,7 +54,8 @@ public:
 				NODEID_WIDTH,
 				RSVDC_WIDTH,
 				DATACHECK_WIDTH,
-				POISON_WIDTH> PCType;
+				POISON_WIDTH,
+				DAT_OPCODE_WIDTH> PCType;
 
 	typedef CHECKERS::ReqFlit< ADDR_WIDTH,
 			NODEID_WIDTH,
@@ -68,7 +70,8 @@ public:
 			NODEID_WIDTH,
 			RSVDC_WIDTH,
 			DATACHECK_WIDTH,
-			POISON_WIDTH> DatFlit_t;
+			POISON_WIDTH,
+			DAT_OPCODE_WIDTH> DatFlit_t;
 
 	enum {
 		TXREQ_FLIT_W = ReqFlit_t::FLIT_WIDTH,

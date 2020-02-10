@@ -223,6 +223,9 @@ namespace Dat {
 		CCID_Width = 2,
 		DataID_Width = 2,
 		TraceTag_Width = 1,
+
+		// Width prior Issue C
+		Opcode_Width_3 = 3,
 	};
 };
 

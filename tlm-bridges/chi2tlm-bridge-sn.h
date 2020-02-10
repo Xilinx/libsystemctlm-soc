@@ -35,7 +35,8 @@ template<
 	int NODEID_WIDTH = 7,
 	int RSVDC_WIDTH = 32,
 	int DATACHECK_WIDTH = 64,
-	int POISON_WIDTH = 8>
+	int POISON_WIDTH = 8,
+	int DAT_OPCODE_WIDTH = Dat::Opcode_Width>
 class chi2tlm_bridge_sn :
 	public sc_core::sc_module
 {
@@ -45,7 +46,8 @@ public:
 				NODEID_WIDTH,
 				RSVDC_WIDTH,
 				DATACHECK_WIDTH,
-				POISON_WIDTH> chi2tlm_bridge_sn_t;
+				POISON_WIDTH,
+				DAT_OPCODE_WIDTH> chi2tlm_bridge_sn_t;
 
 	typedef BRIDGES::ReqPkt< ADDR_WIDTH,
 			NODEID_WIDTH,
@@ -60,7 +62,8 @@ public:
 			NODEID_WIDTH,
 			RSVDC_WIDTH,
 			DATACHECK_WIDTH,
-			POISON_WIDTH> DatPkt_t;
+			POISON_WIDTH,
+			DAT_OPCODE_WIDTH> DatPkt_t;
 	enum {
 		RXREQ_FLIT_WIDTH = ReqPkt_t::FLIT_WIDTH,
 		RXDAT_FLIT_WIDTH = DatPkt_t::FLIT_WIDTH,
