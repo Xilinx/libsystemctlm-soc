@@ -2684,7 +2684,8 @@ private:
 			m_port_RN_F(port_RN_F),
 			m_ids(ids),
 			m_ongoingTxn(ongoingTxn),
-			m_txnProcessor(txnProcessor)
+			m_txnProcessor(txnProcessor),
+			m_DCT_enabled(true)
 		{}
 
 		void ProcessReq(ReqTxn *req)
@@ -2701,8 +2702,13 @@ private:
 				// Do DCT only to one port and Exclusive don't
 				// allow DCT 6.3.1 [1]
 				//
-				bool allowsSnpFwd =
-					ports.size() == 1 && !req->GetExcl();
+				bool allowsSnpFwd = false;
+
+				if (m_DCT_enabled) {
+					allowsSnpFwd =
+						ports.size() == 1 &&
+						!req->GetExcl();
+				}
 
 				for (it = ports.begin(); it != ports.end(); it++) {
 					SnpMsg *snp = new SnpMsg(req,
@@ -2910,6 +2916,7 @@ private:
 			}
 		}
 
+		void EnableDCT(bool enable) { m_DCT_enabled = enable; }
 	private:
 		Port_RN_F **m_port_RN_F;
 
@@ -2917,6 +2924,8 @@ private:
 		ReqTxn **m_ongoingTxn;
 
 		TxnProcessor& m_txnProcessor;
+
+		bool m_DCT_enabled;
 	};
 
 	class ExclusiveMonitor
@@ -3140,6 +3149,8 @@ public:
 			0x0,
 			TxnIDs::NumIDs * sizeof(m_ongoingTxn[0]));
 	}
+
+	void EnableDCT(bool enable) { m_poc.EnableDCT(enable); }
 
 	virtual ~iconnect_chi()
 	{
