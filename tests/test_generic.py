@@ -55,9 +55,9 @@ pc_chi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/checkers/chi/"), '*-test')
 tests_pc_chi = ['./checkers/chi/{0}'.format(i) for i in pc_chi_tests]
 
-hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/"), '*-test-pcie-master')
-hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/"), '*-test-pcie-slave')
-hwb_axi_tests = ['./rtl-bridges/{0}'.format(i) for i in hwb_axi_testnames]
+hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-master')
+hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-slave')
+hwb_axi_tests = ['./rtl-bridges/axi/{0}'.format(i) for i in hwb_axi_testnames]
 
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):

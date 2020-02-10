@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
--include ../../.config.mk
-include ../Rules.mk
+-include ../../../.config.mk
+include ../../Rules.mk
 
 VFLAGS =-Wno-fatal --pins-bv 2 --sc
 VFLAGS += --unroll-count 100000
@@ -51,13 +51,13 @@ AXI3_SLAVE_TOP = axi3_slave
 CPPFLAGS += -I $(VOBJ_DIR)
 CPPFLAGS += -I $(VERILATOR_ROOT)/include
 
-CPPFLAGS += -I ../../ -I ../ -I .
+CPPFLAGS += -I ../../../ -I ../../ -I .
 CXXFLAGS += -Wall -O3 -g
 
-OBJS_COMMON += ../test-modules/memory.o
-OBJS_COMMON += ../../trace/trace.o
+OBJS_COMMON += ../../test-modules/memory.o
+OBJS_COMMON += ../../../trace/trace.o
 
-RTL_BRIDGE_AXI_DIR = ../../rtl-bridges/pcie-host/axi/rtl/
+RTL_BRIDGE_AXI_DIR = ../../../rtl-bridges/pcie-host/axi/rtl/
 
 include $(RTL_BRIDGE_AXI_DIR)/common/files-bridge-axi-common.mk
 
@@ -171,7 +171,7 @@ test-pcie-axi4-slave-cdma-vfio: $(TEST_PCIE_AXI4_SLAVE_CDMA_VFIO_OBJS) $(OBJS_CO
 test-pcie-axi4-master-vfio: $(TEST_PCIE_AXI4_MASTER_VFIO_OBJS) $(OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
-GEN_FLAGS=../traffic-generators/gen-axi-tg-test-cflags.py
+GEN_FLAGS=../../traffic-generators/gen-axi-tg-test-cflags.py
 
 .PRECIOUS: %-test-pcie-master.o
 .PRECIOUS: %-test-pcie-slave.o
