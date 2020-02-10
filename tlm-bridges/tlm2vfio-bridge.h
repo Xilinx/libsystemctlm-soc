@@ -123,7 +123,8 @@ public:
 	SC_HAS_PROCESS(tlm2vfio_bridge);
 	tlm2vfio_bridge(sc_module_name name, int nr_sockets,
 			class vfio_dev& dev,
-			int region, uint64_t offset = 0);
+			int region, uint64_t offset = 0,
+			bool handle_irq = true);
 	void irq_poll(void);
 
 	// FIXME: How many lines should we expose?
@@ -136,7 +137,10 @@ private:
 	async_event event;
 	bool irq_val;
 	pthread_t thread;
-	pthread_mutex_t mutex;
+	static pthread_mutex_t mutex;
+	static bool mutex_initiated;
+	sc_signal<bool> irq_dummy;
+	bool handle_irq;
 
 	void irq_proxy(void);
 	void irq_ack(void);
@@ -145,7 +149,12 @@ private:
 			sc_time& delay);
 	virtual bool get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
 			tlm::tlm_dmi& dmi_data);
+
+	void before_end_of_elaboration();
 };
+
+pthread_mutex_t tlm2vfio_bridge::mutex;
+bool tlm2vfio_bridge::mutex_initiated = false;
 
 static void *poll_trampoline(void *arg) {
 	class tlm2vfio_bridge *b = (class tlm2vfio_bridge *)(arg);
@@ -157,7 +166,8 @@ static void *poll_trampoline(void *arg) {
 tlm2vfio_bridge::tlm2vfio_bridge(sc_module_name name,
 		int nr_sockets,
 		class vfio_dev& dev,
-		int region, uint64_t offset) :
+		int region, uint64_t offset,
+		bool handle_irq) :
 	sc_module(name),
 	tgt_socket("tgt-socket", nr_sockets),
 	irq("irq"),
@@ -165,7 +175,9 @@ tlm2vfio_bridge::tlm2vfio_bridge(sc_module_name name,
 	offset(offset),
 	region(region),
 	event("ev"),
-	irq_val(false)
+	irq_val(false),
+	irq_dummy("irq-dummy"),
+	handle_irq(handle_irq)
 {
 	unsigned int i;
 
@@ -176,10 +188,15 @@ tlm2vfio_bridge::tlm2vfio_bridge(sc_module_name name,
 				&tlm2vfio_bridge::get_direct_mem_ptr);
 	}
 
-	SC_THREAD(irq_proxy);
+	if (!tlm2vfio_bridge::mutex_initiated) {
+		pthread_mutex_init(&tlm2vfio_bridge::mutex, NULL);
+		tlm2vfio_bridge::mutex_initiated = true;
+	}
 
-	pthread_mutex_init(&mutex, NULL);
-	pthread_create(&thread, NULL, poll_trampoline, this);
+	if (handle_irq) {
+		SC_THREAD(irq_proxy);
+		pthread_create(&thread, NULL, poll_trampoline, this);
+	}
 }
 
 void tlm2vfio_bridge::irq_proxy(void)
@@ -192,13 +209,13 @@ void tlm2vfio_bridge::irq_proxy(void)
 
 void tlm2vfio_bridge::irq_ack(void)
 {
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&tlm2vfio_bridge::mutex);
 	if (irq_val) {
 		irq_val = 0;
 		dev.unmask_irq(VFIO_PCI_INTX_IRQ_INDEX, 0);
 		event.notify(SC_ZERO_TIME);
 	}
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&tlm2vfio_bridge::mutex);
 }
 
 void tlm2vfio_bridge::irq_poll(void)
@@ -214,10 +231,10 @@ void tlm2vfio_bridge::irq_poll(void)
 				printf("eventfd-irq: %s\n", strerror(errno));
 				SC_REPORT_WARNING("tlm2vfio", "read-irq");
 			}
-			pthread_mutex_lock(&mutex);
+			pthread_mutex_lock(&tlm2vfio_bridge::mutex);
 			irq_val = true;
 			event.notify();
-			pthread_mutex_unlock(&mutex);
+			pthread_mutex_unlock(&tlm2vfio_bridge::mutex);
 		} while (ret == sizeof c);
 		SC_REPORT_WARNING("tlm2vfio", "read-irq");
         }
@@ -281,5 +298,14 @@ bool tlm2vfio_bridge::get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
 	dmi_data.set_read_latency(SC_ZERO_TIME);
 	dmi_data.set_write_latency(SC_ZERO_TIME);
 	return true;
+}
+
+void tlm2vfio_bridge::before_end_of_elaboration()
+{
+	assert(tlm2vfio_bridge::mutex_initiated);
+
+	if (!handle_irq) {
+		irq(irq_dummy);
+	}
 }
 #endif
