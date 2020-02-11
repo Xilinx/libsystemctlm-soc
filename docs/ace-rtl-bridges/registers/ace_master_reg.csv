@@ -1,0 +1,269 @@
+Register Name,Address Offset,Type,Reset Value,Description,Note
+,,,,,
+General Config and Status,,,,,
+BRIDGE_IDENTIFICATION_REG,0x0,ro,0xC3A89FE1,Unique number for Bridge Identification,
+BRIDGE_POSITION_REG,0x4,ro,0x0,To Indicate that current bridge is the Last bridge in the design,0x1 = To show this is the last bridge; 0x0 = To show there are still bridges connected to next offset
+VERSION_REG,0x20,ro,0x0100,Bridge IP version,
+BRIDGE_TYPE_REG,0x24,ro,NA ,Type of Bridge ,The reset value changes based on design parameters
+MODE_SELECT_REG,0x38,rw,0x0,Mode Selection,
+RESET_REG,0x3C,rw,0xFFFF,Reset Register,
+H2C_INTR_0_REG,0x40,rw,0x0,Host to Card Interrupt Generation,
+H2C_INTR_1_REG,0x44,rw,0x0,Host to Card Interrupt Generation,
+H2C_INTR_2_REG,0x48,rw,0x0,Host to Card Interrupt Generation,
+H2C_INTR_3_REG,0x4C,rw,0x0,Host to Card Interrupt Generation,
+C2H_INTR_STATUS_0_REG,0x60,ro,0x0,Card to Host Interrupt Status,
+INTR_C2H_TOGGLE_STATUS_0_REG,0x64,ro,0x0,To indicate any change in C2H INTR status bits. ,For every change 0->1 or 1->0 respective bits will be asserted to 1
+INTR_C2H_TOGGLE_CLEAR_0_REG,0x68,w1sraz,0x0,Card to Host Interrupt Toggle Clear,
+INTR_C2H_TOGGLE_ENABLE_0_REG,0x6C,rw,0x0,Card to Host Interrupt Toggle Enable,
+C2H_INTR_STATUS_1_REG,0x70,ro,0x0,Card to Host Interrupt Status,
+INTR_C2H_TOGGLE_STATUS_1_REG,0x74,ro,0x0,To indicate any change in C2H INTR status bits. ,For every change 0->1 or 1->0 respective bits will be asserted to 1
+INTR_C2H_TOGGLE_CLEAR_1_REG,0x78,w1sraz,0x0,Card to Host Interrupt Toggle Clear,
+INTR_C2H_TOGGLE_ENABLE_1_REG,0x7C,rw,0x0,Card to Host Interrupt Toggle Enable,
+C2H_GPIO_0_REG,0x80,ro,0x0,To monitor 32-bit GPIO from FPGA,"Currently, only register-0 to register-7  are valid. Other registers are for future enhacement"
+C2H_GPIO_1_REG,0x84,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_2_REG,0x88,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_3_REG,0x8C,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_4_REG,0x90,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_5_REG,0x94,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_6_REG,0x98,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_7_REG,0x9C,ro,0x0,To monitor 32-bit GPIO from FPGA,
+C2H_GPIO_8_REG,0xA0,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_9_REG,0xA4,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_10_REG,0xA8,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_11_REG,0xAC,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_12_REG,0xB0,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_13_REG,0xB4,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_14_REG,0xB8,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+C2H_GPIO_15_REG,0xBC,ro,0x0,To monitor 32-bit GPIO from FPGA,Reserved for future use.
+H2C_GPIO_0_REG,0xC0,rw,0x0,To send 32-bit GPIO to FPGA,"Currently, only register-0 to register-7  are valid. Other registers are for future enhacement"
+H2C_GPIO_1_REG,0xC4,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_2_REG,0xC8,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_3_REG,0xCC,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_4_REG,0xD0,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_5_REG,0xD4,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_6_REG,0xD8,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_7_REG,0xDC,rw,0x0,To send 32-bit GPIO to FPGA,
+H2C_GPIO_8_REG,0xE0,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_9_REG,0xE4,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_10_REG,0xE8,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_11_REG,0xEC,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_12_REG,0xF0,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_13_REG,0xF4,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_14_REG,0xF8,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_GPIO_15_REG,0xFC,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+,,,,,
+Protocol Specific Registers,,,,,
+BRIDGE_CONFIG_REG,0x200,ro,NA,Bridge Capability Register,The reset value changes based on design parameters
+INTR_STATUS_REG,0x208,ro,0x0,Interrupt Status Register,
+INTR_ERROR_STATUS_REG,0x20C,ro,0x0,Bridge error Interrupt Status,
+INTR_ERROR_CLEAR_REG,0x210,w1sraz,0x0,Bridge error Interrupt Clear. ,
+INTR_ERROR_ENABLE_REG,0x214,rw,0x0,Bridge error Interrupt Enable,
+BRIDGE_RD_USER_CONFIG_REG,0x218,ro,NA,Bridge User width configugration,The reset value changes based on design parameters
+BRIDGE_WR_USER_CONFIG_REG,0x21C,ro,NA,Bridge User width configugration,The reset value changes based on design parameters
+RD_MAX_DESC_REG,0x220,ro,NA,Maximum number of Descriptor supported by the Bridge,The reset value changes based on design parameters
+WR_MAX_DESC_REG,0x224,ro,NA,Maximum number of Descriptor supported by the Bridge,The reset value changes based on design parameters
+SN_MAX_DESC_REG,0x228,ro,NA,Maximum number of Descriptor supported by the Bridge,The reset value changes based on design parameters
+,,,,,
+RD_REQ_FIFO_PUSH_DESC_REG,0x300,w1sraz,0x0,FIFO register,
+RD_REQ_FIFO_FREE_LEVEL_REG,0x304,ro,0x10,FIFO free level,
+RD_REQ_INTR_COMP_STATUS_REG,0x308,ro,0x0,Completion Interrupt Status,
+RD_REQ_INTR_COMP_CLEAR_REG,0x30C,w1sraz,0x0,Completion Interrupt Clear. ,
+RD_REQ_INTR_COMP_ENABLE_REG,0x310,rw,0x0,Completion Interrupt Enable,
+RD_RESP_FREE_DESC_REG,0x314,w1sraz,0x0,Freeup descriptor. ,"PS[R] =PS_DYNAMIC + Tsize * [R-1]
+Where, PS_DYNAMIC is fixed at 0x300"
+RD_RESP_FIFO_POP_DESC_REG,0x318,ro,0x0,FIFO register,
+RD_RESP_FIFO_FILL_LEVEL_REG,0x31C,ro,0x0,FIFO fill level,
+,,,,,
+WR_REQ_FIFO_PUSH_DESC_REG,0x320,w1sraz,0x0,FIFO register,
+WR_REQ_FIFO_FREE_LEVEL_REG,0x324,ro,0x10,FIFO free level,
+WR_REQ_INTR_COMP_STATUS_REG,0x328,ro,0x0,Completion Interrupt Status,
+WR_REQ_INTR_COMP_CLEAR_REG,0x32C,w1sraz,0x0,Completion Interrupt Clear. ,
+WR_REQ_INTR_COMP_ENABLE_REG,0x330,rw,0x0,Completion Interrupt Enable,
+WR_RESP_FREE_DESC_REG,0x334,w1sraz,0x0,Freeup descriptor. ,"PS[R] =PS_DYNAMIC + Tsize * [R-1]
+Where, PS_DYNAMIC is fixed at 0x300"
+WR_RESP_FIFO_POP_DESC_REG,0x338,ro,0x0,FIFO register,
+WR_RESP_FIFO_FILL_LEVEL_REG,0x33C,ro,0x0,FIFO fill level,
+,,,,,
+SN_REQ_FREE_DESC_REG,0x340,w1sraz,0x0,Freeup descriptor. ,
+SN_REQ_FIFO_POP_DESC_REG,0x344,ro,0x0,FIFO register,
+SN_REQ_FIFO_FILL_LEVEL_REG,0x348,ro,0x0,FIFO fill level,
+SN_RESP_FIFO_PUSH_DESC_REG,0x34C,w1sraz,0x0,FIFO register,
+SN_RESP_FIFO_FREE_LEVEL_REG,0x350,ro,0x10,FIFO free level,
+SN_RESP_INTR_COMP_STATUS_REG,0x354,ro,0x0,Completion Interrupt Status,
+SN_RESP_INTR_COMP_CLEAR_REG,0x358,w1sraz,0x0,Completion Interrupt Clear. ,
+SN_RESP_INTR_COMP_ENABLE_REG,0x35C,rw,0x0,Completion Interrupt Enable,
+SN_DATA_FIFO_PUSH_DESC_REG,0x360,w1sraz,0x0,FIFO register,
+SN_DATA_FIFO_FREE_LEVEL_REG,0x364,ro,0x10,FIFO free level,
+SN_DATA_INTR_COMP_STATUS_REG,0x368,ro,0x0,Completion Interrupt Status,
+SN_DATA_INTR_COMP_CLEAR_REG,0x36C,w1sraz,0x0,Completion Interrupt Clear. ,
+SN_DATA_INTR_COMP_ENABLE_REG,0x370,rw,0x0,Completion Interrupt Enable,
+,,,,,
+INTR_FIFO_ENABLE_REG,0x374,rw,0x0,FIFO Interrupt Enable,
+,,,,,
+Descriptors,,,,,
+RD_REQ_DESC_N_BASE,0x3000 + ( N * 0x100 ),,,"Here, ""N"" is Descriptor Number. There are total MAX_DESC Descriptors available",Currently N = 0 to 15 is supported
+RD_REQ_DESC_N_TXN_TYPE_REG,RD_REQ_DESC_N_BASE + 0x0,rw,0x0,Type Of Transaction,
+RD_REQ_DESC_N_SIZE_REG,RD_REQ_DESC_N_BASE + 0x4,rw,0x0,Size Of Transaction in Bytes,
+RD_REQ_DESC_N_AXSIZE_REG,RD_REQ_DESC_N_BASE + 0x8,rw,0x0,ACE Size Field,
+RD_REQ_DESC_N_ATTR_REG,RD_REQ_DESC_N_BASE + 0xC,rw,0x0,ACE Attributes,
+RD_REQ_DESC_N_AXADDR_0_REG,RD_REQ_DESC_N_BASE + 0x10,rw,0x0,DUT address (araddr),
+RD_REQ_DESC_N_AXADDR_1_REG,RD_REQ_DESC_N_BASE + 0x14,rw,0x0,DUT address (araddr),
+RD_REQ_DESC_N_AXADDR_2_REG,RD_REQ_DESC_N_BASE + 0x18,rw,0x0,DUT address (araddr),
+RD_REQ_DESC_N_AXADDR_3_REG,RD_REQ_DESC_N_BASE + 0x1C,rw,0x0,DUT address (araddr),
+RD_REQ_DESC_N_AXID_0_REG,RD_REQ_DESC_N_BASE + 0x20,rw,0x0,ACE AXID (arid),"Currently, only register-0 is valid. Other registers are for future enhacement"
+RD_REQ_DESC_N_AXID_1_REG,RD_REQ_DESC_N_BASE + 0x24,rw,0x0,ACE AXID (arid),
+RD_REQ_DESC_N_AXID_2_REG,RD_REQ_DESC_N_BASE + 0x28,rw,0x0,ACE AXID (arid),
+RD_REQ_DESC_N_AXID_3_REG,RD_REQ_DESC_N_BASE + 0x2C,rw,0x0,ACE AXID (arid),
+RD_REQ_DESC_N_AXUSER_0_REG,RD_REQ_DESC_N_BASE + 0x30,rw,0x0,ACE DUT axuser (aruser),"Currently, only register-0 is valid. Other registers are for future enhacement"
+RD_REQ_DESC_N_AXUSER_1_REG,RD_REQ_DESC_N_BASE + 0x34,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_2_REG,RD_REQ_DESC_N_BASE + 0x38,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_3_REG,RD_REQ_DESC_N_BASE + 0x3C,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_4_REG,RD_REQ_DESC_N_BASE + 0x40,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_5_REG,RD_REQ_DESC_N_BASE + 0x44,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_6_REG,RD_REQ_DESC_N_BASE + 0x48,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_7_REG,RD_REQ_DESC_N_BASE + 0x4C,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_8_REG,RD_REQ_DESC_N_BASE + 0x50,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_9_REG,RD_REQ_DESC_N_BASE + 0x54,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_10_REG,RD_REQ_DESC_N_BASE + 0x58,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_11_REG,RD_REQ_DESC_N_BASE + 0x5C,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_12_REG,RD_REQ_DESC_N_BASE + 0x60,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_13_REG,RD_REQ_DESC_N_BASE + 0x64,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_14_REG,RD_REQ_DESC_N_BASE + 0x68,rw,0x0,ACE DUT axuser (aruser),
+RD_REQ_DESC_N_AXUSER_15_REG,RD_REQ_DESC_N_BASE + 0x6C,rw,0x0,ACE DUT axuser (aruser),
+,,,,,
+RD_RESP_DESC_N_BASE,0x4000 + ( N * 0x100 ),,,"Here, ""N"" is Descriptor Number. There are total MAX_DESC Descriptors available",Currently N = 0 to 15 is supported
+RD_RESP_DESC_N_DATA_OFFSET_REG,RD_RESP_DESC_N_BASE + 0x0,ro,0x0,Offset addr of RDATA_RAM.,
+RD_RESP_DESC_N_DATA_SIZE_REG,RD_RESP_DESC_N_BASE + 0x4,ro,0x4,Data size in bytes,
+RD_RESP_DESC_N_DATA_HOST_ADDR_0_REG,RD_RESP_DESC_N_BASE + 0x8,rw,0x0,Host Buffer Address for RD DATA,Valid only for Mode 1
+RD_RESP_DESC_N_DATA_HOST_ADDR_1_REG,RD_RESP_DESC_N_BASE + 0xC,rw,0x0,Host Buffer Address for RD DATA,Valid only for Mode 1
+RD_RESP_DESC_N_DATA_HOST_ADDR_2_REG,RD_RESP_DESC_N_BASE + 0x10,rw,0x0,Host Buffer Address for RD DATA,Valid only for Mode 1
+RD_RESP_DESC_N_DATA_HOST_ADDR_3_REG,RD_RESP_DESC_N_BASE + 0x14,rw,0x0,Host Buffer Address for RD DATA,Valid only for Mode 1
+RD_RESP_DESC_N_RESP_REG,RD_RESP_DESC_N_BASE + 0x18,ro,0x0,ACE DUT rresp,
+RD_RESP_DESC_N_XID_0_REG,RD_RESP_DESC_N_BASE + 0x1C,ro,0x0,ACE XID (rid),"Currently, only register-0 is valid. Other registers are for future enhacement"
+RD_RESP_DESC_N_XID_1_REG,RD_RESP_DESC_N_BASE + 0x20,ro,0x0,ACE XID (rid),
+RD_RESP_DESC_N_XID_2_REG,RD_RESP_DESC_N_BASE + 0x24,ro,0x0,ACE XID (rid),
+RD_RESP_DESC_N_XID_3_REG,RD_RESP_DESC_N_BASE + 0x28,ro,0x0,ACE XID (rid),
+RD_RESP_DESC_N_XUSER_0_REG,RD_RESP_DESC_N_BASE + 0x2C,ro,0x0,ACE DUT xuser (ruser),"Currently, only register-0 is valid. Other registers are for future enhacement"
+RD_RESP_DESC_N_XUSER_1_REG,RD_RESP_DESC_N_BASE + 0x30,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_2_REG,RD_RESP_DESC_N_BASE + 0x34,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_3_REG,RD_RESP_DESC_N_BASE + 0x38,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_4_REG,RD_RESP_DESC_N_BASE + 0x3C,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_5_REG,RD_RESP_DESC_N_BASE + 0x40,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_6_REG,RD_RESP_DESC_N_BASE + 0x44,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_7_REG,RD_RESP_DESC_N_BASE + 0x48,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_8_REG,RD_RESP_DESC_N_BASE + 0x4C,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_9_REG,RD_RESP_DESC_N_BASE + 0x50,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_10_REG,RD_RESP_DESC_N_BASE + 0x54,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_11_REG,RD_RESP_DESC_N_BASE + 0x58,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_12_REG,RD_RESP_DESC_N_BASE + 0x5C,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_13_REG,RD_RESP_DESC_N_BASE + 0x60,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_14_REG,RD_RESP_DESC_N_BASE + 0x64,ro,0x0,ACE DUT xuser (ruser),
+RD_RESP_DESC_N_XUSER_15_REG,RD_RESP_DESC_N_BASE + 0x68,ro,0x0,ACE DUT xuser (ruser),
+,,,,,
+WR_REQ_DESC_N_BASE,0x5000 + ( N * 0x100 ),,,"Here, ""N"" is Descriptor Number. There are total MAX_DESC Descriptors available",Currently N = 0 to 15 is supported
+WR_REQ_DESC_N_TXN_TYPE_REG,WR_REQ_DESC_N_BASE + 0x0,rw,0x0,Type Of Transaction,
+WR_REQ_DESC_N_SIZE_REG,WR_REQ_DESC_N_BASE + 0x4,rw,0x0,Size Of Transaction,
+WR_REQ_DESC_N_DATA_OFFSET_REG,WR_REQ_DESC_N_BASE + 0x8,rw,0x0,Offset addr of WDATA_RAM.,
+WR_REQ_DESC_N_DATA_HOST_ADDR_0_REG,WR_REQ_DESC_N_BASE + 0xC,rw,0x0,Host Buffer Address for  WR  DATA,Valid only for Mode 1
+WR_REQ_DESC_N_DATA_HOST_ADDR_1_REG,WR_REQ_DESC_N_BASE + 0x10,rw,0x0,Host Buffer Address for  WR  DATA,Valid only for Mode 1
+WR_REQ_DESC_N_DATA_HOST_ADDR_2_REG,WR_REQ_DESC_N_BASE + 0x14,rw,0x0,Host Buffer Address for  WR  DATA,Valid only for Mode 1
+WR_REQ_DESC_N_DATA_HOST_ADDR_3_REG,WR_REQ_DESC_N_BASE + 0x18,rw,0x0,Host Buffer Address for  WR  DATA,Valid only for Mode 1
+WR_REQ_DESC_N_WSTRB_HOST_ADDR_0_REG,WR_REQ_DESC_N_BASE + 0x1C,rw,0x0,Host Buffer Address for �WRSTRB,Valid only for Mode 1
+WR_REQ_DESC_N_WSTRB_HOST_ADDR_1_REG,WR_REQ_DESC_N_BASE + 0x20,rw,0x0,Host Buffer Address for �WRSTRB,Valid only for Mode 1
+WR_REQ_DESC_N_WSTRB_HOST_ADDR_2_REG,WR_REQ_DESC_N_BASE + 0x24,rw,0x0,Host Buffer Address for �WRSTRB,Valid only for Mode 1
+WR_REQ_DESC_N_WSTRB_HOST_ADDR_3_REG,WR_REQ_DESC_N_BASE + 0x28,rw,0x0,Host Buffer Address for �WRSTRB,Valid only for Mode 1
+WR_REQ_DESC_N_AXSIZE_REG,WR_REQ_DESC_N_BASE + 0x2C,rw,0x0,ACE Size Field,
+WR_REQ_DESC_N_ATTR_REG,WR_REQ_DESC_N_BASE + 0x30,rw,0x0,ACE Attributes,
+WR_REQ_DESC_N_AXADDR_0_REG,WR_REQ_DESC_N_BASE + 0x34,rw,0x0,DUT address (awaddr),
+WR_REQ_DESC_N_AXADDR_1_REG,WR_REQ_DESC_N_BASE + 0x38,rw,0x0,DUT address (awaddr),
+WR_REQ_DESC_N_AXADDR_2_REG,WR_REQ_DESC_N_BASE + 0x3C,rw,0x0,DUT address (awaddr),
+WR_REQ_DESC_N_AXADDR_3_REG,WR_REQ_DESC_N_BASE + 0x40,rw,0x0,DUT address (awaddr),
+WR_REQ_DESC_N_AXID_0_REG,WR_REQ_DESC_N_BASE + 0x44,rw,0x0,ACE AXID (awid),"Currently, only register-0 is valid. Other registers are for future enhacement"
+WR_REQ_DESC_N_AXID_1_REG,WR_REQ_DESC_N_BASE + 0x48,rw,0x0,ACE AXID (awid),
+WR_REQ_DESC_N_AXID_2_REG,WR_REQ_DESC_N_BASE + 0x4C,rw,0x0,ACE AXID (awid),
+WR_REQ_DESC_N_AXID_3_REG,WR_REQ_DESC_N_BASE + 0x50,rw,0x0,ACE AXID (awid),
+WR_REQ_DESC_N_AXUSER_0_REG,WR_REQ_DESC_N_BASE + 0x54,rw,0x0,ACE DUT axuser (awuser),"Currently, only register-0 is valid. Other registers are for future enhacement"
+WR_REQ_DESC_N_AXUSER_1_REG,WR_REQ_DESC_N_BASE + 0x58,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_2_REG,WR_REQ_DESC_N_BASE + 0x5C,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_3_REG,WR_REQ_DESC_N_BASE + 0x60,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_4_REG,WR_REQ_DESC_N_BASE + 0x64,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_5_REG,WR_REQ_DESC_N_BASE + 0x68,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_6_REG,WR_REQ_DESC_N_BASE + 0x6C,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_7_REG,WR_REQ_DESC_N_BASE + 0x70,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_8_REG,WR_REQ_DESC_N_BASE + 0x74,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_9_REG,WR_REQ_DESC_N_BASE + 0x78,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_10_REG,WR_REQ_DESC_N_BASE + 0x7C,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_11_REG,WR_REQ_DESC_N_BASE + 0x80,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_12_REG,WR_REQ_DESC_N_BASE + 0x84,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_13_REG,WR_REQ_DESC_N_BASE + 0x88,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_14_REG,WR_REQ_DESC_N_BASE + 0x8C,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_AXUSER_15_REG,WR_REQ_DESC_N_BASE + 0x90,rw,0x0,ACE DUT axuser (awuser),
+WR_REQ_DESC_N_WUSER_0_REG,WR_REQ_DESC_N_BASE + 0x94,rw,0x0,ACE WUSER,"Currently, only register-0 is valid. Other registers are for future enhacement"
+WR_REQ_DESC_N_WUSER_1_REG,WR_REQ_DESC_N_BASE + 0x98,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_2_REG,WR_REQ_DESC_N_BASE + 0x9C,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_3_REG,WR_REQ_DESC_N_BASE + 0xA0,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_4_REG,WR_REQ_DESC_N_BASE + 0xA4,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_5_REG,WR_REQ_DESC_N_BASE + 0xA8,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_6_REG,WR_REQ_DESC_N_BASE + 0xAC,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_7_REG,WR_REQ_DESC_N_BASE + 0xB0,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_8_REG,WR_REQ_DESC_N_BASE + 0xB4,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_9_REG,WR_REQ_DESC_N_BASE + 0xB8,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_10_REG,WR_REQ_DESC_N_BASE + 0xBC,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_11_REG,WR_REQ_DESC_N_BASE + 0xC0,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_12_REG,WR_REQ_DESC_N_BASE + 0xC4,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_13_REG,WR_REQ_DESC_N_BASE + 0xC8,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_14_REG,WR_REQ_DESC_N_BASE + 0xCC,rw,0x0,ACE WUSER,
+WR_REQ_DESC_N_WUSER_15_REG,WR_REQ_DESC_N_BASE + 0xD0,rw,0x0,ACE WUSER,
+,,,,,
+WR_RESP_DESC_N_BASE,0x6000 + ( N * 0x100 ),,,"Here, ""N"" is Descriptor Number. There are total MAX_DESC Descriptors available",Currently N = 0 to 15 is supported
+WR_RESP_DESC_N_RESP_REG,WR_RESP_DESC_N_BASE + 0x0,ro,0x0,ACE DUT bresp,
+WR_RESP_DESC_N_XID_0_REG,WR_RESP_DESC_N_BASE + 0x4,ro,0x0,ACE XID (bid),"Currently, only register-0 is valid. Other registers are for future enhacement"
+WR_RESP_DESC_N_XID_1_REG,WR_RESP_DESC_N_BASE + 0x8,ro,0x0,ACE XID (bid),
+WR_RESP_DESC_N_XID_2_REG,WR_RESP_DESC_N_BASE + 0xC,ro,0x0,ACE XID (bid),
+WR_RESP_DESC_N_XID_3_REG,WR_RESP_DESC_N_BASE + 0x10,ro,0x0,ACE XID (bid),
+WR_RESP_DESC_N_XUSER_0_REG,WR_RESP_DESC_N_BASE + 0x14,ro,0x0,ACE DUT xuser (buser),"Currently, only register-0 is valid. Other registers are for future enhacement"
+WR_RESP_DESC_N_XUSER_1_REG,WR_RESP_DESC_N_BASE + 0x18,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_2_REG,WR_RESP_DESC_N_BASE + 0x1C,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_3_REG,WR_RESP_DESC_N_BASE + 0x20,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_4_REG,WR_RESP_DESC_N_BASE + 0x24,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_5_REG,WR_RESP_DESC_N_BASE + 0x28,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_6_REG,WR_RESP_DESC_N_BASE + 0x2C,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_7_REG,WR_RESP_DESC_N_BASE + 0x30,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_8_REG,WR_RESP_DESC_N_BASE + 0x34,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_9_REG,WR_RESP_DESC_N_BASE + 0x38,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_10_REG,WR_RESP_DESC_N_BASE + 0x3C,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_11_REG,WR_RESP_DESC_N_BASE + 0x40,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_12_REG,WR_RESP_DESC_N_BASE + 0x44,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_13_REG,WR_RESP_DESC_N_BASE + 0x48,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_14_REG,WR_RESP_DESC_N_BASE + 0x4C,ro,0x0,ACE DUT xuser (buser),
+WR_RESP_DESC_N_XUSER_15_REG,WR_RESP_DESC_N_BASE + 0x50,ro,0x0,ACE DUT xuser (buser),
+,,,,,
+SN_REQ_DESC_N_BASE,0x7000 + ( N * 0x20 ),,,"Here, ""N"" is Descriptor Number. There are total MAX_DESC Descriptors available",Currently N = 0 to 15 is supported
+SN_REQ_DESC_N_ATTR_REG,SN_REQ_DESC_N_BASE + 0x0,ro,0x0,Attributes,
+SN_REQ_DESC_N_ACADDR_0_REG,SN_REQ_DESC_N_BASE + 0x4,ro,0x0,Snoop DUT address (acaddr),
+SN_REQ_DESC_N_ACADDR_1_REG,SN_REQ_DESC_N_BASE + 0x8,ro,0x0,Snoop DUT address (acaddr),
+SN_REQ_DESC_N_ACADDR_2_REG,SN_REQ_DESC_N_BASE + 0xC,ro,0x0,Snoop DUT address (acaddr),
+SN_REQ_DESC_N_ACADDR_3_REG,SN_REQ_DESC_N_BASE + 0x10,ro,0x0,Snoop DUT address (acaddr),
+,,,,,
+SN_RESP_DESC_N_BASE,0x7200 + ( N * 0x20 ),,,"Here, ""N"" is Descriptor Number. There are total MAX_DESC Descriptors available",Currently N = 0 to 15 is supported
+SN_RESP_DESC_N_RESP_REG,SN_RESP_DESC_N_BASE + 0x0,rw,0x0,ACE DUT crresp,
+,,,,,
+RDATA_RAM,,,,,
+RDATA_RAM Start Address,0x8000,"RO in Mode 0
+Reserved in Mode 1",0x0,,RDATA_RAM Start address = RAMsize*2
+RDATA_RAM End Address,0xBFFC,,,,RDATA_RAM End �address = RDATA_RAM Start Address + RAMsize -4
+,,,,,
+WDATA_RAM,,,,,
+WDATA_RAM Start Address,0xC000,"WO in Mode 0
+Reserved in Mode 1",0x0,,WDATA_RAM Start address = RDATA_RAM End �address + 4
+WDATA_RAM End Address,0xFFFC,,,,WDATA_RAM End �address = WDATA_RAM Start Address + RAMsize -4
+,,,,,
+WSTRB_RAM,,,,,
+WSTRB_RAM Start Address,0x10000,"WO in Mode 0
+Reserved in Mode 1",0x0,,WSTRB_RAM Start address = WDATA_RAM End �address + 4
+WSTRB_RAM End Address,0x13FFC,,,,WSTRB_RAM End �address = WSTRB_RAM Start Address + RAMsize -4
+,,,,,
+CDDATA_RAM,,,,,
+CDDATA_RAM Start Address,0x14000,"WO 
+(Always in Mode 0)",0x0,,CDDATA_RAM Start address = WSTRB_RAM End �address + 4
+CDDATA_RAM End Address,0x143FC,,,,CDDATA_RAM End �address = CDDATA_RAM Start Address + CDDATA_RAMsize -4
