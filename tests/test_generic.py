@@ -59,6 +59,10 @@ hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-
 hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-slave')
 hwb_axi_tests = ['./rtl-bridges/axi/{0}'.format(i) for i in hwb_axi_testnames]
 
+hwb_ace_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/rtl-bridges/ace/"), '*-test')
+hwb_ace_tests = ['./rtl-bridges/ace/{0}'.format(i) for i in hwb_ace_testnames]
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -178,5 +182,11 @@ def test_pysimgen_tests(platform, outdir):
 @pytest.mark.hw_bridge
 @pytest.mark.parametrize("filename", hwb_axi_tests)
 def test_hwb_axi_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.hw_bridge
+@pytest.mark.parametrize("filename", hwb_ace_tests)
+def test_hwb_ace_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
