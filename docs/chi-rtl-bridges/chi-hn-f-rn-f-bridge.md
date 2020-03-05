@@ -128,15 +128,12 @@ Bridge top level and block level port map can be found below:
            -   u_chi_txflit_txsnp_txreq_mgmt (chi_txflit_mgmt.v)
            -   u_chi_txflit_txdat_mgmt (chi_txflit_mgmt.v)
            -   u_chi_txflit_txrsp_mgmt (chi_txflit_mgmt.v)
-           -   u_chi_txflit_rxreq_rxsnp_mgmt (chi_txflit_mgmt.v)
-           -   u_chi_txflit_rxdat_mgmt (chi_txflit_mgmt.v)
-           -   u_chi_txflit_rxrsp_mgmt (chi_txflit_mgmt.v)
            -   u_chi_txflit_txsnp_txreq_ram(chi_txflit_ram.v)
            -   u_chi_txflit_txdat_ram (chi_txflit_ram.v)
            -   u_chi_txflit_txrsp_ram (chi_txflit_ram.v)
-           -   u_chi_txflit_rxreq_rxsnp_ram (chi_txflit_ram.v)
-           -   u_chi_txflit_rxdat_ram(chi_txflit_ram.v)
-           -   u_chi_txflit_rxrsp_ram (chi_txflit_ram.v)
+           -   u_chi_txflit_rxreq_rxsnp_ram (chi_rxflit_ram.v)
+           -   u_chi_txflit_rxdat_ram(chi_rxflit_ram.v)
+           -   u_chi_txflit_rxrsp_ram (chi_rxflit_ram.v)
        -   u_chi_intr_handler(chi_intr_handler)
        
 ### Hardware Block Description
