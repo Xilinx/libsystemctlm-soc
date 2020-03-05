@@ -1235,22 +1235,22 @@ module ace_slv_inf #(
    assign aw_req_tr_descbus_n['hE] = aw_req_tr_descbus_E;
    assign aw_req_tr_descbus_n['hF] = aw_req_tr_descbus_F;
 
-   assign int_wr_req_desc_n_data_offset_addr['h0] = (wr_req_tr_descbus_dtoffset_0*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h1] = (wr_req_tr_descbus_dtoffset_1*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h2] = (wr_req_tr_descbus_dtoffset_2*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h3] = (wr_req_tr_descbus_dtoffset_3*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h4] = (wr_req_tr_descbus_dtoffset_4*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h5] = (wr_req_tr_descbus_dtoffset_5*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h6] = (wr_req_tr_descbus_dtoffset_6*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h7] = (wr_req_tr_descbus_dtoffset_7*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h8] = (wr_req_tr_descbus_dtoffset_8*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['h9] = (wr_req_tr_descbus_dtoffset_9*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['hA] = (wr_req_tr_descbus_dtoffset_A*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['hB] = (wr_req_tr_descbus_dtoffset_B*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['hC] = (wr_req_tr_descbus_dtoffset_C*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['hD] = (wr_req_tr_descbus_dtoffset_D*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['hE] = (wr_req_tr_descbus_dtoffset_E*XX_DATA_WIDTH/8);
-   assign int_wr_req_desc_n_data_offset_addr['hF] = (wr_req_tr_descbus_dtoffset_F*XX_DATA_WIDTH/8);
+   assign int_wr_req_desc_n_data_offset_addr['h0] = (wr_req_tr_descbus_dtoffset_0);
+   assign int_wr_req_desc_n_data_offset_addr['h1] = (wr_req_tr_descbus_dtoffset_1);
+   assign int_wr_req_desc_n_data_offset_addr['h2] = (wr_req_tr_descbus_dtoffset_2);
+   assign int_wr_req_desc_n_data_offset_addr['h3] = (wr_req_tr_descbus_dtoffset_3);
+   assign int_wr_req_desc_n_data_offset_addr['h4] = (wr_req_tr_descbus_dtoffset_4);
+   assign int_wr_req_desc_n_data_offset_addr['h5] = (wr_req_tr_descbus_dtoffset_5);
+   assign int_wr_req_desc_n_data_offset_addr['h6] = (wr_req_tr_descbus_dtoffset_6);
+   assign int_wr_req_desc_n_data_offset_addr['h7] = (wr_req_tr_descbus_dtoffset_7);
+   assign int_wr_req_desc_n_data_offset_addr['h8] = (wr_req_tr_descbus_dtoffset_8);
+   assign int_wr_req_desc_n_data_offset_addr['h9] = (wr_req_tr_descbus_dtoffset_9);
+   assign int_wr_req_desc_n_data_offset_addr['hA] = (wr_req_tr_descbus_dtoffset_A);
+   assign int_wr_req_desc_n_data_offset_addr['hB] = (wr_req_tr_descbus_dtoffset_B);
+   assign int_wr_req_desc_n_data_offset_addr['hC] = (wr_req_tr_descbus_dtoffset_C);
+   assign int_wr_req_desc_n_data_offset_addr['hD] = (wr_req_tr_descbus_dtoffset_D);
+   assign int_wr_req_desc_n_data_offset_addr['hE] = (wr_req_tr_descbus_dtoffset_E);
+   assign int_wr_req_desc_n_data_offset_addr['hF] = (wr_req_tr_descbus_dtoffset_F);
 
    generate
 
