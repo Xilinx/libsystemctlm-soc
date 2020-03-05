@@ -496,6 +496,7 @@ private:
 			unsigned int be_len = wt->GetGP().
 						get_byte_enable_length();
 			unsigned int pos = 0;
+			unsigned int num_written = 0;
 
 			dev_write32(desc_addr + WR_REQ_DESC_N_TXN_TYPE_REG_ADDR,
 							1 << 1);
@@ -523,7 +524,15 @@ private:
 
 				dev_write32(wstrb_ram_addr, val);
 				wstrb_ram_addr += 4;
+				num_written += 4;
 			}
+
+			while (num_written < DATA_BUS_BYTES) {
+				dev_write32(wstrb_ram_addr, 0);
+				wstrb_ram_addr += 4;
+				num_written += 4;
+			}
+
 		} else if (wt->GetDataLen() < DATA_BUS_BYTES) {
 			unsigned int pos = DATA_BUS_BYTES;
 
