@@ -66,12 +66,6 @@ void memory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 		streaming_width = len;
 	}
 
-	if ((addr + MIN(len, streaming_width)) > sc_dt::uint64(size)) {
-		trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
-		SC_REPORT_FATAL("Memory", "Unsupported access\n");
-		return;
-	}
-
 	if (be_len || streaming_width) {
 		// Slow path.
 		unsigned int pos;
@@ -83,6 +77,12 @@ void memory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 				do_access = be[pos % be_len] == TLM_BYTE_ENABLED;
 			}
 			if (do_access) {
+				if ((addr + (pos % streaming_width)) >= sc_dt::uint64(size))   {
+					trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+					SC_REPORT_FATAL("Memory", "Unsupported access\n");
+					return;
+				}
+
 				if (trans.is_read()) {
 					ptr[pos] = mem[addr + (pos % streaming_width)];
 				} else {
@@ -91,6 +91,12 @@ void memory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 			}
 		}
 	} else {
+		if ((addr + len) > sc_dt::uint64(size)) {
+			trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+			SC_REPORT_FATAL("Memory", "Unsupported access\n");
+			return;
+		}
+
 		if (trans.get_command() == tlm::TLM_READ_COMMAND)
 			memcpy(ptr, &mem[addr], len);
 		else if (cmd == tlm::TLM_WRITE_COMMAND)
