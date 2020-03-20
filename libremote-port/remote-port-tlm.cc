@@ -546,7 +546,7 @@ bool remoteport_tlm::rp_process(bool can_sync)
 				// Drop responses for posted packets.
 				return true;
 			}
-                        sync->pre_any_cmd(&pkt_rx, can_sync);
+			sync->pre_any_cmd(&pkt_rx, can_sync);
 
 			pkt_rx.data_offset = sizeof pkt_rx.pkt->hdr + dlen;
 
@@ -561,7 +561,7 @@ bool remoteport_tlm::rp_process(bool can_sync)
 			pkt_rx.copy(dev->resp[ri].pkt);
 			dev->resp[ri].valid = true;
 			dev->resp[ri].ev.notify();
-                        sync->post_any_cmd(&pkt_rx, can_sync);
+			sync->post_any_cmd(&pkt_rx, can_sync);
 			return true;
 		}
 
