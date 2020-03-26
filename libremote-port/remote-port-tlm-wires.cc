@@ -87,7 +87,6 @@ void remoteport_tlm_wires::cmd_interrupt_null(remoteport_tlm *adaptor,
 	    && !(lpkt.hdr.flags & RP_PKT_FLAGS_posted)) {
 		int64_t clk;
 		size_t plen;
-		unsigned int id = lpkt.hdr.id;
 
 	        clk = adaptor->rp_map_time(adaptor->sync->get_current_time());
 		plen = rp_encode_interrupt_f(lpkt.hdr.id,
