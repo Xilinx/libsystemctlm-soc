@@ -54,6 +54,8 @@ module axi_master_common #(
 			   parameter EN_INTFM_AXI4  = 1,
 			   parameter EN_INTFM_AXI4LITE = 0,
 			   parameter EN_INTFM_AXI3 = 0,
+                           parameter PCIE_AXI = 0,
+                           parameter PCIE_LAST_BRIDGE = 0,
 			   parameter LAST_BRIDGE   =  0,
 			   parameter EXTEND_WSTRB  =  0
 
@@ -73,6 +75,7 @@ module axi_master_common #(
                              //DUT Interrupt
                              output [127:0] 			    h2c_intr_out,
                              input [63:0] 			    c2h_intr_in,
+                             output [63:0] 			      h2c_pulse_out,
                              //DUT GPIO
                              input [255:0] 			    c2h_gpio_in,
 			     output [255:0] 			    h2c_gpio_out,
@@ -1386,6 +1389,8 @@ module axi_master_common #(
    wire [31:0] 													  c2h_intr_status_1_reg;
    wire [31:0] 													  intr_c2h_toggle_clear_0_reg;  
    wire [31:0] 													  intr_c2h_toggle_clear_1_reg;
+   wire [31:0] 													  h2c_pulse_0_reg;
+   wire [31:0] 													  h2c_pulse_1_reg;
    wire [31:0] 													  intr_c2h_toggle_status_0_reg;  
    wire [31:0] 													  intr_c2h_toggle_status_1_reg;
    wire [31:0] 													  intr_c2h_toggle_enable_0_reg;  
@@ -3679,6 +3684,8 @@ module axi_master_common #(
 		  .M_AXI_USR_WUSER_WIDTH  (M_AXI_USR_WUSER_WIDTH),
 		  .M_AXI_USR_RUSER_WIDTH  (M_AXI_USR_RUSER_WIDTH),
 		  .M_AXI_USR_BUSER_WIDTH  (M_AXI_USR_BUSER_WIDTH),
+                  .PCIE_AXI                          (PCIE_AXI),
+                  .PCIE_LAST_BRIDGE                          (PCIE_LAST_BRIDGE),
 		  .LAST_BRIDGE          (LAST_BRIDGE),
 		  .EXTEND_WSTRB         (EXTEND_WSTRB))
 
@@ -3715,6 +3722,8 @@ module axi_master_common #(
 		       .c2h_intr_status_1_reg(c2h_intr_status_1_reg[31:0]),
 		       .intr_c2h_toggle_clear_0_reg(intr_c2h_toggle_clear_0_reg[31:0]),
 		       .intr_c2h_toggle_clear_1_reg(intr_c2h_toggle_clear_1_reg[31:0]),
+		       .h2c_pulse_0_reg(h2c_pulse_0_reg[31:0]),
+		       .h2c_pulse_1_reg(h2c_pulse_1_reg[31:0]),
 		       .intr_c2h_toggle_status_0_reg(intr_c2h_toggle_status_0_reg[31:0]),
 		       .intr_c2h_toggle_status_1_reg(intr_c2h_toggle_status_1_reg[31:0]),
 		       .intr_c2h_toggle_enable_0_reg(intr_c2h_toggle_enable_0_reg[31:0]),
@@ -5726,6 +5735,7 @@ module axi_master_common #(
       .irq_ack                        (irq_ack                       ), 
       .h2c_intr_out                   (h2c_intr_out                  ), 
       .c2h_intr_in                    (c2h_intr_in                   ), 
+      .h2c_pulse_out				(h2c_pulse_out),
       .c2h_gpio_in                    (c2h_gpio_in                   ),
       .h2c_gpio_out                   (h2c_gpio_out                  ),
       .ih2rb_c2h_intr_status_0_reg    (ih2rb_c2h_intr_status_0_reg   ), 
@@ -5734,6 +5744,8 @@ module axi_master_common #(
       .ih2rb_intr_c2h_toggle_status_1_reg    (ih2rb_intr_c2h_toggle_status_1_reg   ),
       .intr_c2h_toggle_clear_0_reg           (intr_c2h_toggle_clear_0_reg          ),
       .intr_c2h_toggle_clear_1_reg           (intr_c2h_toggle_clear_1_reg          ),
+      .h2c_pulse_0_reg           (h2c_pulse_0_reg          ),
+      .h2c_pulse_1_reg           (h2c_pulse_1_reg          ),
       .ih2rb_c2h_gpio_0_reg     (ih2rb_c2h_gpio_0_reg   ),
       .ih2rb_c2h_gpio_1_reg     (ih2rb_c2h_gpio_1_reg   ),
       .ih2rb_c2h_gpio_2_reg     (ih2rb_c2h_gpio_2_reg   ),

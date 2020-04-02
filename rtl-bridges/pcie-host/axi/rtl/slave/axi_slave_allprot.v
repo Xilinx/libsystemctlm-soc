@@ -52,6 +52,8 @@ module axi_slave_allprot    #(
                         parameter RAM_SIZE                       = 16384, 
                         parameter MAX_DESC                       = 16,                   
                         parameter USR_RST_NUM                    = 4,
+                        parameter PCIE_AXI                       = 0, 
+                        parameter PCIE_LAST_BRIDGE               = 0,
 			parameter LAST_BRIDGE                    = 0,
 			parameter EXTEND_WSTRB                   = 1,
                         parameter FORCE_RESP_ORDER               = 1
@@ -68,6 +70,7 @@ module axi_slave_allprot    #(
                           //DUT Interrupt
                           output [127:0] 						 h2c_intr_out,
                           input [63:0] 							 c2h_intr_in,
+                          output [63:0] 			                         h2c_pulse_out,                          
                           //DUT GPIO
                           input [255:0] 						 c2h_gpio_in,
                           output [255:0] 						 h2c_gpio_out,
@@ -1381,6 +1384,8 @@ wire [31:0] 			c2h_intr_status_0_reg;
 wire [31:0] 			c2h_intr_status_1_reg;
 wire [31:0] 			intr_c2h_toggle_clear_0_reg;  
 wire [31:0] 			intr_c2h_toggle_clear_1_reg;
+wire [31:0] 			h2c_pulse_0_reg;  
+wire [31:0] 			h2c_pulse_1_reg;
 wire [31:0] 			intr_c2h_toggle_status_0_reg;  
 wire [31:0] 			intr_c2h_toggle_status_1_reg;
 wire [31:0] 			intr_c2h_toggle_enable_0_reg;  
@@ -5571,6 +5576,8 @@ user_slave_control_inst (/*AUTO*INST*/
                 .S_AXI_USR_RUSER_WIDTH  (S_AXI_USR_RUSER_WIDTH),
                 .S_AXI_USR_DATA_WIDTH   (S_AXI_USR_DATA_WIDTH),
                 .MAX_DESC               (MAX_DESC            ),
+	        .PCIE_AXI                 (PCIE_AXI),
+	        .PCIE_LAST_BRIDGE         (PCIE_LAST_BRIDGE),		  
 		.LAST_BRIDGE		(LAST_BRIDGE),
 		.EXTEND_WSTRB		(EXTEND_WSTRB),
 	        .FORCE_RESP_ORDER     	(FORCE_RESP_ORDER)
@@ -5617,6 +5624,8 @@ regs_slave_inst              (/*AUTOINST*/
 							  .c2h_intr_status_1_reg(c2h_intr_status_1_reg),
 							  .intr_c2h_toggle_clear_0_reg(intr_c2h_toggle_clear_0_reg),
 							  .intr_c2h_toggle_clear_1_reg(intr_c2h_toggle_clear_1_reg),
+							  .h2c_pulse_0_reg(h2c_pulse_0_reg),
+							  .h2c_pulse_1_reg(h2c_pulse_1_reg),
 							  .intr_c2h_toggle_status_0_reg(intr_c2h_toggle_status_0_reg),
 							  .intr_c2h_toggle_status_1_reg(intr_c2h_toggle_status_1_reg),
 							  .intr_c2h_toggle_enable_0_reg(intr_c2h_toggle_enable_0_reg),
@@ -8577,6 +8586,7 @@ regs_slave_inst              (/*AUTOINST*/
 	  .irq_ack                        (irq_ack                       ), 
 	  .h2c_intr_out                   (h2c_intr_out                  ),
 	  .h2c_gpio_out                   (h2c_gpio_out                  ),
+          .h2c_pulse_out	(h2c_pulse_out),                   
 	  .c2h_intr_in                    (c2h_intr_in                   ), 
 	  .c2h_gpio_in                    (c2h_gpio_in                   ), 
 	  .ih2rb_c2h_intr_status_0_reg    (ih2rb_c2h_intr_status_0_reg   ), 
@@ -8585,6 +8595,8 @@ regs_slave_inst              (/*AUTOINST*/
 	  .ih2rb_intr_c2h_toggle_status_1_reg    (ih2rb_intr_c2h_toggle_status_1_reg   ),
 	  .intr_c2h_toggle_clear_0_reg           (intr_c2h_toggle_clear_0_reg          ),
 	  .intr_c2h_toggle_clear_1_reg           (intr_c2h_toggle_clear_1_reg          ),
+	  .h2c_pulse_0_reg           (h2c_pulse_0_reg          ),
+	  .h2c_pulse_1_reg           (h2c_pulse_1_reg          ),
 	  .ih2rb_c2h_gpio_0_reg     (ih2rb_c2h_gpio_0_reg   ),
       .ih2rb_c2h_gpio_1_reg     (ih2rb_c2h_gpio_1_reg   ),
       .ih2rb_c2h_gpio_2_reg     (ih2rb_c2h_gpio_2_reg   ),

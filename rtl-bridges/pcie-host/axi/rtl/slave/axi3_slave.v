@@ -49,6 +49,8 @@ module axi3_slave     #(
                         parameter RAM_SIZE                       = 16384, 
                         parameter MAX_DESC                       = 16,                   
                         parameter USR_RST_NUM                    = 4,
+                        parameter PCIE_AXI                       = 0, 
+                        parameter PCIE_LAST_BRIDGE               = 0,
 			parameter LAST_BRIDGE                    = 0,
 			parameter EXTEND_WSTRB                   = 1
                         
@@ -64,6 +66,7 @@ module axi3_slave     #(
                           //DUT Interrupt
                           output [127:0] 						 h2c_intr_out,
                           input [63:0] 							 c2h_intr_in,
+                          output [63:0] 			                         h2c_pulse_out,                          
                           //DUT GPIO
                           input [255:0] 						 c2h_gpio_in,
 						  output [255:0] 						 h2c_gpio_out,
@@ -206,6 +209,8 @@ axi_slave_allprot #(/*AUTOINSTPARAM*/
               .RAM_SIZE                 (RAM_SIZE),
               .MAX_DESC                 (MAX_DESC),
               .USR_RST_NUM              (USR_RST_NUM),
+	      .PCIE_AXI                 (PCIE_AXI),
+	      .PCIE_LAST_BRIDGE         (PCIE_LAST_BRIDGE),		  
 	      .LAST_BRIDGE		(LAST_BRIDGE),
 	      .EXTEND_WSTRB		(EXTEND_WSTRB),
 	      .FORCE_RESP_ORDER     	(FORCE_RESP_ORDER)
@@ -269,6 +274,7 @@ i_axi_slave_allprot (/*AUTOINST*/
                .s_axi_usr_rlast         (s_axi_usr_rlast),
                .s_axi_usr_ruser         (),
                .s_axi_usr_rvalid        (s_axi_usr_rvalid),
+               .h2c_pulse_out	(h2c_pulse_out),                   
                // Inputs
                .axi_aclk                (axi_aclk),
                .axi_aresetn             (axi_aresetn),

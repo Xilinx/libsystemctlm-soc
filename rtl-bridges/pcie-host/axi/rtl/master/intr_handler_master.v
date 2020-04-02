@@ -24,6 +24,7 @@
  *   Interrupt handler for Master
  *
  */
+`include "defines_common.vh"
 `include "defines_intr.vh"
 module intr_handler_master #(
                          
@@ -56,6 +57,7 @@ module intr_handler_master #(
                            output reg [127:0] h2c_intr_out,
 			   output [255:0]     h2c_gpio_out,
                            input [63:0]       c2h_intr_in,
+                           output [63:0] 			      h2c_pulse_out,
                            //DUT GPIO
                            input [255:0]      c2h_gpio_in,
 
@@ -143,7 +145,9 @@ module intr_handler_master #(
                            input [31:0]       intr_comp_clear_reg ,
                            input [31:0]       intr_comp_enable_reg,
 			   input [31:0]       intr_c2h_toggle_clear_0_reg,
-			   input [31:0]       intr_c2h_toggle_clear_1_reg
+			   input [31:0]       intr_c2h_toggle_clear_1_reg,
+			   input [31:0]       h2c_pulse_0_reg,
+			   input [31:0]       h2c_pulse_1_reg
 						   );
      
 
@@ -159,6 +163,14 @@ module intr_handler_master #(
    
    
    reg [63:0] 								 c2h_intr_in_ff;
+
+   reg [31:0]       h2c_pulse_0_ff;
+   reg [31:0]       h2c_pulse_1_ff;
+
+   `FF_RSTLOW(axi_aclk,axi_aresetn,h2c_pulse_0_reg,h2c_pulse_0_ff);
+   `FF_RSTLOW(axi_aclk,axi_aresetn,h2c_pulse_1_reg,h2c_pulse_1_ff);
+
+   assign h2c_pulse_out = {h2c_pulse_1_reg,h2c_pulse_0_reg} & ~{h2c_pulse_1_ff,h2c_pulse_0_ff} ;
 
    assign h2c_gpio_out = { h2c_gpio_7_reg, h2c_gpio_6_reg, h2c_gpio_5_reg, h2c_gpio_4_reg, h2c_gpio_3_reg, h2c_gpio_2_reg, h2c_gpio_1_reg, h2c_gpio_0_reg };
    

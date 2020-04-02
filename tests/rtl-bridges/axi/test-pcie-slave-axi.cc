@@ -102,6 +102,7 @@ SC_MODULE(Top)
 	sc_signal<sc_bv<64> > signals_c2h_intr_in;
 	sc_signal<sc_bv<256> > signals_c2h_gpio_in;
 	sc_signal<sc_bv<256> > signals_h2c_gpio_out;
+	sc_signal<sc_bv<64> > signals_h2c_pulse_out;
 	sc_signal<sc_bv<4> > signals_usr_resetn;
 	sc_signal<bool> signals_irq_out;
 	sc_signal<bool> signals_irq_ack;
@@ -156,6 +157,7 @@ SC_MODULE(Top)
 		signals_c2h_intr_in("c2h-intr-in"),
 		signals_c2h_gpio_in("c2h-gpio-in"),
 		signals_h2c_gpio_out("h2c-gpio-out"),
+		signals_h2c_pulse_out("h2c-pulse-out"),
 		signals_usr_resetn("signals-usr-resetn"),
 		signals_irq_out("signals-irq-out"),
 		signals_irq_ack("signals-irq-ack"),
@@ -233,6 +235,7 @@ SC_MODULE(Top)
 		rtl_hw_bridge.c2h_intr_in(signals_c2h_intr_in);
 		rtl_hw_bridge.c2h_gpio_in(signals_c2h_gpio_in);
 		rtl_hw_bridge.h2c_gpio_out(signals_h2c_gpio_out);
+		rtl_hw_bridge.h2c_pulse_out(signals_h2c_pulse_out);
 
 		rtl_hw_bridge.irq_out(signals_irq_out);
 		rtl_hw_bridge.irq_ack(signals_irq_ack);

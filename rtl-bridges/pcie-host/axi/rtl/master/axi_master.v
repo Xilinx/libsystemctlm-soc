@@ -51,8 +51,10 @@ module axi_master
     parameter MAX_DESC                      =   16,                   
     parameter USR_RST_NUM                   =   4, //Allowed values : 1-31
 
-    parameter AXI_PROTOCOL = "AXI4",
-    parameter LAST_BRIDGE = 1,
+    parameter AXI_PROTOCOL = "AXI4", //Allowed values : AXI4, AXI4LITE, AXI3
+    parameter PCIE_AXI = 0, //Indication of PCIe-AXI Bridge
+    parameter PCIE_LAST_BRIDGE = 0, //If last bridge in pcie_ep bridge
+    parameter LAST_BRIDGE = 0, //If last bridge in design
     parameter EXTEND_WSTRB = 1
   
   
@@ -69,6 +71,7 @@ module axi_master
       //DUT Interrupt
       output [127:0] 			      h2c_intr_out,
       input [63:0] 			      c2h_intr_in,
+      output [63:0] 			      h2c_pulse_out,
       //DUT GPIO
       input [255:0] 			      c2h_gpio_in,
       output [255:0] 			      h2c_gpio_out,
@@ -214,6 +217,8 @@ module axi_master
 	     .MAX_DESC								(MAX_DESC),
 	     .USR_RST_NUM							(USR_RST_NUM),
 	     .EXTEND_WSTRB                          (EXTEND_WSTRB),
+	     .PCIE_AXI                          (PCIE_AXI),
+	     .PCIE_LAST_BRIDGE                          (PCIE_LAST_BRIDGE),
 	     .LAST_BRIDGE                           (LAST_BRIDGE))
 	 i_axi4_master 
 	   (/*AUTOINST*/
@@ -291,6 +296,7 @@ module axi_master
 	    .m_axi_usr_aruser			(m_axi_usr_aruser),
 	    .m_axi_usr_arvalid			(m_axi_usr_arvalid),
 	    .m_axi_usr_rready			(m_axi_usr_rready),
+	    .h2c_pulse_out				(h2c_pulse_out),
 	    // Inputs
 	    .axi_aclk					(axi_aclk),
 	    .axi_aresetn				(axi_aresetn),
@@ -362,6 +368,8 @@ module axi_master
 	     .MAX_DESC					(MAX_DESC),
 	     .USR_RST_NUM				(USR_RST_NUM),
 	     .EXTEND_WSTRB              (EXTEND_WSTRB),
+	     .PCIE_AXI                          (PCIE_AXI),
+	     .PCIE_LAST_BRIDGE                          (PCIE_LAST_BRIDGE),
 	     .LAST_BRIDGE               (LAST_BRIDGE))
 	 i_axi4_lite_master
 	   (/*AUTOINST*/
@@ -419,6 +427,7 @@ module axi_master
 	    .m_axi_usr_arprot				(m_axi_usr_arprot[2:0]),
 	    .m_axi_usr_arvalid			(m_axi_usr_arvalid),
 	    .m_axi_usr_rready				(m_axi_usr_rready),
+	    .h2c_pulse_out				(h2c_pulse_out),
 	    // Inputs
 	    .axi_aclk						(axi_aclk),
 	    .axi_aresetn					(axi_aresetn),
@@ -484,6 +493,8 @@ module axi_master
 	     .MAX_DESC					(MAX_DESC),
 	     .USR_RST_NUM				(USR_RST_NUM),
 	     .EXTEND_WSTRB              (EXTEND_WSTRB),
+	     .PCIE_AXI                          (PCIE_AXI),
+	     .PCIE_LAST_BRIDGE                          (PCIE_LAST_BRIDGE),
 	     .LAST_BRIDGE               (LAST_BRIDGE))
 
 	 i_axi3_master
@@ -556,6 +567,7 @@ module axi_master
 	    .m_axi_usr_arprot			(m_axi_usr_arprot[2:0]),
 	    .m_axi_usr_arvalid		(m_axi_usr_arvalid),
 	    .m_axi_usr_rready			(m_axi_usr_rready),
+	    .h2c_pulse_out				(h2c_pulse_out),
 	    // Inputs
 	    .axi_aclk					(axi_aclk),
 	    .axi_aresetn				(axi_aresetn),

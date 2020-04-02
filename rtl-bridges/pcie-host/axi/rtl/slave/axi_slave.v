@@ -50,7 +50,9 @@ module axi_slave #(
                         parameter RAM_SIZE                       = 16384, //Size of RAM in Bytes
                         parameter MAX_DESC                       = 16,    //Max number of descriptors 
                         parameter USR_RST_NUM                    = 4,    //Allowed values : 1 to 31
-		        parameter LAST_BRIDGE                    = 0,
+                        parameter PCIE_AXI                       = 0, //Indication of PCIe-AXI Bridge
+                        parameter PCIE_LAST_BRIDGE               = 0, //If last bridge in pcie_ep bridge
+		        parameter LAST_BRIDGE                    = 0, //If last bridge in design
 			parameter EXTEND_WSTRB                   = 1
                         
                         )(
@@ -65,6 +67,7 @@ module axi_slave #(
                           //DUT Interrupt
                           output [127:0] 						 h2c_intr_out,
                           input [63:0] 							 c2h_intr_in,
+                          output [63:0] 			                         h2c_pulse_out,                          
                           //DUT GPIO
                           input [255:0] 						 c2h_gpio_in,
 			  output [255:0] 						 h2c_gpio_out,
@@ -209,7 +212,9 @@ axi4_slave #(
                   .RAM_SIZE                     (RAM_SIZE),
                   .MAX_DESC                     (MAX_DESC),
                   .USR_RST_NUM                  (USR_RST_NUM),
-		  .LAST_BRIDGE			(LAST_BRIDGE),
+	          .PCIE_AXI                     (PCIE_AXI),
+	          .PCIE_LAST_BRIDGE             (PCIE_LAST_BRIDGE),		  
+                  .LAST_BRIDGE			(LAST_BRIDGE),
 		  .EXTEND_WSTRB			(EXTEND_WSTRB)
 			 )
 i_axi4_slave      (
@@ -270,6 +275,7 @@ i_axi4_slave      (
                    .s_axi_usr_rlast     (s_axi_usr_rlast),
                    .s_axi_usr_ruser     (s_axi_usr_ruser),
                    .s_axi_usr_rvalid    (s_axi_usr_rvalid),
+                   .h2c_pulse_out	(h2c_pulse_out),                   
                    // Inputs
                    .axi_aclk            (axi_aclk),
                    .axi_aresetn         (axi_aresetn),
@@ -356,6 +362,8 @@ axi4lite_slave #(
                   .RAM_SIZE                     (RAM_SIZE),
                   .MAX_DESC                     (MAX_DESC),
                   .USR_RST_NUM                  (USR_RST_NUM),
+	          .PCIE_AXI                     (PCIE_AXI),
+	          .PCIE_LAST_BRIDGE             (PCIE_LAST_BRIDGE),		  
 		  .LAST_BRIDGE		        (LAST_BRIDGE),
 		  .EXTEND_WSTRB			(EXTEND_WSTRB)
 				 )
@@ -412,6 +420,7 @@ i_axi4lite_slave (
 		       .s_axi_usr_rdata	(s_axi_usr_rdata),
 		       .s_axi_usr_rresp	(s_axi_usr_rresp),
 		       .s_axi_usr_rvalid(s_axi_usr_rvalid),
+                       .h2c_pulse_out	(h2c_pulse_out),                   
 		       // Inputs
 		       .axi_aclk	(axi_aclk),
 		       .axi_aresetn	(axi_aresetn),
@@ -477,6 +486,8 @@ axi3_slave #(
                   .RAM_SIZE                     (RAM_SIZE),
                   .MAX_DESC                     (MAX_DESC),
                   .USR_RST_NUM                  (USR_RST_NUM),
+	          .PCIE_AXI                     (PCIE_AXI),
+	          .PCIE_LAST_BRIDGE             (PCIE_LAST_BRIDGE),		  
 		  .LAST_BRIDGE			(LAST_BRIDGE),
 		  .EXTEND_WSTRB			(EXTEND_WSTRB)
 			 )
@@ -536,6 +547,7 @@ i_axi3_slave (
 		   .s_axi_usr_rresp	(s_axi_usr_rresp),
 		   .s_axi_usr_rlast	(s_axi_usr_rlast),
 		   .s_axi_usr_rvalid	(s_axi_usr_rvalid),
+                   .h2c_pulse_out	(h2c_pulse_out),                   
 		   // Inputs
 		   .axi_aclk		(axi_aclk),
 		   .axi_aresetn		(axi_aresetn),

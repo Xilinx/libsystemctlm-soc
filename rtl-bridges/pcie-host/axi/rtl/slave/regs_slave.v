@@ -46,6 +46,8 @@ module regs_slave #(
                      parameter S_AXI_USR_BUSER_WIDTH    = 32,    
                      parameter S_AXI_USR_ARUSER_WIDTH   = 32,    
                      parameter S_AXI_USR_RUSER_WIDTH    = 32,
+                     parameter PCIE_AXI                 = 0, 
+                     parameter PCIE_LAST_BRIDGE         = 0,
 		     parameter LAST_BRIDGE              = 0,
 		     parameter EXTEND_WSTRB             = 1, 
                      parameter FORCE_RESP_ORDER         = 1
@@ -122,6 +124,8 @@ module regs_slave #(
 	output reg [31:0] 										intr_c2h_toggle_status_1_reg ,
 	output reg [31:0] 										intr_c2h_toggle_clear_0_reg ,
     output reg [31:0] 										intr_c2h_toggle_clear_1_reg ,
+    output reg [31:0] 										h2c_pulse_0_reg ,
+    output reg [31:0] 										h2c_pulse_1_reg ,
 	
     output reg [31:0] 										c2h_gpio_0_reg ,
     output reg [31:0] 										c2h_gpio_1_reg ,
@@ -2804,6 +2808,12 @@ module regs_slave #(
    reg [31:0] intr_c2h_toggle_clear_1_reg_clear ;
 
 
+// H2C_PULSE_0_REG
+   reg [31:0] h2c_pulse_0_reg_clear ;
+
+// H2C_PULSE_1_REG
+   reg [31:0] h2c_pulse_1_reg_clear ;
+
 
    reg [31:0] ownership_flip_clear;
 
@@ -2815,15 +2825,31 @@ module regs_slave #(
    localparam BRIDGE_IDENTIFICATION_ID = 32'hC3A89FE1;
 
 
-// BRIDGE_TYPE DEFINITION
-// 0x0 : AXI3 Bridge in Master Mode
-// 0x1 : AXI3 Bridge in Slave Mode
-// 0x2 : AXI4 Bridge in Master Mode
-// 0x3 : AXI4 Bridge in Slave Mode
-// 0x4 : AXI4-lite Bridge in Master Mode
-// 0x5 : AXI4-lite Bridge in Slave Mode
 
-   localparam [31:0] BRIDGE_TYPE = (EN_INTFS_AXI3==1'b1) ? 32'h0001 : (EN_INTFS_AXI4LITE==1'b1) ? 32'h0005 : 32'h0003 ;
+// BRIDGE_TYPE DEFINITION
+//0X0: AXI3 Bridge in Master Mode
+//0x1: AXI3 Bridge in Slave Mode
+//0x2: AXI4 Bridge in Master Mode
+//0x3: AXI4 Bridge in Slave Mode
+//0x4: AXI4-Lite Bridge in Master Mode
+//0x5: AXI4-Lite Bridge in Slave Mode
+//0x8: ACE Bridge in Master Mode 
+//0x9: ACE Bridge in Slave Mode
+//0xA: CHI Bridge in RN_F Mode
+//0xB: CHI Bridge in HN_F Mode
+//0xC: CXS Bridge
+//0x12: PCIe-AXI Master Bridge (AXI4 mode)
+//0x13: PCIe-AXI Slave Bridge (AXI4 mode)
+//0x14: PCIe-AXI Master Bridge (AXI4-Lite mode)
+//0x15: PCIe-AXI Slave Bridge (AXI4-Lite mode)
+
+
+
+   localparam [31:0] BRIDGE_TYPE = (PCIE_AXI==1'b1) ?
+        ( (EN_INTFS_AXI3==1'b1) ? 32'h0011 : (EN_INTFS_AXI4LITE==1'b1) ? 32'h0015 : 32'h0013 )
+      : ( (EN_INTFS_AXI3==1'b1) ? 32'h0001 : (EN_INTFS_AXI4LITE==1'b1) ? 32'h0005 : 32'h0003 ) ;
+
+   
 
 
 // BRIDGE CONFIG
@@ -2841,6 +2867,7 @@ module regs_slave #(
    localparam [31:0] BUSER_WIDTH_DECODE  = S_AXI_USR_BUSER_WIDTH;         
 
    localparam [0:0] LAST_BRIDGE_DECODE = LAST_BRIDGE;
+   localparam [0:0] PCIE_LAST_BRIDGE_DECODE = PCIE_LAST_BRIDGE;   
 
    localparam [31:0] MAX_DESC_DECODE = MAX_DESC;
    
@@ -3422,6 +3449,8 @@ module regs_slave #(
              intr_error_clear_reg           <=32'h0;
 	     intr_c2h_toggle_clear_0_reg    <=32'h0;
 	     intr_c2h_toggle_clear_1_reg    <=32'h0;
+	     h2c_pulse_0_reg                <=32'h0;
+	     h2c_pulse_1_reg                <=32'h0;
              intr_txn_avail_clear_reg       <=32'h0;
              intr_comp_clear_reg            <=32'h0;
              ownership_flip_reg             <=32'h0;
@@ -5562,6 +5591,18 @@ module regs_slave #(
                          intr_c2h_toggle_clear_1_reg[(byte_index*8) +: 8] <= s_axi_wdata[(byte_index*8) +: 8];
                       end  
 
+				  `H2C_PULSE_0_REG_ADDR: 
+                    for ( byte_index = 0; byte_index <= (S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
+                      if ( s_axi_wstrb[byte_index] == 1 ) begin
+                         h2c_pulse_0_reg[(byte_index*8) +: 8] <= s_axi_wdata[(byte_index*8) +: 8];
+                      end  
+
+				  `H2C_PULSE_1_REG_ADDR: 
+                    for ( byte_index = 0; byte_index <= (S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
+                      if ( s_axi_wstrb[byte_index] == 1 ) begin
+                         h2c_pulse_1_reg[(byte_index*8) +: 8] <= s_axi_wdata[(byte_index*8) +: 8];
+                      end  
+
 				  `INTR_C2H_TOGGLE_ENABLE_0_REG_ADDR: 
                     for ( byte_index = 0; byte_index <= (S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
                       if ( s_axi_wstrb[byte_index] == 1 ) begin
@@ -5601,6 +5642,13 @@ module regs_slave #(
 				if (intr_c2h_toggle_clear_1_reg_clear[i])begin
                    intr_c2h_toggle_clear_1_reg[i] <= 1'b0;
                 end
+                if (h2c_pulse_0_reg_clear[i])begin
+                   h2c_pulse_0_reg[i] <= 1'b0;
+                end
+                if (h2c_pulse_1_reg_clear[i])begin
+                   h2c_pulse_1_reg[i] <= 1'b0;
+                end
+
 
 
              end
@@ -5792,6 +5840,8 @@ always@(posedge axi_aclk)
                    `INTR_C2H_TOGGLE_STATUS_1_REG_ADDR       :reg_data_out_1 <= intr_c2h_toggle_status_1_reg    ;
 				   `INTR_C2H_TOGGLE_CLEAR_0_REG_ADDR        :reg_data_out_1 <= 32'h0           ;        
                    `INTR_C2H_TOGGLE_CLEAR_1_REG_ADDR        :reg_data_out_1 <= 32'h0           ;        
+				   `H2C_PULSE_0_REG_ADDR        :reg_data_out_1 <= 32'h0           ;        
+				   `H2C_PULSE_1_REG_ADDR        :reg_data_out_1 <= 32'h0           ;        
                    `C2H_GPIO_0_REG_ADDR              		:reg_data_out_1 <= c2h_gpio_0_reg           ;        
                    `C2H_GPIO_1_REG_ADDR              		:reg_data_out_1 <= c2h_gpio_1_reg           ;        
                    `C2H_GPIO_2_REG_ADDR              		:reg_data_out_1 <= c2h_gpio_2_reg           ;        
@@ -7332,7 +7382,7 @@ always @(posedge axi_aclk)
    
 //LAST_BRIDGE_REG
    always @( posedge axi_aclk ) begin
-      bridge_position_reg <= { 31'h0, LAST_BRIDGE_DECODE };
+      bridge_position_reg <= {30'h0, PCIE_LAST_BRIDGE_DECODE, LAST_BRIDGE_DECODE };      
    end
 
 
@@ -7654,6 +7704,56 @@ always @(posedge axi_aclk)
 			 end // else: !if(~rst_n)
 		  end // always @ ( posedge axi_aclk )
 	 end // always @ ( posedge axi_aclk )
+
+   // H2C_PULSE_0_REG
+   always @( posedge axi_aclk )
+     begin
+	for(i = 0; i < 32; i = i + 1 )
+	  begin
+	     if (~rst_n)
+	       h2c_pulse_0_reg_clear[i] <= 1'b0;
+	     else begin 
+		if (~h2c_pulse_0_reg_clear[i])begin
+		   if (h2c_pulse_0_reg[i]) 
+		     h2c_pulse_0_reg_clear[i] <= 1'b1;
+		   else
+		     h2c_pulse_0_reg_clear[i] <= 1'b0;
+		end
+		else begin
+		   if (~reg_wr_en)
+		     h2c_pulse_0_reg_clear[i] <= 1'b0;
+		   else
+		     h2c_pulse_0_reg_clear[i] <= h2c_pulse_0_reg_clear[i];
+		end 
+	     end 
+	  end 
+     end 
+   
+
+   // H2C_PULSE_1_REG
+   always @( posedge axi_aclk )
+     begin
+	for(i = 0; i < 32; i = i + 1 )
+	  begin
+	     if (~rst_n)
+	       h2c_pulse_1_reg_clear[i] <= 1'b0;
+	     else begin 
+		if (~h2c_pulse_1_reg_clear[i])begin
+		   if (h2c_pulse_1_reg[i]) 
+		     h2c_pulse_1_reg_clear[i] <= 1'b1;
+		   else
+		     h2c_pulse_1_reg_clear[i] <= 1'b0;
+		end
+		else begin
+		   if (~reg_wr_en)
+		     h2c_pulse_1_reg_clear[i] <= 1'b0;
+		   else
+		     h2c_pulse_1_reg_clear[i] <= h2c_pulse_1_reg_clear[i];
+		end 
+	     end 
+	  end 
+     end 
+   
 
 
 

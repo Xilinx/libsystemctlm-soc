@@ -85,6 +85,9 @@
 `define H2C_GPIO_14_REG_ADDR     'hF8    
 `define H2C_GPIO_15_REG_ADDR     'hFC    
 
+`define H2C_PULSE_0_REG_ADDR     'h100    
+`define H2C_PULSE_1_REG_ADDR     'h104   
+
 
 `define AXI_BRIDGE_CONFIG_REG_ADDR   'h200   
 `define AXI_MAX_DESC_REG_ADDR        'h204   

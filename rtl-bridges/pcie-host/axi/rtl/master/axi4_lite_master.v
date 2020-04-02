@@ -49,6 +49,8 @@ module axi4_lite_master
     parameter RAM_SIZE                      =   16384, // Size of RAM in Bytes
     parameter MAX_DESC                      =   16,                   
     parameter USR_RST_NUM                   =   4, //Allowed values : 1-31
+    parameter PCIE_AXI = 0,
+    parameter PCIE_LAST_BRIDGE = 0,
     parameter LAST_BRIDGE                   =   0,
     parameter EXTEND_WSTRB                  =   1
     )(
@@ -64,6 +66,7 @@ module axi4_lite_master
       //DUT Interrupt
       output [127:0] 				 h2c_intr_out,
       input [63:0] 				 c2h_intr_in,
+      output [63:0] 			      h2c_pulse_out,
       //DUT GPIO
       input [255:0] 				 c2h_gpio_in,
       output [255:0] 				 h2c_gpio_out,
@@ -188,6 +191,8 @@ module axi4_lite_master
        .EN_INTFM_AXI3 (0),
        .EN_INTFM_AXI4LITE (1),
        .EXTEND_WSTRB(EXTEND_WSTRB),
+       .PCIE_AXI                          (PCIE_AXI),
+       .PCIE_LAST_BRIDGE                          (PCIE_LAST_BRIDGE),
        .LAST_BRIDGE ( LAST_BRIDGE) )
    i_axi4_lite_master
      (/*AUTOINST*/
@@ -266,6 +271,7 @@ module axi4_lite_master
       .m_axi_usr_arvalid					(m_axi_usr_arvalid),
       .m_axi_usr_rready					(m_axi_usr_rready),
       //	.m_axi_usr_wid						(m_axi_usr_wid[M_AXI_USR_ID_WIDTH-1:0]),
+      .h2c_pulse_out				(h2c_pulse_out),
       // Inputs
       .axi_aclk							(axi_aclk),
       .axi_aresetn						(axi_aresetn),
