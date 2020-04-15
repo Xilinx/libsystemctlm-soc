@@ -34,8 +34,8 @@ VM_TRACE=1
 
 ifeq "$(VM_TRACE)" "1"
 VFLAGS += --trace
-SC_OBJS += $(VERILATOR_ROOT)/include/verilated_vcd_c.o
-SC_OBJS += $(VERILATOR_ROOT)/include/verilated_vcd_sc.o
+VERILATED_OBJS_COMMON += verilated_vcd_c.o
+VERILATED_OBJS_COMMON += verilated_vcd_sc.o
 CPPFLAGS += -DVM_TRACE=1
 endif
 
@@ -46,7 +46,9 @@ CPPFLAGS += -I ../../../ -I ../../ -I .
 CXXFLAGS += -Wall -O3 -g
 
 OBJS_COMMON += ../../test-modules/memory.o
-ALL_OBJS += $(OBJS_COMMON)
+
+VERILATED_OBJS_COMMON += $(OBJS_COMMON)
+ALL_OBJS += $(VERILATED_OBJS_COMMON)
 
 RTL_BRIDGE_CHI_DIR = ../../../rtl-bridges/pcie-host/chi/rtl
 RTL_BRIDGE_CHI_COMMON_DIR = $(RTL_BRIDGE_CHI_DIR)/common
@@ -67,17 +69,16 @@ CHI_HNF_DEV_V += $(RTL_BRIDGE_CHI_HN_F_V)
 CHI_HNF_DEV_H += $(VOBJ_DIR)/Vchi_bridge_hn_top.h
 CHI_HNF_DEV_LIB += $(VOBJ_DIR)/Vchi_bridge_hn_top__ALL.a
 CHI_HNF_RTL_TEST_OBJS += chi-hnf-test.o $(VERILATED_O)
-ALL_OBJS += $(SC_OBJS) $(CHI_HNF_RTL_TEST_OBJS) $(CHI_HNF_CHNLS_TEST_OBJS)
+ALL_OBJS += $(CHI_HNF_RTL_TEST_OBJS) $(CHI_HNF_CHNLS_TEST_OBJS)
 
 CHI_RNF_DEV_V += $(RTL_BRIDGE_CHI_RN_F_V)
 CHI_RNF_DEV_H += $(VOBJ_DIR)/Vchi_bridge_rn_top.h
 CHI_RNF_DEV_LIB += $(VOBJ_DIR)/Vchi_bridge_rn_top__ALL.a
 CHI_RNF_RTL_TEST_OBJS += chi-rnf-test.o $(VERILATED_O)
-ALL_OBJS += $(SC_OBJS) $(CHI_RNF_RTL_TEST_OBJS)
+ALL_OBJS += $(CHI_RNF_RTL_TEST_OBJS)
 
 CHI_RNF_HNF_LBACK_TEST_OBJS += chi-rnf-hnf-loopback-test.o
 CHI_RNF_HNF_LBACK_TEST_OBJS += $(VERILATED_O)
-CHI_RNF_HNF_LBACK_TEST_OBJS += $(SC_OBJS) $(OBJS_COMMON)
 ALL_OBJS += $(CHI_RNF_HNF_LBACK_TEST_OBJS)
 
 CHI_RNF_HNF_LBACK_VFIO_OBJS += test-pcie-chi-rnf-hnf-loopback-vfio.o
@@ -97,6 +98,8 @@ all: $(TARGETS)
 ## Dep generation ##
 -include $(ALL_OBJS:.o=.d)
 
+include $(VERILATOR_ROOT)/include/verilated.mk
+
 $(CHI_HNF_DEV_LIB): $(CHI_HNF_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_CHI_MASTER) $^
 	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_hn_top.mk
@@ -113,16 +116,16 @@ $(CHI_RNF_RTL_TEST_OBJS): $(CHI_RNF_DEV_LIB)
 
 $(CHI_RNF_HNF_LBACK_TEST_OBJS): $(CHI_HNF_DEV_LIB) $(CHI_RNF_DEV_LIB)
 
-chi-hnf-test: $(CHI_HNF_RTL_TEST_OBJS) $(CHI_HNF_DEV_LIB) $(SC_OBJS) $(OBJS_COMMON)
+chi-hnf-test: $(CHI_HNF_RTL_TEST_OBJS) $(CHI_HNF_DEV_LIB) $(VERILATED_OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
-chi-rnf-test: $(CHI_RNF_RTL_TEST_OBJS) $(CHI_RNF_DEV_LIB) $(SC_OBJS) $(OBJS_COMMON)
+chi-rnf-test: $(CHI_RNF_RTL_TEST_OBJS) $(CHI_RNF_DEV_LIB) $(VERILATED_OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 test-pcie-chi-rnf-hnf-loopback-vfio: $(CHI_RNF_HNF_LBACK_VFIO_OBJS) $(OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
-chi-rnf-hnf-loopback-test: $(CHI_RNF_HNF_LBACK_TEST_OBJS)
+chi-rnf-hnf-loopback-test: $(CHI_RNF_HNF_LBACK_TEST_OBJS) $(VERILATED_OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) $(CHI_RNF_DEV_LIB) $(CHI_HNF_DEV_LIB) -o $@
 
 clean:
