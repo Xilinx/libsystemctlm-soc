@@ -36,8 +36,8 @@ VM_TRACE=1
 
 ifeq "$(VM_TRACE)" "1"
 VFLAGS += --trace
-SC_OBJS += $(VERILATOR_ROOT)/include/verilated_vcd_c.o
-SC_OBJS += $(VERILATOR_ROOT)/include/verilated_vcd_sc.o
+VERILATED_OBJS_COMMON += verilated_vcd_c.o
+VERILATED_OBJS_COMMON += verilated_vcd_sc.o
 CPPFLAGS += -DVM_TRACE=1
 endif
 
@@ -48,7 +48,9 @@ CPPFLAGS += -I ../../../ -I ../../ -I .
 CXXFLAGS += -Wall -O3 -g
 
 OBJS_COMMON += ../../test-modules/memory.o
-ALL_OBJS += $(OBJS_COMMON)
+
+VERILATED_OBJS_COMMON += $(OBJS_COMMON)
+ALL_OBJS += $(VERILATED_OBJS_COMMON)
 
 RTL_BRIDGE_ACE_DIR = ../../../rtl-bridges/pcie-host/ace/rtl
 RTL_BRIDGE_ACE_COMON_DIR = $(RTL_BRIDGE_ACE_DIR)/common
@@ -61,7 +63,7 @@ ACE_SLV_DEV_LIB += $(VOBJ_DIR)/Vace_slv__ALL.a
 ACE_SLV_RTL_TEST_OBJS += ace-slv-test.o $(VERILATED_O)
 ACE_S_CACHE_SLV_VFIO_OBJS += test-pcie-ace-s-cache-slv-vfio.o
 
-ALL_OBJS += $(SC_OBJS) $(ACE_SLV_RTL_TEST_OBJS) $(ACE_S_CACHE_SLV_VFIO_OBJS)
+ALL_OBJS += $(ACE_SLV_RTL_TEST_OBJS) $(ACE_S_CACHE_SLV_VFIO_OBJS)
 
 VFLAGS_RTL_BRIDGE_ACE_MST  = -I$(RTL_BRIDGE_ACE_COMON_DIR)
 VFLAGS_RTL_BRIDGE_ACE_MST += -I$(RTL_BRIDGE_ACE_DIR)/master
@@ -72,7 +74,7 @@ ACE_MST_DEV_LIB += $(VOBJ_DIR)/Vace_mst__ALL.a
 ACE_MST_RTL_TEST_OBJS += ace-mst-test.o $(VERILATED_O)
 ACE_MST_SLV_LBACK_VFIO_OBJS += test-pcie-ace-mst-slv-loopback-vfio.o
 
-ALL_OBJS += $(SC_OBJS) $(ACE_MST_RTL_TEST_OBJS) $(ACE_MST_SLV_LBACK_VFIO_OBJS)
+ALL_OBJS += $(ACE_MST_RTL_TEST_OBJS) $(ACE_MST_SLV_LBACK_VFIO_OBJS)
 
 TARGETS += ace-mst-test
 TARGETS += test-pcie-ace-mst-slv-loopback-vfio
@@ -86,6 +88,8 @@ all: $(TARGETS)
 
 ## Dep generation ##
 -include $(ALL_OBJS:.o=.d)
+
+include $(VERILATOR_ROOT)/include/verilated.mk
 
 $(ACE_SLV_DEV_LIB): $(ACE_SLV_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_ACE_SLV) $^
@@ -101,10 +105,10 @@ $(ACE_SLV_RTL_TEST_OBJS): $(ACE_SLV_DEV_LIB)
 
 $(ACE_MST_RTL_TEST_OBJS): $(ACE_MST_DEV_LIB)
 
-ace-slv-test: $(ACE_SLV_RTL_TEST_OBJS) $(ACE_SLV_DEV_LIB) $(SC_OBJS) $(OBJS_COMMON)
+ace-slv-test: $(ACE_SLV_RTL_TEST_OBJS) $(ACE_SLV_DEV_LIB) $(VERILATED_OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
-ace-mst-test: $(ACE_MST_RTL_TEST_OBJS) $(ACE_MST_DEV_LIB) $(SC_OBJS) $(OBJS_COMMON)
+ace-mst-test: $(ACE_MST_RTL_TEST_OBJS) $(ACE_MST_DEV_LIB) $(VERILATED_OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 test-pcie-ace-s-cache-slv-vfio: $(ACE_S_CACHE_SLV_VFIO_OBJS) $(OBJS_COMMON)
