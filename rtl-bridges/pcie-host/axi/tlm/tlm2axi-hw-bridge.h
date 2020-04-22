@@ -158,7 +158,8 @@ tlm2axi_hw_bridge::tlm2axi_hw_bridge(sc_module_name name,
 
 bool tlm2axi_hw_bridge::is_axilite_master(void)
 {
-	return bridge_type == TYPE_AXI4_LITE_MASTER;
+	return bridge_type == TYPE_AXI4_LITE_MASTER ||
+               bridge_type == TYPE_PCIE_AXI4_LITE_MASTER;
 }
 
 void tlm2axi_hw_bridge::configure_aligner(void)
@@ -170,10 +171,14 @@ void tlm2axi_hw_bridge::configure_aligner(void)
 	case TYPE_AXI3_SLAVE:
 		max_burstlen = AXI3_MAX_BURSTLENGTH - 1;
 		break;
+	case TYPE_PCIE_AXI4_MASTER:
+	case TYPE_PCIE_AXI4_SLAVE:
 	case TYPE_AXI4_MASTER:
 	case TYPE_AXI4_SLAVE:
 		max_burstlen = AXI4_MAX_BURSTLENGTH - 1;
 		break;
+	case TYPE_PCIE_AXI4_LITE_MASTER:
+	case TYPE_PCIE_AXI4_LITE_SLAVE:
 	case TYPE_AXI4_LITE_MASTER:
 	case TYPE_AXI4_LITE_SLAVE:
 		max_burstlen = 1;
