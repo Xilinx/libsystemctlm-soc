@@ -80,6 +80,7 @@ private:
 
 	sc_vector<sc_signal<bool > > sig_dummy_bool_h2c;
 
+	bool is_axilite_master(void);
 	void configure_aligner(void);
 	void reset_thread(void);
 	void desc_setup_wstrb(int d, uint64_t addr,
@@ -153,6 +154,11 @@ tlm2axi_hw_bridge::tlm2axi_hw_bridge(sc_module_name name,
 	}
 	SC_THREAD(reset_thread);
 	SC_THREAD(process_wires);
+}
+
+bool tlm2axi_hw_bridge::is_axilite_master(void)
+{
+	return bridge_type == TYPE_AXI4_LITE_MASTER;
 }
 
 void tlm2axi_hw_bridge::configure_aligner(void)
@@ -341,7 +347,7 @@ int tlm2axi_hw_bridge::desc_access(int d, uint64_t addr, bool is_write,
 	 * 1. Single-beat
 	 * 2. Size matches exactly with AxSize (Size cannot be less)
 	 */
-	if (size <= data_bytewidth && bridge_type != TYPE_AXI4_LITE_MASTER) {
+	if (size <= data_bytewidth && !is_axilite_master()) {
 		axsize = map_size_to_axsize(size);
 		if (axsize != -1) {
 			offset = 0;
@@ -356,7 +362,7 @@ int tlm2axi_hw_bridge::desc_access(int d, uint64_t addr, bool is_write,
 		D(printf("need wstrb axsize=%d\n", axsize));
 	}
 
-	if (bridge_type == TYPE_AXI4_LITE_MASTER) {
+	if (is_axilite_master()) {
 		axsize = map_size_to_axsize(data_bytewidth);
 		assert(axsize != -1);
 	}
