@@ -83,6 +83,11 @@ protected:
 		TYPE_ACE_SLAVE			= 9,
 		TYPE_CHI_MASTER			= 10,
 		TYPE_CHI_SLAVE			= 11,
+		TYPE_CXS_BRIDGE			= 12,
+		TYPE_PCIE_AXI4_MASTER		= 18,
+		TYPE_PCIE_AXI4_SLAVE		= 19,
+		TYPE_PCIE_AXI4_LITE_MASTER	= 20,
+		TYPE_PCIE_AXI4_LITE_SLAVE	= 21,
 	};
 
 	unsigned int version_major;
@@ -113,6 +118,16 @@ protected:
 			"ace-slave",
 			"chi-master",
 			"chi-slave",
+			"cxs-bridge",
+			"unknown",		/* 13 */
+			"unknown",		/* 14 */
+			"unknown",		/* 15 */
+			"unknown",		/* 16 */
+			"unknown",		/* 17 */
+			"pcie-axi-master",	/* 18 */
+			"pcie-axi-slave",
+			"pcie-axi4lite-master",
+			"pcie-axi4lite-slave",
 		};
 
 		assert(t < (sizeof(type2str) / sizeof(*type2str)));
