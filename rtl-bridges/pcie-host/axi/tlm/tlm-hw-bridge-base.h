@@ -220,37 +220,37 @@ void tlm_hw_bridge_base::bridge_probe(void)
 
 void tlm_hw_bridge_base::process_wires(void)
 {
-        while (true) {
-                uint64_t r_toggles;
-                uint64_t r_irqs;
-                unsigned int i;
+	while (true) {
+		uint64_t r_toggles;
+		uint64_t r_irqs;
+		unsigned int i;
 
-                if (!irq.read())
-                        wait(irq.posedge_event());
+		if (!irq.read())
+			wait(irq.posedge_event());
 
-                r_toggles = dev_read32(INTR_C2H_TOGGLE_STATUS_1_REG_ADDR_SLAVE);
-                r_toggles <<= 32;
-                r_toggles |= dev_read32(INTR_C2H_TOGGLE_STATUS_0_REG_ADDR_SLAVE);
+		r_toggles = dev_read32(INTR_C2H_TOGGLE_STATUS_1_REG_ADDR_SLAVE);
+		r_toggles <<= 32;
+		r_toggles |= dev_read32(INTR_C2H_TOGGLE_STATUS_0_REG_ADDR_SLAVE);
 
-                if (!r_toggles)
-                        continue;
+		if (!r_toggles)
+			continue;
 
-                dev_write32(INTR_C2H_TOGGLE_CLEAR_0_REG_ADDR_SLAVE,
-                                                r_toggles);
-                dev_write32(INTR_C2H_TOGGLE_CLEAR_1_REG_ADDR_SLAVE,
-                                r_toggles >> 32);
+		dev_write32(INTR_C2H_TOGGLE_CLEAR_0_REG_ADDR_SLAVE,
+				r_toggles);
+		dev_write32(INTR_C2H_TOGGLE_CLEAR_1_REG_ADDR_SLAVE,
+				r_toggles >> 32);
 
-                r_irqs = dev_read32(C2H_INTR_STATUS_1_REG_ADDR_SLAVE);
-                r_irqs <<= 32;
-                r_irqs |= dev_read32(C2H_INTR_STATUS_0_REG_ADDR_SLAVE);
+		r_irqs = dev_read32(C2H_INTR_STATUS_1_REG_ADDR_SLAVE);
+		r_irqs <<= 32;
+		r_irqs |= dev_read32(C2H_INTR_STATUS_0_REG_ADDR_SLAVE);
 
-                D(printf("process-wires toggles=%lx r_irqs=%lx\n",
-                        r_toggles, r_irqs));
-                for (i = 0; i < c2h_irq.size(); i++) {
-                        c2h_irq[i].write(r_irqs & 1);
-                        r_irqs >>= 1;
-                }
-        }
+		D(printf("process-wires toggles=%lx r_irqs=%lx\n",
+			 r_toggles, r_irqs));
+		for (i = 0; i < c2h_irq.size(); i++) {
+			c2h_irq[i].write(r_irqs & 1);
+			r_irqs >>= 1;
+		}
+	}
 }
 
 void tlm_hw_bridge_base::dev_access(tlm::tlm_command cmd, uint64_t offset,
