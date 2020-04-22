@@ -252,14 +252,13 @@ private:
 	{
 		Transaction tr(trans);
 
-		m_mutex.lock();
-
 		// Since we're going todo waits in order to wiggle the
 		// AXI signals, we need to eliminate the accumulated
 		// TLM delay.
 		wait(delay, resetn.negedge_event());
 		delay = SC_ZERO_TIME;
 
+		m_mutex.lock();
 		if (resetn.read() && Validate(tr)) {
 			// Hand it over to the signal wiggling machinery.
 			if (trans.is_read()) {
