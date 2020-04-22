@@ -87,8 +87,13 @@ private:
 		genattr_extension *genattr;
 		bool eop = true;
 
-		m_mutex.lock();
+		// Since we're going to do waits in order to wiggle the
+		// AXI signals, we need to eliminate the accumulated
+		// TLM delay.
+		wait(delay, resetn.negedge_event());
+		delay = SC_ZERO_TIME;
 
+		m_mutex.lock();
 		// Get end of packet
 		trans.get_extension(genattr);
 		if (genattr) {
