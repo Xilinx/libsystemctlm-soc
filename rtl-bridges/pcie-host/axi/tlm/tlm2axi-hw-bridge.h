@@ -472,6 +472,12 @@ void tlm2axi_hw_bridge::b_transport(tlm::tlm_generic_payload& trans,
 	tlm_gp_set_axi_resp(trans, resp);
 	mutex.unlock();
 
+	// SystemC uses voluntary preemption and we don't have a wait-queue.
+	// If two callers are spinning around this interface, time may only
+	// advance in the calls with the lock taken while competing threads
+	// are stuck waiting for the lock(). Once this thread releases the
+	// lock it may keep re-taking it for-ever.
+	// Avoid that by yielding.
 	wait(SC_ZERO_TIME);
 }
 #endif
