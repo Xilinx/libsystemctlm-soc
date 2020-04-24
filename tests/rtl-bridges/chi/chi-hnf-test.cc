@@ -372,7 +372,7 @@ SC_MODULE(Top)
 		//
 		// Delay start (wait for reset and chi2tlm_hwb_bridge init)
 		//
-		rnf1.GetTrafficGenerator().setStartDelay(sc_time(11000, SC_US));
+		rnf1.GetTrafficGenerator().setStartDelay(sc_time(16000, SC_US));
 		rnf0.GetTrafficGenerator().setStartDelay(sc_time(100, SC_US));
 		rnf0.GetTrafficGenerator().addTransfers(xfers, 0, m_tgDoneCB);
 		rnf0.GetTrafficGenerator().enableDebug();
