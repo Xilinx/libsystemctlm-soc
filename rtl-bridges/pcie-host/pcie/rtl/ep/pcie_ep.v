@@ -28,9 +28,8 @@
 `include "defines_common.vh"
 `include "defines_pcie.vh"
 
-
 module pcie_ep #(
-		         parameter PCIE_EP_LAST_BRIDGE                    = 0 //If pcie_ep is last bridge in design
+		         parameter PCIE_EP_LAST_BRIDGE            = 0 //If pcie_ep is last bridge in design
 
                         ,parameter NUM_MASTER_BRIDGE              = 1 //Allowed values : 1 to 6
                         ,parameter NUM_SLAVE_BRIDGE               = 1 //Allowed values : 0 to 1
@@ -39,88 +38,88 @@ module pcie_ep #(
                         
                         ,parameter M_AXI_ADDR_WIDTH               = 64  //Allowed values : Upto 64  
                         
-                        ,parameter USR_RST_NUM                    = 1    //Allowed values : 1 to 31
+                        ,parameter USR_RST_NUM                    = 1 //Allowed values : 1 to 31
 
-                        ,parameter M_AXI_USR_0_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter M_AXI_USR_1_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter M_AXI_USR_2_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter M_AXI_USR_3_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter M_AXI_USR_4_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter M_AXI_USR_5_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter S_AXI_USR_0_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
-                        ,parameter S_AXI_USR_1_PROTOCOL                   = "AXI4"  //Allowed values : AXI4, AXI4LITE
+                        ,parameter M_AXI_USR_0_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter M_AXI_USR_1_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter M_AXI_USR_2_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter M_AXI_USR_3_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter M_AXI_USR_4_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter M_AXI_USR_5_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter S_AXI_USR_0_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
+                        ,parameter S_AXI_USR_1_PROTOCOL           = "AXI4" //Allowed values : AXI4, AXI4LITE
                         
-                        ,parameter M_AXI_USR_0_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter M_AXI_USR_0_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter M_AXI_USR_0_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter M_AXI_USR_0_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_0_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_0_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_0_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_0_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_0_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter M_AXI_USR_0_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter M_AXI_USR_0_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter M_AXI_USR_0_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_0_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_0_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_0_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_0_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter M_AXI_USR_1_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter M_AXI_USR_1_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter M_AXI_USR_1_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter M_AXI_USR_1_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_1_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_1_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_1_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_1_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_1_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter M_AXI_USR_1_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter M_AXI_USR_1_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter M_AXI_USR_1_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_1_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_1_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_1_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_1_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter M_AXI_USR_2_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter M_AXI_USR_2_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter M_AXI_USR_2_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter M_AXI_USR_2_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_2_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_2_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_2_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_2_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_2_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter M_AXI_USR_2_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter M_AXI_USR_2_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter M_AXI_USR_2_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_2_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_2_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_2_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_2_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter M_AXI_USR_3_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter M_AXI_USR_3_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter M_AXI_USR_3_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter M_AXI_USR_3_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_3_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_3_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_3_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_3_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_3_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter M_AXI_USR_3_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter M_AXI_USR_3_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter M_AXI_USR_3_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_3_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_3_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_3_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_3_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter M_AXI_USR_4_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter M_AXI_USR_4_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter M_AXI_USR_4_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter M_AXI_USR_4_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_4_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_4_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_4_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_4_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_4_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter M_AXI_USR_4_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter M_AXI_USR_4_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter M_AXI_USR_4_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_4_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_4_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_4_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_4_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter M_AXI_USR_5_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter M_AXI_USR_5_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter M_AXI_USR_5_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter M_AXI_USR_5_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_5_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_5_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_5_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter M_AXI_USR_5_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_5_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter M_AXI_USR_5_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter M_AXI_USR_5_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter M_AXI_USR_5_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_5_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_5_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_5_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter M_AXI_USR_5_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter S_AXI_USR_0_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter S_AXI_USR_0_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter S_AXI_USR_0_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter S_AXI_USR_0_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_0_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_0_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_0_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_0_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_0_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter S_AXI_USR_0_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter S_AXI_USR_0_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter S_AXI_USR_0_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_0_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_0_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_0_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_0_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
-                        ,parameter S_AXI_USR_1_ADDR_WIDTH           = 64  //Allowed values : Upto 64  
-                        ,parameter S_AXI_USR_1_DATA_WIDTH           = 128 //Allowed values : 32,64,128
-                        ,parameter S_AXI_USR_1_ID_WIDTH             = 16  //Allowed values : 1 to 16
-                        ,parameter S_AXI_USR_1_AWUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_1_WUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_1_BUSER_WIDTH          = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_1_ARUSER_WIDTH         = 32  //Allowed values : 1 to 32  
-                        ,parameter S_AXI_USR_1_RUSER_WIDTH          = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_1_ADDR_WIDTH         = 64  //Allowed values : Upto 64  
+                        ,parameter S_AXI_USR_1_DATA_WIDTH         = 128 //Allowed values : 32,64,128
+                        ,parameter S_AXI_USR_1_ID_WIDTH           = 16  //Allowed values : 1 to 16
+                        ,parameter S_AXI_USR_1_AWUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_1_WUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_1_BUSER_WIDTH        = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_1_ARUSER_WIDTH       = 32  //Allowed values : 1 to 32  
+                        ,parameter S_AXI_USR_1_RUSER_WIDTH        = 32  //Allowed values : 1 to 32  
                         
                         )(
                           
@@ -143,7 +142,9 @@ module pcie_ep #(
                           ,output [NUM_MASTER_BRIDGE+NUM_SLAVE_BRIDGE-1:0]              irq_req
                           ,input [NUM_MASTER_BRIDGE+NUM_SLAVE_BRIDGE-1:0]               irq_ack
                           
-                          // S_AXI - AXI4-Lite
+                          //AXI4-Lite slave interface is used for configuration of Bridge.
+                          //"s_axi_pcie_m<NUM>" is used for AXI-master-bridge. 
+                          //"s_axi_pcie_s<NUM>" is used for AXI-slave-bridge
                           `d_axi4lite_s(s_axi_pcie_m0, S_AXI_ADDR_WIDTH, 32) 
                           `d_axi4lite_s(s_axi_pcie_m1, S_AXI_ADDR_WIDTH, 32) 
                           `d_axi4lite_s(s_axi_pcie_m2, S_AXI_ADDR_WIDTH, 32) 
@@ -153,7 +154,9 @@ module pcie_ep #(
                           `d_axi4lite_s(s_axi_pcie_s0, S_AXI_ADDR_WIDTH, 32) 
                           `d_axi4lite_s(s_axi_pcie_s1, S_AXI_ADDR_WIDTH, 32) 
 
-                          // M_AXI - AXI4
+                          //AXI4 master interface is used for data-transfer to/from host in mode-1.
+                          //"m_axi_pcie_m<NUM>" is used for AXI-master-bridge. 
+                          //"m_axi_pcie_s<NUM>" is used for AXI-slave-bridge
                           `d_axi4_m(m_axi_pcie_m0, M_AXI_ADDR_WIDTH, 128, 16, 32) 
                           `d_axi4_m(m_axi_pcie_m1, M_AXI_ADDR_WIDTH, 128, 16, 32) 
                           `d_axi4_m(m_axi_pcie_m2, M_AXI_ADDR_WIDTH, 128, 16, 32) 
@@ -163,7 +166,9 @@ module pcie_ep #(
                           `d_axi4_m(m_axi_pcie_s0, M_AXI_ADDR_WIDTH, 128, 16, 32) 
                           `d_axi4_m(m_axi_pcie_s1, M_AXI_ADDR_WIDTH, 128, 16, 32) 
 
-                          //M_AXI_USR, S_AXI_USR
+                          //AXI master/slave interface is to be connected to DUT.
+                          //"m_axi_usr_<NUM>" is AXI master interface which used for AXI-master-bridge.
+                          //"s_axi_usr_<NUM>" is AXI slave interface which used for AXI-slave-bridge.
                           `d_axi_m(m_axi_usr_0, M_AXI_USR_0_PROTOCOL, M_AXI_USR_0_ADDR_WIDTH, M_AXI_USR_0_DATA_WIDTH, M_AXI_USR_0_ID_WIDTH, M_AXI_USR_0_AWUSER_WIDTH, M_AXI_USR_0_WUSER_WIDTH, M_AXI_USR_0_BUSER_WIDTH, M_AXI_USR_0_ARUSER_WIDTH, M_AXI_USR_0_RUSER_WIDTH) 
                           `d_axi_m(m_axi_usr_1, M_AXI_USR_1_PROTOCOL, M_AXI_USR_1_ADDR_WIDTH, M_AXI_USR_1_DATA_WIDTH, M_AXI_USR_1_ID_WIDTH, M_AXI_USR_1_AWUSER_WIDTH, M_AXI_USR_1_WUSER_WIDTH, M_AXI_USR_1_BUSER_WIDTH, M_AXI_USR_1_ARUSER_WIDTH, M_AXI_USR_1_RUSER_WIDTH) 
                           `d_axi_m(m_axi_usr_2, M_AXI_USR_2_PROTOCOL, M_AXI_USR_2_ADDR_WIDTH, M_AXI_USR_2_DATA_WIDTH, M_AXI_USR_2_ID_WIDTH, M_AXI_USR_2_AWUSER_WIDTH, M_AXI_USR_2_WUSER_WIDTH, M_AXI_USR_2_BUSER_WIDTH, M_AXI_USR_2_ARUSER_WIDTH, M_AXI_USR_2_RUSER_WIDTH) 
@@ -176,23 +181,23 @@ module pcie_ep #(
 );
 
 localparam RAM_SIZE                       = 16384; //Size of RAM in Bytes
-localparam MAX_DESC                       = 16;    //Max number of descriptors 
+localparam MAX_DESC                       = 16; //Max number of descriptors 
 localparam EXTEND_WSTRB                   = 1;
 
 localparam S_AXI_DATA_WIDTH               = 32; //Allowed values : 32    
 
 localparam M_AXI_DATA_WIDTH               = 128; //Allowed values : 128
-localparam M_AXI_ID_WIDTH                 = 16;  //Allowed values : log2(MAX_DESC) to 16
-localparam M_AXI_USER_WIDTH               = 32;  //Allowed values : 1 to 32  
+localparam M_AXI_ID_WIDTH                 = 16; //Allowed values : log2(MAX_DESC) to 16
+localparam M_AXI_USER_WIDTH               = 32; //Allowed values : 1 to 32  
 
-localparam M_USR_RST_NUM_0                    = USR_RST_NUM;    //Allowed values : 1 to 31
-localparam M_USR_RST_NUM_1                    = 1;    //Allowed values : 1 to 31
-localparam M_USR_RST_NUM_2                    = 1;    //Allowed values : 1 to 31
-localparam M_USR_RST_NUM_3                    = 1;    //Allowed values : 1 to 31
-localparam M_USR_RST_NUM_4                    = 1;    //Allowed values : 1 to 31
-localparam M_USR_RST_NUM_5                    = 1;    //Allowed values : 1 to 31
-localparam S_USR_RST_NUM_0                    = 1;    //Allowed values : 1 to 31
-localparam S_USR_RST_NUM_1                    = 1;    //Allowed values : 1 to 31
+localparam M_USR_RST_NUM_0                = USR_RST_NUM; //Allowed values : 1 to 31
+localparam M_USR_RST_NUM_1                = 1; //Allowed values : 1 to 31
+localparam M_USR_RST_NUM_2                = 1; //Allowed values : 1 to 31
+localparam M_USR_RST_NUM_3                = 1; //Allowed values : 1 to 31
+localparam M_USR_RST_NUM_4                = 1; //Allowed values : 1 to 31
+localparam M_USR_RST_NUM_5                = 1; //Allowed values : 1 to 31
+localparam S_USR_RST_NUM_0                = 1; //Allowed values : 1 to 31
+localparam S_USR_RST_NUM_1                = 1; //Allowed values : 1 to 31
 
 localparam PCIE_LAST_BRIDGE_M0 = ( (NUM_SLAVE_BRIDGE=='h0) && (NUM_MASTER_BRIDGE=='h1) );
 localparam PCIE_LAST_BRIDGE_M1 = ( (NUM_SLAVE_BRIDGE=='h0) && (NUM_MASTER_BRIDGE=='h2) );
@@ -212,75 +217,74 @@ localparam LAST_BRIDGE_M5 = (PCIE_EP_LAST_BRIDGE==1'b0) ? 1'b0 : PCIE_LAST_BRIDG
 localparam LAST_BRIDGE_S0 = (PCIE_EP_LAST_BRIDGE==1'b0) ? 1'b0 : PCIE_LAST_BRIDGE_S0 ; 
 localparam LAST_BRIDGE_S1 = (PCIE_EP_LAST_BRIDGE==1'b0) ? 1'b0 : PCIE_LAST_BRIDGE_S1 ; 
                           
-wire [127:0] h2c_intr_out;
+wire [127:0]                                            h2c_intr_out;
+wire [7:0]                                              irq_out_net;
+wire [7:0]                                              irq_ack_net;
+wire [31:0]                                             irq_ack_dummy;
+wire                                                    m_irq_out_0;
+wire                                                    m_irq_out_1;
+wire                                                    m_irq_out_2;
+wire                                                    m_irq_out_3;
+wire                                                    m_irq_out_4;
+wire                                                    m_irq_out_5;
+wire                                                    s_irq_out_0;
+wire                                                    s_irq_out_1;
+wire                                                    m_irq_ack_0;
+wire                                                    m_irq_ack_1;
+wire                                                    m_irq_ack_2;
+wire                                                    m_irq_ack_3;
+wire                                                    m_irq_ack_4;
+wire                                                    m_irq_ack_5;
+wire                                                    s_irq_ack_0;
+wire                                                    s_irq_ack_1;
 
-wire [7:0] irq_out_net;
-wire [7:0] irq_ack_net;
-wire [31:0] irq_ack_dummy;
-wire m_irq_out_0;
-wire m_irq_out_1;
-wire m_irq_out_2;
-wire m_irq_out_3;
-wire m_irq_out_4;
-wire m_irq_out_5;
-wire s_irq_out_0;
-wire s_irq_out_1;
-wire m_irq_ack_0;
-wire m_irq_ack_1;
-wire m_irq_ack_2;
-wire m_irq_ack_3;
-wire m_irq_ack_4;
-wire m_irq_ack_5;
-wire s_irq_ack_0;
-wire s_irq_ack_1;
-
-wire [127:0] 						 m_h2c_intr_out_0;
-wire [63:0] 						 m_c2h_intr_in_0;
-wire [63:0] 			                         m_h2c_pulse_out_0;                          
-wire [255:0] 						 m_c2h_gpio_in_0;
-wire [255:0] 						 m_h2c_gpio_out_0;
+wire [127:0] 						m_h2c_intr_out_0;
+wire [63:0] 						m_c2h_intr_in_0;
+wire [63:0] 			                        m_h2c_pulse_out_0;                          
+wire [255:0] 						m_c2h_gpio_in_0;
+wire [255:0] 						m_h2c_gpio_out_0;
                           
-wire [127:0] 						 m_h2c_intr_out_1;
-wire [63:0] 						 m_c2h_intr_in_1;
-wire [63:0] 			                         m_h2c_pulse_out_1;                          
-wire [255:0] 						 m_c2h_gpio_in_1;
-wire [255:0] 						 m_h2c_gpio_out_1;
+wire [127:0] 						m_h2c_intr_out_1;
+wire [63:0] 						m_c2h_intr_in_1;
+wire [63:0] 			                        m_h2c_pulse_out_1;                          
+wire [255:0] 						m_c2h_gpio_in_1;
+wire [255:0] 						m_h2c_gpio_out_1;
 
-wire [127:0] 						 m_h2c_intr_out_2;
-wire [63:0] 						 m_c2h_intr_in_2;
-wire [63:0] 			                         m_h2c_pulse_out_2;                          
-wire [255:0] 						 m_c2h_gpio_in_2;
-wire [255:0] 						 m_h2c_gpio_out_2;
+wire [127:0] 						m_h2c_intr_out_2;
+wire [63:0] 						m_c2h_intr_in_2;
+wire [63:0] 			                        m_h2c_pulse_out_2;                          
+wire [255:0] 						m_c2h_gpio_in_2;
+wire [255:0] 						m_h2c_gpio_out_2;
 
-wire [127:0] 						 m_h2c_intr_out_3;
-wire [63:0] 						 m_c2h_intr_in_3;
-wire [63:0] 			                         m_h2c_pulse_out_3;                          
-wire [255:0] 						 m_c2h_gpio_in_3;
-wire [255:0] 						 m_h2c_gpio_out_3;
+wire [127:0] 						m_h2c_intr_out_3;
+wire [63:0] 						m_c2h_intr_in_3;
+wire [63:0] 			                        m_h2c_pulse_out_3;                          
+wire [255:0] 						m_c2h_gpio_in_3;
+wire [255:0] 						m_h2c_gpio_out_3;
 
-wire [127:0] 						 m_h2c_intr_out_4;
-wire [63:0] 						 m_c2h_intr_in_4;
-wire [63:0] 			                         m_h2c_pulse_out_4;                          
-wire [255:0] 						 m_c2h_gpio_in_4;
-wire [255:0] 						 m_h2c_gpio_out_4;
+wire [127:0] 						m_h2c_intr_out_4;
+wire [63:0] 						m_c2h_intr_in_4;
+wire [63:0] 			                        m_h2c_pulse_out_4;                          
+wire [255:0] 						m_c2h_gpio_in_4;
+wire [255:0] 						m_h2c_gpio_out_4;
 
-wire [127:0] 						 m_h2c_intr_out_5;
-wire [63:0] 						 m_c2h_intr_in_5;
-wire [63:0] 			                         m_h2c_pulse_out_5;                          
-wire [255:0] 						 m_c2h_gpio_in_5;
-wire [255:0] 						 m_h2c_gpio_out_5;
+wire [127:0] 						m_h2c_intr_out_5;
+wire [63:0] 						m_c2h_intr_in_5;
+wire [63:0] 			                        m_h2c_pulse_out_5;                          
+wire [255:0] 						m_c2h_gpio_in_5;
+wire [255:0] 						m_h2c_gpio_out_5;
 
-wire [127:0] 						 s_h2c_intr_out_0;
-wire [63:0] 						 s_c2h_intr_in_0;
-wire [63:0] 			                         s_h2c_pulse_out_0;                          
-wire [255:0] 						 s_c2h_gpio_in_0;
-wire [255:0] 						 s_h2c_gpio_out_0;
+wire [127:0] 						s_h2c_intr_out_0;
+wire [63:0] 						s_c2h_intr_in_0;
+wire [63:0] 			                        s_h2c_pulse_out_0;                          
+wire [255:0] 						s_c2h_gpio_in_0;
+wire [255:0] 						s_h2c_gpio_out_0;
                           
-wire [127:0] 						 s_h2c_intr_out_1;
-wire [63:0] 						 s_c2h_intr_in_1;
-wire [63:0] 			                         s_h2c_pulse_out_1;                          
-wire [255:0] 						 s_c2h_gpio_in_1;
-wire [255:0] 						 s_h2c_gpio_out_1;
+wire [127:0] 						s_h2c_intr_out_1;
+wire [63:0] 						s_c2h_intr_in_1;
+wire [63:0] 			                        s_h2c_pulse_out_1;                          
+wire [255:0] 						s_c2h_gpio_in_1;
+wire [255:0] 						s_h2c_gpio_out_1;
 
 assign h2c_intr_out = m_h2c_intr_out_0;
 assign usr_irq_ack = m_h2c_pulse_out_0;                          
@@ -314,6 +318,10 @@ assign m_irq_ack_3 = irq_ack_net[3];
 assign m_irq_ack_2 = irq_ack_net[2];
 assign m_irq_ack_1 = irq_ack_net[1];
 assign m_irq_ack_0 = irq_ack_net[0];
+
+///////////////////////
+//Instantiation of AXI-master-bridge, AXI-slave-bridge.
+//////////////////////
 
 generate 
 
@@ -646,8 +654,6 @@ assign s_irq_out_0 = 1'b0;
 
 end
 
-
-
 if (NUM_SLAVE_BRIDGE<='h2) begin : gen_axi_slave_1
 
 axi_slave#(
@@ -693,11 +699,8 @@ end else begin
 
 assign s_irq_out_1 = 1'b0;  
 
-
 end
 
-
 endgenerate
-
 
 endmodule
