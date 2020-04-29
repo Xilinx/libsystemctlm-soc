@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void hexdump(const char *prefix, unsigned char *buf, size_t len)
+static void hexdump(const char *prefix, unsigned char *buf, size_t len)
 {
         unsigned char *u8 = buf;
         size_t i;
