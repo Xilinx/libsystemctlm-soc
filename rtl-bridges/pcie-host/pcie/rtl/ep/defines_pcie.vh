@@ -24,6 +24,10 @@
  *
  */
 
+//Maximum AXI-master-bridge/AXI-slave-bridge supported in rtl
+`define MAX_NUM_MASTER_BR_SUP 6
+`define MAX_NUM_SLAVE_BR_SUP 6
+
 //Declare AXI master ports
 `define d_axi_m(IF, AXI_PROTOCOL, ADDR_WIDTH, DATA_WIDTH, ID_WIDTH, AWUSER_WIDTH, WUSER_WIDTH, BUSER_WIDTH, ARUSER_WIDTH, RUSER_WIDTH) \
 	,output [``ID_WIDTH``-1:0] ``IF``_awid, \
