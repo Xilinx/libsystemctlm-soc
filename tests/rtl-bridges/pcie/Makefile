@@ -45,10 +45,20 @@ CPPFLAGS += -I $(VOBJ_DIR)
 CPPFLAGS += -I $(VERILATOR_ROOT)/include
 
 CPPFLAGS += -I ../../../ -I ../../ -I .
+CPPFLAGS += -I ../../../libremote-port/
 CXXFLAGS += -Wall -O3 -g
 
 OBJS_COMMON += ../../test-modules/memory.o
 OBJS_COMMON += ../../../trace/trace.o
+OBJS_COMMON += ../../../soc/pci/core/pci-device-base.o
+OBJS_COMMON += ../../../libremote-port/safeio.o
+OBJS_COMMON += ../../../libremote-port/remote-port-proto.o
+OBJS_COMMON += ../../../libremote-port/remote-port-sk.o
+OBJS_COMMON += ../../../libremote-port/remote-port-tlm.o
+OBJS_COMMON += ../../../libremote-port/remote-port-tlm-wires.o
+OBJS_COMMON += ../../../libremote-port/remote-port-tlm-memory-master.o
+OBJS_COMMON += ../../../libremote-port/remote-port-tlm-memory-slave.o
+OBJS_COMMON += ../../../libremote-port/remote-port-tlm-pci-ep.o
 
 RTL_BRIDGE_PCIE_DIR = ../../../rtl-bridges/pcie-host/pcie/rtl/
 RTL_BRIDGE_AXI_DIR = ../../../rtl-bridges/pcie-host/axi/rtl/
@@ -70,6 +80,9 @@ VFLAGS_RTL_BRIDGE_PCIE_EP +=-I$(RTL_BRIDGE_AXI_DIR)/slave/
 TEST_PCIE_PCIE_EP_OBJS += test-pcie-ep.o
 TEST_PCIE_PCIE_EP_OBJS += $(VERILATED_O)
 
+REFDESIGN_SIM_OBJS += refdesign-sim.o
+REFDESIGN_SIM_OBJS += $(VERILATED_O)
+
 ifeq "$(VM_TRACE)" "1"
 VFLAGS += --trace
 VERILATED_OBJS_COMMON += verilated_vcd_c.o
@@ -82,6 +95,7 @@ VERILATED_OBJS_COMMON += $(OBJS_COMMON)
 ALL_OBJS += $(VERILATED_OBJS_COMMON)
 
 TARGETS += test-pcie-ep
+TARGETS += refdesign-sim
 
 ################################################################################
 
@@ -100,6 +114,11 @@ $(VERILATED_O) $(RTL_BRIDGE_PCIE_EP_LIB): $(RTL_BRIDGE_PCIE_EP_V)
 test-pcie-ep.o: $(RTL_BRIDGE_PCIE_EP_LIB)
 
 test-pcie-ep: $(TEST_PCIE_PCIE_EP_OBJS) $(VERILATED_OBJS_COMMON) $(V_LDLIBS)
+	$(LINK.cc) $^ $(LDLIBS) -o $@
+
+refdesign-sim.o: $(RTL_BRIDGE_PCIE_EP_LIB)
+
+refdesign-sim: $(REFDESIGN_SIM_OBJS) $(VERILATED_OBJS_COMMON) $(V_LDLIBS)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 clean:
