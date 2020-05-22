@@ -40,4 +40,16 @@ static inline uint64_t bitops_mask64(unsigned int start, unsigned int len)
 	return v;
 }
 
+// Maps an sc_bv into a vector of booleans.
+template <int width>
+static void map_sc_bv2v(sc_vector<sc_signal<bool> > &v, const sc_bv<width> &s)
+{
+	int i;
+
+	for (i = 0; i < width && i < v.size(); i++) {
+		bool b = s[i].to_bool();
+
+		v[i].write(b);
+	}
+}
 #endif
