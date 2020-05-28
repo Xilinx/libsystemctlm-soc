@@ -40,65 +40,65 @@ class xilinx_versal
 : public remoteport_tlm
 {
 private:
-	remoteport_tlm_memory_master rp_m_axi_gp_0;
-	remoteport_tlm_memory_master rp_m_axi_gp_2;
-	remoteport_tlm_memory_master rp_if_ps_noc_cci_0;
-	remoteport_tlm_memory_master rp_if_ps_noc_cci_1;
-	remoteport_tlm_memory_master rp_if_ps_noc_cci_2;
-	remoteport_tlm_memory_master rp_if_ps_noc_cci_3;
-	remoteport_tlm_memory_master rp_if_ps_noc_nci_0;
-	remoteport_tlm_memory_master rp_if_ps_noc_nci_1;
-	remoteport_tlm_memory_master rp_if_ps_noc_pcie_0;
-	remoteport_tlm_memory_master rp_if_ps_noc_pcie_1;
-	remoteport_tlm_memory_master rp_if_ps_noc_rpu_0;
-	remoteport_tlm_memory_master rp_if_pmc_noc_axi_0;
+	remoteport_tlm_memory_master rp_m_axi_fpd;
+	remoteport_tlm_memory_master rp_m_axi_lpd;
+	remoteport_tlm_memory_master rp_fpd_cci_noc_0;
+	remoteport_tlm_memory_master rp_fpd_cci_noc_1;
+	remoteport_tlm_memory_master rp_fpd_cci_noc_2;
+	remoteport_tlm_memory_master rp_fpd_cci_noc_3;
+	remoteport_tlm_memory_master rp_fpd_axi_noc_0;
+	remoteport_tlm_memory_master rp_fpd_axi_noc_1;
+	remoteport_tlm_memory_master rp_cpm_pcie_noc_0;
+	remoteport_tlm_memory_master rp_cpm_pcie_noc_1;
+	remoteport_tlm_memory_master rp_noc_lpd_axi_0;
+	remoteport_tlm_memory_master rp_pmc_noc_axi_0;
 
-	remoteport_tlm_memory_slave rp_s_axi_gp_0;
+	remoteport_tlm_memory_slave rp_s_axi_fpd;
 	remoteport_tlm_memory_slave rp_s_axi_gp_2;
-	remoteport_tlm_memory_slave rp_s_axi_gp_4;
-	remoteport_tlm_memory_slave rp_s_axi_acp;
-	remoteport_tlm_memory_slave rp_s_axi_ace;
+	remoteport_tlm_memory_slave rp_s_axi_lpd;
+	remoteport_tlm_memory_slave rp_s_acp_fpd;
+	remoteport_tlm_memory_slave rp_s_ace_fpd;
 
-	remoteport_tlm_memory_slave rp_if_noc_ps_nci_0;
-	remoteport_tlm_memory_slave rp_if_noc_ps_nci_1;
-	remoteport_tlm_memory_slave rp_if_noc_ps_cci_0;
-	remoteport_tlm_memory_slave rp_if_noc_ps_cci_1;
-	remoteport_tlm_memory_slave rp_if_noc_ps_pcie_0;
-	remoteport_tlm_memory_slave rp_if_noc_ps_pcie_1;
-	remoteport_tlm_memory_slave rp_if_noc_pmc_axi_0;
+	remoteport_tlm_memory_slave rp_noc_fpd_axi_0;
+	remoteport_tlm_memory_slave rp_noc_fpd_axi_1;
+	remoteport_tlm_memory_slave rp_noc_fpd_cci_0;
+	remoteport_tlm_memory_slave rp_noc_fpd_cci_1;
+	remoteport_tlm_memory_slave rp_noc_cpm_pcie_0;
+	remoteport_tlm_memory_slave rp_noc_cpm_pcie_1;
+	remoteport_tlm_memory_slave rp_noc_pmc_axi_0;
 
 	remoteport_tlm_wires rp_pl2ps_irq;
 	remoteport_tlm_wires rp_wires_out;
 
 public:
 	/* FPD 0 and 1. Base PS only has port 0.  */
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *m_axi_gp_0;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *m_axi_fpd;
 	/* LPD.  */
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *m_axi_gp_2;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_cci_0;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_cci_1;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_cci_2;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_cci_3;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_nci_0;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_nci_1;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_pcie_0;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_pcie_1;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_ps_noc_rpu_0;
-	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *if_pmc_noc_axi_0;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *m_axi_lpd;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *fpd_cci_noc_0;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *fpd_cci_noc_1;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *fpd_cci_noc_2;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *fpd_cci_noc_3;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *fpd_axi_noc_0;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *fpd_axi_noc_1;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *cpm_pcie_noc_0;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *cpm_pcie_noc_1;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *noc_lpd_axi_0;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *pmc_noc_axi_0;
 
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_gp_0;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_fpd;
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_gp_2;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_gp_4;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_acp;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_ace;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_lpd;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_acp_fpd;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_ace_fpd;
 
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_ps_nci_0;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_ps_nci_1;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_ps_cci_0;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_ps_cci_1;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_ps_pcie_0;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_ps_pcie_1;
-	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *if_noc_pmc_axi_0;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_fpd_axi_0;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_fpd_axi_1;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_fpd_cci_0;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_fpd_cci_1;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_cpm_pcie_0;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_cpm_pcie_1;
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_pmc_axi_0;
 
 	sc_vector<sc_signal<bool> > pl2ps_irq;
 	sc_vector<sc_signal<bool> > pl_reset;
