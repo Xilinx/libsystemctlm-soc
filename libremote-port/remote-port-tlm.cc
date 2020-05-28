@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/utsname.h>
+#include <errno.h>
 
 #include "systemc.h"
 #include "tlm_utils/simple_initiator_socket.h"
