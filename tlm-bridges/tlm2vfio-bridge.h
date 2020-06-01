@@ -42,8 +42,7 @@ public:
 /*
  * MM with support for IOMMU mappings over VFIO.
  *
- * TODO: Add support for multiple Bridges on the samve vdev.
-*/
+ */
 class tlm_mm_vfio : public tlm::tlm_mm_interface
 {
 public:
@@ -53,6 +52,7 @@ public:
 		  gp("gp", nr_gp)
 	{
 		int flags = MAP_SHARED | MAP_ANONYMOUS;
+		uintptr_t map_uint;
 		unsigned int i;
 		void *m;
 
@@ -68,12 +68,13 @@ public:
 		}
 
 		map = (uint8_t *) m;
+		map_uint = (uintptr_t) map;
 
 		// For simulations, we allow this MM to be used without a
 		// VFIO device. Without dev, we excersize the MM without
 		// actually creating memory maps through IOMMU's.
 		if (dev) {
-			dev->iommu_map_dma((uintptr_t) map, 0, map_size * 2,
+			dev->iommu_map_dma(map_uint, map_uint, map_size * 2,
 				VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE);
 		}
 
@@ -86,7 +87,7 @@ public:
 
 	~tlm_mm_vfio() {
 		if (dev) {
-			dev->iommu_unmap_dma(0, map_size * 2,
+			dev->iommu_unmap_dma((uintptr_t) map, map_size * 2,
 				VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE);
 		}
 		munmap(map, map_size);
@@ -97,13 +98,7 @@ public:
 	}
 
 	uint64_t to_dma(uint64_t offset) {
-		uint64_t ret = offset;
-
-		if (dev) {
-			// The IOMMU setup offsets the dev virtual address.
-			ret -= (uint64_t) map;
-		}
-		return ret;
+		return offset;
 	}
 
 	void free(tlm::tlm_generic_payload *tr) {
