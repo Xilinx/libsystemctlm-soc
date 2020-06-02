@@ -142,7 +142,7 @@ int sc_main(int argc, char *argv[])
 	int bridge_idx;
 
 	if (argc < 4) {
-		printf("%s: device-name iommu-group\n", argv[0]);
+		printf("%s: device-name iommu-group bridge-index\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
