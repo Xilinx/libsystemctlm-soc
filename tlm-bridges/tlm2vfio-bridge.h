@@ -56,6 +56,12 @@ public:
 		unsigned int i;
 		void *m;
 
+		// Some IOMMUs have a smaller address space than the CPU.
+		// Use a 1:1 low-mem mapping.
+		if (dev) {
+			flags |= MAP_32BIT;
+		}
+
 		m = mmap(0, map_size * 2, PROT_READ | PROT_WRITE, flags, 0, 0);
 		if (m == MAP_FAILED) {
 			perror("tlm_mm_vfio");
