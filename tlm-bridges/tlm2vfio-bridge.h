@@ -56,13 +56,15 @@ public:
 		unsigned int i;
 		void *m;
 
-		// With VFIO, lock down the pages for direct DMA via IOMMU.
-		flags |= dev ? MAP_LOCKED : 0;
-
 		m = mmap(0, map_size * 2, PROT_READ | PROT_WRITE, flags, 0, 0);
 		if (m == MAP_FAILED) {
 			perror("tlm_mm_vfio");
 			SC_REPORT_ERROR("tlm_mm_vfio", "mmap failure");
+		}
+
+		// Lock pages to allow direct DMA.
+		if (dev) {
+			mlock(m, map_size * 2);
 		}
 
 		map = (uint8_t *) m;
