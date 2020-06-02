@@ -97,7 +97,7 @@ using namespace std;
 #define RAM_SIZE (16 * 1024)
 
 #define BASE_MASTER_BRIDGE(idx)     (0x00000000 + 0x20000 * idx)
-#define BASE_SLAVE_BRIDGE(idx)      (0x00100000 + 0x20000 * idx)
+#define BASE_SLAVE_BRIDGE(idx)      (0x00020000 + 0x20000 * idx)
 #define BASE_CDMA(idx)              (0xB0100000 + 0x10000 * idx)
 #define BASE_BRAM(idx)              (0xB0000000 + 0x04000 * idx)
 #endif
