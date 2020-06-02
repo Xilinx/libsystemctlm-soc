@@ -80,6 +80,8 @@ VFLAGS_RTL_BRIDGE_PCIE_EP +=-I$(RTL_BRIDGE_AXI_DIR)/slave/
 TEST_PCIE_PCIE_EP_OBJS += test-pcie-ep.o
 TEST_PCIE_PCIE_EP_OBJS += $(VERILATED_O)
 
+TEST_PCIE_EP_MASTER_VFIO_OBJS += test-pcie-ep-master-vfio.o
+
 REFDESIGN_SIM_OBJS += refdesign-sim.o
 REFDESIGN_SIM_OBJS += $(VERILATED_O)
 
@@ -95,6 +97,7 @@ VERILATED_OBJS_COMMON += $(OBJS_COMMON)
 ALL_OBJS += $(VERILATED_OBJS_COMMON)
 
 TARGETS += test-pcie-ep
+TARGETS += test-pcie-ep-master-vfio
 TARGETS += refdesign-sim
 
 ################################################################################
@@ -114,6 +117,9 @@ $(VERILATED_O) $(RTL_BRIDGE_PCIE_EP_LIB): $(RTL_BRIDGE_PCIE_EP_V)
 test-pcie-ep.o: $(RTL_BRIDGE_PCIE_EP_LIB)
 
 test-pcie-ep: $(TEST_PCIE_PCIE_EP_OBJS) $(VERILATED_OBJS_COMMON) $(V_LDLIBS)
+	$(LINK.cc) $^ $(LDLIBS) -o $@
+
+test-pcie-ep-master-vfio: $(TEST_PCIE_EP_MASTER_VFIO_OBJS) $(OBJS_COMMON)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 refdesign-sim.o: $(RTL_BRIDGE_PCIE_EP_LIB)
