@@ -61,7 +61,7 @@ public:
 	void trigger_irq(uint32_t index, uint32_t start);
 	bool reset(void);
 
-	void iommu_map_dma(uint64_t vaddr, uint64_t iova,
+	int iommu_map_dma(uint64_t vaddr, uint64_t iova,
 			  uint64_t size, uint32_t flags) {
 		struct vfio_iommu_type1_dma_map dma_map = { .argsz = sizeof(dma_map) };
 		int r;
@@ -74,9 +74,11 @@ public:
 		if (r < 0) {
 			printf("vfio-dma-map: %s\n", strerror(errno));
 		}
+
+		return r;
 	}
 
-	void iommu_unmap_dma(uint64_t iova, uint64_t size, uint32_t flags) {
+	int iommu_unmap_dma(uint64_t iova, uint64_t size, uint32_t flags) {
 		struct vfio_iommu_type1_dma_unmap dma_unmap = { .argsz = sizeof(dma_unmap) };
 		int r;
 
@@ -89,6 +91,8 @@ public:
 			       " flags=%x %s\n",
 			       iova, size, flags, strerror(errno));
 		}
+
+		return r;
 	}
 
 	void *map[MAX_NR_MAPS];
