@@ -132,6 +132,8 @@ refdesign-sim.o: $(RTL_BRIDGE_PCIE_EP_LIB)
 refdesign-sim: $(REFDESIGN_SIM_OBJS) $(VERILATED_OBJS_COMMON) $(V_LDLIBS)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
+vfio: test-pcie-ep-slave-vfio test-pcie-ep-master-vfio
+
 clean:
 	$(RM) $(ALL_OBJS) $(ALL_OBJS:.o=.d)
 	$(RM) $(TARGETS:=.o) $(TARGETS:=.d)
