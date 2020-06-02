@@ -324,7 +324,7 @@ SC_MODULE(Top)
 		rst("rst"),
 		rst_n("rst_n"),
 		irq("irq"),
-		vdev("0000:17:00.0", 26),
+		vdev(devname, iommu_group),
 		tlm2vfio("tlm2vfio-bridge", 2, vdev, 0),
 		tlm_master_hw_bridge("tlm-master-hw-bridge", BASE_MASTER_BRIDGE(bridge_idx), 0),
 		tlm_slave_hw_bridge("tlm-slave-hw-bridge", BASE_SLAVE_BRIDGE(bridge_idx), 0, &vdev),
