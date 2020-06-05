@@ -1,3 +1,4 @@
 obj_dir
 test-pcie-ep
+qemu-pcie-vfio
 refdesign-sim
