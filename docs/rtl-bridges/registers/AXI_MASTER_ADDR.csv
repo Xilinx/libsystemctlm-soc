@@ -51,6 +51,8 @@ H2C_GPIO_12_REG,0xF0,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
 H2C_GPIO_13_REG,0xF4,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
 H2C_GPIO_14_REG,0xF8,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
 H2C_GPIO_15_REG,0xFC,rw,0x0,To send 32-bit GPIO to FPGA,Reserved for future use.
+H2C_PULSE_0_REG,0x100,w1sraz,0x0,Card to Host Pulse,
+H2C_PULSE_1_REG,0x104,w1sraz,0x0,Card to Host Pulse,
 ,,,,,
 Protocol Specific Registers,,,,,
 AXI_BRIDGE_CONFIG_REG,0x200,ro,NA,Bridge Capability Register,The reset value changes based on design parameters

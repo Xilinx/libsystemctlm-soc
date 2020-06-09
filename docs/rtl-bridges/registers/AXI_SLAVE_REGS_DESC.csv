@@ -1,22 +1,33 @@
 Register Name,Field Name,Bits,Type,Reset Value,Description,Note
 BRIDGE_IDENTIFICATION_REG,,,,,,
 ,IDENTIFICATION_ID,  31:0,ro,0xC3A89FE1,Unique number for Bridge Identification,
-BRIDGE_POSITION_REG,,,,,,0x1 : To show this is the last bridge; 0x0 : To show there are still bridges connected to next offset
-,RESERVED,  31:1,ro,0x0,,
-,LAST_BRIDGE,0,ro,0x0,To Indicate that current bridge is the Last bridge in the design,
+BRIDGE_POSITION_REG,,,,,,
+,RESERVED,  31:2,ro,0x0,,
+,PCIE_LAST_BRIDGE,1,ro,0x0,Indicate that current bridge is the Last PCIe-AXI bridge (applicable in case of PCIe-AXI Bridge only),0x1 : To show this is the last PCIe-AXI bridge;  0x0 : To show there are still PCIe-AXI bridges connected to next offset
+,LAST_BRIDGE,0,ro,0x0,To Indicate that current bridge is the Last bridge in the design,0x1 : To show this is the last bridge;  0x0 : To show there are still bridges connected to next offset
 VERSION_REG                        ,,,,,,
 ,RESERVED,  31:16,ro,0x0,,Current value of Bridge version is 0x0100
 ,MAJOR_VER,  15:8,ro,0x1,,
 ,MINOR_VER,  7:0,ro,0X0,,
 BRIDGE_TYPE_REG,,,,,,
 ,RESERVED,  31:8,ro,0x0,,
-,TYPE,  7:0,ro,NA,"0x0 : AXI3 Bridge in Master Mode ;
-0x1 : AXI3 Bridge in Slave Mode ;
-0x2 : AXI4 Bridge in Master Mode ;
-0x3 : AXI4 Bridge in Slave Mode ;
-0x4 : AXI4-lite Bridge in Master Mode ;
-0x5 : AXI4-lite Bridge in Slave Mode ;
-",
+,TYPE,  7:0,ro,NA,"0X0 : AXI3 Bridge in Master Mode
+0x1 : AXI3 Bridge in Slave Mode
+0x2 : AXI4 Bridge in Master Mode
+0x3 : AXI4 Bridge in Slave Mode
+0x4: AXI4-Lite Bridge in Master Mode
+0x5: AXI4-Lite Bridge in Slave Mode
+0x6: AXI4-Stream Bridge in Master Mode
+0x7: AXI4-Stream Bridge in Slave Mode
+0x8 : ACE Bridge in Master Mode 
+0x9: ACE Bridge in Slave Mode
+0xA: CHI Bridge in RN_F Mode
+0xB: CHI Bridge in HN_F Mode
+0xC: CXS Bridge
+0x12: PCIe-AXI Master Bridge (AXI4 mode)
+0x13: PCIe-AXI Slave Bridge (AXI4 mode)
+0x14: PCIe-AXI Master Bridge (AXI4-Lite mode)
+0x15: PCIe-AXI Slave Bridge (AXI4-Lite mode)",
 MODE_SELECT_REG,,,,,,
 ,RESERVED,  31:3,rw,0x0,,
 ,IMM_BRESP,2,rw,0x0,"IMM_BRESP : This field is only valid for Host slave WR mode.
@@ -1505,6 +1516,72 @@ H2C_GPIO_15_REG,,,,,To send 32-bit GPIO from Host to  FPGA,
 ,GPIO_2,2,rw,0x0,,
 ,GPIO_1,1,rw,0x0,,
 ,GPIO_0,0,rw,0x0,,
+H2C_PULSE_0_REG,,,,,Card to FPGA 1-clock cycle pulse. Writing '1' to this register will generate 1-clock cycle pulse,
+,PULSE_31,31,w1sraz,0x0,,
+,PULSE_30,30,w1sraz,0x0,,
+,PULSE_29,29,w1sraz,0x0,,
+,PULSE_28,28,w1sraz,0x0,,
+,PULSE_27,27,w1sraz,0x0,,
+,PULSE_26,26,w1sraz,0x0,,
+,PULSE_25,25,w1sraz,0x0,,
+,PULSE_24,24,w1sraz,0x0,,
+,PULSE_23,23,w1sraz,0x0,,
+,PULSE_22,22,w1sraz,0x0,,
+,PULSE_21,21,w1sraz,0x0,,
+,PULSE_20,20,w1sraz,0x0,,
+,PULSE_19,19,w1sraz,0x0,,
+,PULSE_18,18,w1sraz,0x0,,
+,PULSE_17,17,w1sraz,0x0,,
+,PULSE_16,16,w1sraz,0x0,,
+,PULSE_15,15,w1sraz,0x0,,
+,PULSE_14,14,w1sraz,0x0,,
+,PULSE_13,13,w1sraz,0x0,,
+,PULSE_12,12,w1sraz,0x0,,
+,PULSE_11,11,w1sraz,0x0,,
+,PULSE_10,10,w1sraz,0x0,,
+,PULSE_9,9,w1sraz,0x0,,
+,PULSE_8,8,w1sraz,0x0,,
+,PULSE_7,7,w1sraz,0x0,,
+,PULSE_6,6,w1sraz,0x0,,
+,PULSE_5,5,w1sraz,0x0,,
+,PULSE_4,4,w1sraz,0x0,,
+,PULSE_3,3,w1sraz,0x0,,
+,PULSE_2,2,w1sraz,0x0,,
+,PULSE_1,1,w1sraz,0x0,,
+,PULSE_0,0,w1sraz,0x0,,
+H2C_PULSE_1_REG,,,,,Card to FPGA 1-clock cycle pulse. Writing '1' to this register will generate 1-clock cycle pulse,
+,PULSE_31,31,w1sraz,0x0,,
+,PULSE_30,30,w1sraz,0x0,,
+,PULSE_29,29,w1sraz,0x0,,
+,PULSE_28,28,w1sraz,0x0,,
+,PULSE_27,27,w1sraz,0x0,,
+,PULSE_26,26,w1sraz,0x0,,
+,PULSE_25,25,w1sraz,0x0,,
+,PULSE_24,24,w1sraz,0x0,,
+,PULSE_23,23,w1sraz,0x0,,
+,PULSE_22,22,w1sraz,0x0,,
+,PULSE_21,21,w1sraz,0x0,,
+,PULSE_20,20,w1sraz,0x0,,
+,PULSE_19,19,w1sraz,0x0,,
+,PULSE_18,18,w1sraz,0x0,,
+,PULSE_17,17,w1sraz,0x0,,
+,PULSE_16,16,w1sraz,0x0,,
+,PULSE_15,15,w1sraz,0x0,,
+,PULSE_14,14,w1sraz,0x0,,
+,PULSE_13,13,w1sraz,0x0,,
+,PULSE_12,12,w1sraz,0x0,,
+,PULSE_11,11,w1sraz,0x0,,
+,PULSE_10,10,w1sraz,0x0,,
+,PULSE_9,9,w1sraz,0x0,,
+,PULSE_8,8,w1sraz,0x0,,
+,PULSE_7,7,w1sraz,0x0,,
+,PULSE_6,6,w1sraz,0x0,,
+,PULSE_5,5,w1sraz,0x0,,
+,PULSE_4,4,w1sraz,0x0,,
+,PULSE_3,3,w1sraz,0x0,,
+,PULSE_2,2,w1sraz,0x0,,
+,PULSE_1,1,w1sraz,0x0,,
+,PULSE_0,0,w1sraz,0x0,,
 AXI_BRIDGE_CONFIG_REG,,,,,,
 ,RESERVED, 31:14,ro,0x0,,
 ,EXTEND_WSTRB,13,ro,NA,1: Each WSTRB bit is extended to 8 bits by replicating it. ; 0: WSTRB is not extended,
