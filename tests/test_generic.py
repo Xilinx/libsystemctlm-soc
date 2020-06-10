@@ -75,6 +75,9 @@ hwb_cxs_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/rtl-bridges/cxs/"), '*-test')
 hwb_cxs_tests = ['./rtl-bridges/cxs/{0}'.format(i) for i in hwb_cxs_testnames]
 
+hwb_pcie_testnames = ["test-pcie-ep"]
+hwb_pcie_tests = ['./rtl-bridges/pcie/{0}'.format(i) for i in hwb_pcie_testnames]
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -218,5 +221,12 @@ def test_hwb_chi_tests(filename):
 @pytest.mark.hw_bridge
 @pytest.mark.parametrize("filename", hwb_cxs_tests)
 def test_hwb_cxs_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.pcie
+@pytest.mark.hw_bridge
+@pytest.mark.parametrize("filename", hwb_pcie_tests)
+def test_hwb_pcie_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
