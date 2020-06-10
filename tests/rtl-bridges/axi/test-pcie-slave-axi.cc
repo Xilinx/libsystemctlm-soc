@@ -155,7 +155,7 @@ SC_MODULE(Top)
 		signals_h2c_intr_out("h2c-intr-out"),
 		signals_c2h_intr_in("c2h-intr-in"),
 		signals_c2h_gpio_in("c2h-gpio-in"),
-		signals_h2c_gpio_out("c2h-gpio-out"),
+		signals_h2c_gpio_out("h2c-gpio-out"),
 		signals_usr_resetn("signals-usr-resetn"),
 		signals_irq_out("signals-irq-out"),
 		signals_irq_ack("signals-irq-ack"),
