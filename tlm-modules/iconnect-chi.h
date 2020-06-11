@@ -1260,7 +1260,7 @@ private:
 				}
 
 				m_chiattr->SetNonSecure(attr->GetNonSecure());
-				m_chiattr->SetDoNotGoToSD(attr->GetDoNotGoToSD());
+				m_chiattr->SetDoNotGoToSD(GetDoNotGoToSD());
 
 				//
 				// Return cache line if it is in SC state
@@ -1500,6 +1500,25 @@ private:
 			}
 
 			return opcode;
+		}
+
+		bool GetDoNotGoToSD()
+		{
+			//
+			// Must be set on below snoop requests, other snoop
+			// requests are allowed or must keep it unset
+			//
+			switch(m_chiattr->GetOpcode()) {
+			case Snp::SnpUniqueFwd:
+			case Snp::SnpUnique:
+			case Snp::SnpCleanShared:
+			case Snp::SnpCleanInvalid:
+			case Snp::SnpMakeInvalid:
+				return true;
+			default:
+				break;
+			}
+			return false;
 		}
 	};
 
