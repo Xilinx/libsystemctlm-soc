@@ -3023,14 +3023,110 @@ private:
 		std::list<uint8_t> m_LPIDs;
 	};
 
+	class SystemAddressMap
+	{
+	public:
+		void AddMap(uint64_t startAddress,
+				unsigned int regionLength,
+				uint16_t TgtID)
+		{
+			uint64_t endAddress = startAddress + regionLength;
+
+			m_maps.push_back(AddressMap(startAddress,
+							endAddress,
+							TgtID));
+		}
+
+		void AddPrefetchTgtMap(uint64_t startAddress,
+					unsigned int regionLength,
+					uint16_t TgtID)
+		{
+			uint64_t endAddress = startAddress + regionLength;
+
+			m_prefetchTgt.push_back(AddressMap(startAddress,
+								endAddress,
+								TgtID));
+		}
+
+		void UpdateTgtID(ReqTxn *req)
+		{
+			//
+			// See 3.3.1 about PrefetchTgt and DVMOp
+			//
+			// Forwarding DVMOp reqs are not supported yet.
+			//
+			if (req->GetOpcode() == Req::PrefetchTgt) {
+
+				//
+				// PrefetchTgt maps
+				//
+				IterateMaps(m_prefetchTgt, req);
+
+			} else if (!req->IsDVMOp()) {
+				//
+				// All other reqs
+				//
+				IterateMaps(m_maps, req);
+			}
+		}
+
+	private:
+		class AddressMap
+		{
+		public:
+			AddressMap(uint64_t startAddress,
+					uint64_t endAddress, uint16_t TgtID) :
+				m_startAddress(startAddress),
+				m_endAddress(endAddress),
+				m_TgtID(TgtID)
+			{}
+
+			bool InRegion(uint64_t addr)
+			{
+				return addr >= m_startAddress &&
+					addr < m_endAddress;
+			}
+
+			uint16_t GetTgtID() { return m_TgtID; }
+
+		private:
+			uint64_t m_startAddress;
+			uint64_t m_endAddress;
+			uint16_t m_TgtID;
+		};
+
+		void IterateMaps(std::vector<AddressMap>& maps, ReqTxn *req)
+		{
+			typename std::vector<AddressMap>::iterator it;
+
+			for (it = maps.begin(); it != maps.end(); it++) {
+				AddressMap& map = (*it);
+
+				if (map.InRegion(req->GetAddress())) {
+					uint16_t tgtID = map.GetTgtID();
+
+					//
+					// Update TgtID
+					//
+					req->GetCHIAttr()->SetTgtID(tgtID);
+				}
+			}
+		}
+
+		std::vector<AddressMap> m_maps;
+		std::vector<AddressMap> m_prefetchTgt;
+	};
+
 	class PacketRouter :
 		public IPacketRouter
 	{
 	public:
 
-		PacketRouter(PointOfCoherence& poc,
+		PacketRouter(SystemAddressMap& sam,
+				PointOfCoherence& poc,
 				TxnProcessor& txnProcessor,
 				Port_RN_F **port_RN_F) :
+			m_sam(sam),
 			m_poc(poc),
 			m_txnProcessor(txnProcessor),
 			m_port_RN_F(port_RN_F)
@@ -3123,6 +3219,7 @@ private:
 		}
 
 
+		SystemAddressMap& m_sam;
 		PointOfCoherence& m_poc;
 		TxnProcessor& m_txnProcessor;
 		Port_RN_F **m_port_RN_F;
@@ -3135,6 +3232,7 @@ private:
 
 	TxnProcessor m_txnProcessor;
 	PointOfCoherence m_poc;
+	SystemAddressMap m_sam;
 	PacketRouter m_router;
 
 public:
@@ -3162,7 +3260,8 @@ public:
 			m_ongoingTxn,
 			m_txnProcessor),
 
-		m_router(m_poc,
+		m_router(m_sam,
+			m_poc,
 			m_txnProcessor,
 			port_RN_F)
 	{
@@ -3185,6 +3284,8 @@ public:
 	}
 
 	void EnableDCT(bool enable) { m_poc.EnableDCT(enable); }
+
+	SystemAddressMap& SystemAddressMap() { return m_sam; }
 
 	virtual ~iconnect_chi()
 	{
