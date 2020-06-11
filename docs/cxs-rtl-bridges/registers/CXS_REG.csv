@@ -1,0 +1,97 @@
+Register Name,Address Offset,Type,Reset Value,Description
+General Config and Status,,,,
+BRIDGE_IDENTIFICATION_REG,0x0,ro,0xC3A89FE1,To indicate a unique number at BAR 0 + 0x0 location for Bridge Discovery
+BRIDGE_LAST_REG,0x4,ro,0x0,To Indicate that this is the Last bridge in the design for Bridge Discovery
+VERSION_REG,0x20,ro,0x0100,Bridge IP version
+BRIDGE_TYPE_REG,0x24,ro,0xC,Type of Bridge 
+MODE_SELECT_REG,0x38,rw,0x0,Mode Selection
+RESET_REG,0x3C,rw,0xFFFFFFFF,Reset Register
+H2C_INTR_0_REG,0x40,rw,0x0,Host to Card Interrupt Generation
+H2C_INTR_1_REG,0x44,rw,0x0,Host to Card Interrupt Generation
+H2C_INTR_2_REG,0x48,rw,0x0,Host to Card Interrupt Generation
+H2C_INTR_3_REG,0x4C,rw,0x0,Host to Card Interrupt Generation
+C2H_INTR_STATUS_0_REG,0x60,ro,0x0,Card to Host Interrupt Status Register
+INTR_C2H_TOGGLE_STATUS_0_REG,0x64,ro,0x0,Card to Host Toggle Status Register
+INTR_C2H_TOGGLE_CLEAR_0_REG,0x68,w1sraz,0x0,C2H Toggle Clear Register
+INTR_C2H_TOGGLE_ENABLE_0_REG,0x6C,rw,0x0,C2H Toggle Enable Register
+C2H_INTR_STATUS_1_REG,0x70,ro,0x0,Card to Host Interrupt Status Register
+INTR_C2H_TOGGLE_STATUS_1_REG,0x74,w1sraz,0x0,Card to Host Toggle Status Register
+INTR_C2H_TOGGLE_CLEAR_1_REG,0x78,rw,0x0,C2H Toggle Clear Register
+INTR_C2H_TOGGLE_ENABLE_1_REG,0x7C,rw,0x0,C2H Toggle Enable Register
+C2H_GPIO_0_REG,0x80,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_1_REG,0x84,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_2_REG,0x88,ro, 0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_3_REG,0x8C,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_4_REG,0x90,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_5_REG,0x94,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_6_REG,0x98,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_7_REG,0x9C,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_8_REG,0xA0,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_9_REG,0xA4,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_10_REG,0xA8,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_11_REG,0xAC,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_12_REG,0xB0,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_13_REG,0xB4,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_14_REG,0xB8,ro,0x0,To monitor 512-bit GPIO from FPGA
+C2H_GPIO_15_REG,0xBC,ro,0x0,To monitor 512-bit GPIO from FPGA
+,,,,
+H2C_GPIO_0_REG,0xC0,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_1_REG,0xC4,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_2_REG,0xC8,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_3_REG,0xCC,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_4_REG,0xD0,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_5_REG,0xD4,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_6_REG,0xD8,rw,0x0,To send 512-bit GPIO to FPGA
+H2C_GPIO_7_REG,0xDC,rw,0x0,To send 512-bit GPIO to FPGA
+Protocol Specific Registers,,,,
+RESERVED UNUSED,0x200,ro,0x0,
+RESERVED UNUSED,0x204,ro,0x0,
+INTR_STATUS_REG,0x208,ro,0x0,Interrupt Status Register
+INTR_ERROR_STATUS_REG,0x20C,ro,0x0,Bridge error Interrupt Status
+INTR_ERROR_CLEAR_REG,0x210,wo,0x0,Bridge error Interrupt Clear
+INTR_ERROR_ENABLE_REG,0x214,rw,0x0,Bridge error Interrupt Enable
+CXS_BRIDGE_FLIT_CONFIG_REG,0x300,ro,0x00006900,Flit configuration register
+CXS_BRIDGE_CONFIGURE_REG,0x304,rw,0x0,Bridge Configure Register
+RX_REFILL_CREDITS_REG,0X308,rw,0xF,RXSNP Credits refill register 
+CXS_LOW_POWER_REG,0x30C,rw,0x0,CXS Low Power Register
+CXS_BRIDGE_CHN_TX_STS_REG,0x330,ro,0x0,Transmit Channel Status Register
+CXS_BRIDGE_CHN_RX_STS_REG,0x334,ro,0x0,CXS Bridge Receive Channel Status Register
+TX_OWNERSHIP_REG,0x338,ro,0x0,Transmit CXS Ownership Register
+TX_OWNERSHIP_FLIP_REG,0x33c,w1sraz,0x0,Transmit CXS Ownership Flip Register
+RX_OWNERSHIP_REG,0x340,ro,0x0,Receive CXS Ownership  Register
+RX_OWNERSHIP_FLIP_REG,0x344,w1sraz,0x0,Receive CXS Ownership Flip Register
+RX_GOOD_TLP_REG,0X348,ro,0x0,RX Good TLP Register
+RX_ERROR_TLP_REG,0X34c,ro,0x0,RX Error TLP Register
+RX_CURRENT_CREDIT_REG,0X350,ro,0x0,RXRSP Current Credit Register
+TX_CURRENT_CREDIT_REG,0X354,ro,0x0,TXSNP Current Credit Register
+INTR_FLIT_TXN_STATUS_REG,0x3A0,ro,0x0, Flit Transaction Status Register
+INTR_FLIT_TXN_CLEAR_REG,0x3A4,w1sraz,0x0,Flit Transaction Clear Register
+INTR_FLIT_TXN_ENABLE_REG,0x3A8,rw,0x0,Flit Transaction Interrupt Enable
+,,,,
+,,,,
+,,, ,
+FLIT MEMORY,,,,"FW -> FLIT_WIDTH, FCW -> FLIT_CONTROL_WIDTH"
+RX_BASE_FLIT_X_LSW_Y,0x3100 + (X*FW)+(Y*0x4),ro,"Read Only Memory for Flit from AXI4 Side, X=Flit Index,range 0-14,Y= Flit offet index,range 0 to FW",
+RX_BASE_FLIT_CNTL_X_LSW_Y,0x3C00 + (X*FCW)+(Y*0x4),ro,"Read Only Memory for Flit from AXI4 Side, X=Flit Index,range 0-14,Y= Flit offet index,range 0 to FCW",
+TX_BASE_FLIT_X_LSW_Y,0x4100 + (X*FW)+(Y*0x4),wo,"Write Memory for Flit from AXI4 side, X=Flit Index,range 0-14,Y= Flit offet index,range 0 to FW",
+TX_BASE_FLIT_CNTL_X_LSW_Y,0x4C00 + (X*FCW)+(Y*0x4),wo,"Write Memory for Flit from AXI4 side, X=Flit Index,range 0-14,Y= Flit offet index,range 0 to FCW",
+,,,,
+ ,,,,
+,, ,,
+,,,,
+,,,,
+,,,,
+,,,,
+ ,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+, ,,,
