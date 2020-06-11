@@ -1298,6 +1298,15 @@ private:
 			m_gp->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 		}
 
+		//
+		// SnpMsg construction when routing the messages
+		//
+		SnpMsg(SnpMsg& rhs)
+		{
+			m_gp->deep_copy_from(rhs.GetGP());
+			m_gp->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+		}
+
 		uint64_t GenerateSnpDVMPacket(ReqTxn *req,
 						bool isSecondPacket)
 		{
@@ -1562,6 +1571,8 @@ private:
 		virtual void RouteDat_SN(DatMsg& dat) = 0;
 
 		virtual void RouteRsp_SN(RspMsg& rsp) = 0;
+
+		virtual void RouteSnpReq(SnpMsg& msg) = 0;
 
 		virtual void TransmitToRequestNode(RspMsg *m) = 0;
 
@@ -3249,6 +3260,13 @@ private:
 
 			if (port) {
 				port->Transmit(t);
+			}
+		}
+
+		void RouteSnpReq(SnpMsg& msg)
+		{
+			for (int i = 0; i < NUM_CHI_RN_F; i++) {
+				m_port_RN_F[i]->Transmit(new SnpMsg(msg));
 			}
 		}
 
