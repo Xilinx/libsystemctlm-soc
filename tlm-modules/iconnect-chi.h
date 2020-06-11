@@ -3024,7 +3024,7 @@ private:
 				m_txnProcessor.TransmitReadReceipt(req);
 			}
 
-			if (req->GetExcl()) {
+			if (!req->IsAtomic() && req->GetExcl()) {
 				exclusivePassed = m_exmon.HandleExclusive(req);
 			}
 
