@@ -1940,6 +1940,7 @@ private:
 		void Transmit(SnpMsg *snp) { m_txSnpChannel.Process(snp); }
 
 		uint16_t GetNodeID() { return m_nodeID; }
+		void SetNodeID(uint16_t nodeID) { m_nodeID = nodeID; }
 
 		template<typename T>
 		void connect(T& dev)
@@ -2089,6 +2090,7 @@ private:
 		void Transmit(DatMsg *dat) { m_txDatChannel.Process(dat); }
 
 		uint16_t GetNodeID() { return m_nodeID; }
+		void SetNodeID(uint16_t nodeID) { m_nodeID = nodeID; }
 
 		template<typename T>
 		void connect(T& dev)
