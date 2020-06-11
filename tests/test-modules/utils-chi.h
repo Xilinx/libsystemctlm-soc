@@ -420,6 +420,10 @@ public:
 
 			if (t.ext.chiattr.exclusive || t.ext.chiattr.snoopme) {
 				attr->SetExcl_SnoopMe(true);
+
+				if (t.ext.chiattr.snoopme) {
+					attr->SetSnpAttr(true);
+				}
 			}
 
 			attr->SetNonSecure(!t.ext.chiattr.secure);
