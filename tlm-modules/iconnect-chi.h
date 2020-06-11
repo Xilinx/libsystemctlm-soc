@@ -1192,6 +1192,11 @@ private:
 			}
 		}
 
+		bool IsCompData()
+		{
+			return m_chiattr->GetOpcode() == Dat::CompData;
+		}
+
 		bool IsCopyBackWrData()
 		{
 			return m_chiattr->GetOpcode() == Dat::CopyBackWrData;
