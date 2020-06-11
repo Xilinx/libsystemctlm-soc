@@ -1138,8 +1138,13 @@ private:
 			// req always have data + byte enable
 			//
 			memcpy(m_data, gp.get_data_ptr(), CACHELINE_SZ);
-			memcpy(m_byteEnable, gp.get_byte_enable_ptr(),
-					req->GetDataReceived());
+			if (req->IsAtomic()) {
+				memcpy(m_byteEnable, gp.get_byte_enable_ptr(),
+						req->GetDataReceived());
+			} else {
+				memcpy(m_byteEnable, gp.get_byte_enable_ptr(),
+						gp.get_byte_enable_length());
+			}
 
 			m_chiattr->SetQoS(attr->GetQoS());
 			m_chiattr->SetTgtID(SLAVE_NODE_ID);
