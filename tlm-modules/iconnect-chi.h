@@ -1001,6 +1001,11 @@ private:
 			m_gp->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 		}
 
+		RspMsg(tlm::tlm_generic_payload& gp)
+		{
+			m_gp->deep_copy_from(gp);
+		};
+
 		bool IsCompAck()
 		{
 			return m_chiattr->GetOpcode() == Rsp::CompAck;
@@ -1285,6 +1290,12 @@ private:
 			} else {
 				m_chiattr->SetNonSecure(false);
 			}
+		}
+
+		SnpMsg(tlm::tlm_generic_payload& gp)
+		{
+			m_gp->deep_copy_from(gp);
+			m_gp->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 		}
 
 		uint64_t GenerateSnpDVMPacket(ReqTxn *req,
