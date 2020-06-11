@@ -222,7 +222,7 @@ private:
 	{
 		unsigned int firstbit = m_pos;
 		unsigned int lastbit = firstbit + width - 1;
-		T mask = (1 << width) - 1;
+		T mask = (static_cast<T>(1) << width) - 1;
 
 		flit.range(lastbit, firstbit) = val & mask;
 
@@ -526,7 +526,7 @@ private:
 	{
 		unsigned int firstbit = m_pos;
 		unsigned int lastbit = firstbit + width - 1;
-		T mask = (1 << width) - 1;
+		T mask = (static_cast<T>(1) << width) - 1;
 
 		flit.range(lastbit, firstbit) = val & mask;
 
@@ -743,7 +743,7 @@ private:
 	{
 		unsigned int firstbit = m_pos;
 		unsigned int lastbit = firstbit + width - 1;
-		T mask = (1 << width) - 1;
+		T mask = (static_cast<T>(1) << width) - 1;
 
 		flit.range(lastbit, firstbit) = val & mask;
 
@@ -761,7 +761,7 @@ private:
 	{
 		unsigned int firstbit = m_pos;
 		unsigned int lastbit = firstbit + width - 1;
-		uint64_t mask = (1 << width) - 1;
+		uint64_t mask = (static_cast<T>(1) << width) - 1;
 		uint64_t val;
 
 		val = flit.range(lastbit, firstbit).to_uint64();
@@ -1011,7 +1011,7 @@ private:
 	{
 		unsigned int firstbit = m_pos;
 		unsigned int lastbit = firstbit + width - 1;
-		T mask = (1 << width) - 1;
+		T mask = (static_cast<T>(1) << width) - 1;
 
 		flit.range(lastbit, firstbit) = val & mask;
 
