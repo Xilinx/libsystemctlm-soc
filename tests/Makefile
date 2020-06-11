@@ -43,6 +43,7 @@ SUBDIRS += checkers/chi
 SUBDIRS += rtl-bridges/axi
 SUBDIRS += rtl-bridges/ace
 SUBDIRS += rtl-bridges/chi
+SUBDIRS += rtl-bridges/cxs
 
 ifeq "$(HAVE_CONFIG_PARSER)" "y"
 SUBDIRS += traffic-generators/config-parser/
