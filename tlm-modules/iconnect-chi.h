@@ -359,6 +359,27 @@ private:
 			return opcode >= Req::AtomicStore && opcode < Req::AtomicLoad;
 		}
 
+		bool IsAtomicLoad()
+		{
+			uint8_t opcode = m_chiattr->GetOpcode();
+
+			return opcode >= Req::AtomicLoad && opcode < Req::AtomicSwap;
+		}
+
+		bool IsAtomicCompare()
+		{
+			uint8_t opcode = m_chiattr->GetOpcode();
+
+			return opcode == Req::AtomicCompare;
+		}
+
+		bool IsAtomicSwap()
+		{
+			uint8_t opcode = m_chiattr->GetOpcode();
+
+			return opcode == Req::AtomicSwap;
+		}
+
 		bool IsAtomic()
 		{
 			uint8_t opcode = m_chiattr->GetOpcode();
