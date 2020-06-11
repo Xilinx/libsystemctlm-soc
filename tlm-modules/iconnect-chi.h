@@ -992,6 +992,15 @@ private:
 			m_chiattr->SetTraceTag(attr->GetTraceTag());
 		};
 
+		//
+		// This is called when routing responses.
+		//
+		RspMsg(RspMsg& rhs)
+		{
+			m_gp->deep_copy_from(rhs.GetGP());
+			m_gp->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+		}
+
 		bool IsCompAck()
 		{
 			return m_chiattr->GetOpcode() == Rsp::CompAck;
@@ -1542,6 +1551,9 @@ private:
 		virtual void RouteDat_SN(DatMsg& dat) = 0;
 
 		virtual void RouteRsp_SN(RspMsg& rsp) = 0;
+
+		virtual void TransmitToRequestNode(RspMsg *m) = 0;
+
 	};
 
 	template<typename T>
@@ -2164,13 +2176,15 @@ private:
 				TxnIDs *ids,
 				ReqTxn **ongoingTxn,
 				RequestOrderer *reqOrderer,
-				IDVMOpProcessor *poc) :
+				IDVMOpProcessor *poc,
+				IPacketRouter *router) :
 			m_port_RN_F(port_RN_F),
 			m_port_SN(port_SN),
 			m_ids(ids),
 			m_ongoingTxn(ongoingTxn),
 			m_reqOrderer(reqOrderer),
-			m_poc(poc)
+			m_poc(poc),
+			m_router(router)
 		{}
 
 		void ProcessSnpdReq(ReqTxn *req)
@@ -2192,13 +2206,13 @@ private:
 			} else if (req->GotSnpData() && req->IsSnpRead() &&
 					!req->IsSnpDataPtl()) {
 
-				DatMsg *dat = new DatMsg(req);
+				DatMsg dat(req);
 
 				if (req->GetExpCompAck()) {
-					dat->GetCHIAttr()->SetHomeNID(NODE_ID);
-					dat->SetDBID(m_ids->GetID());
+					dat.GetCHIAttr()->SetHomeNID(NODE_ID);
+					dat.SetDBID(m_ids->GetID());
 
-					m_ongoingTxn[dat->GetDBID()] = req;
+					m_ongoingTxn[dat.GetDBID()] = req;
 
 					req->SetWaitingForCompAck(true);
 				} else {
@@ -2208,7 +2222,7 @@ private:
 					RequestDone(req);
 				}
 
-				TransmitToRequestNode(dat);
+				m_router->RouteDat(dat);
 
 			} else if (req->IsDVMOp()) {
 				RspMsg *rsp = new RspMsg(req, Rsp::Comp);
@@ -2271,25 +2285,26 @@ private:
 				m_port_SN[0]->Transmit(rdReq);
 
 			} else if (req->IsWrite() || req->IsAtomicStore()) {
-				RspMsg *rsp = new RspMsg(req, Rsp::CompDBIDResp);
+				RspMsg rsp(req, Rsp::CompDBIDResp);
 
 				// HomeNID not used, see 2.6.3 [1]
-				rsp->SetDBID(m_ids->GetID());
-				m_ongoingTxn[rsp->GetDBID()] = req;
+				rsp.SetDBID(m_ids->GetID());
+				m_ongoingTxn[rsp.GetDBID()] = req;
 
 				if (req->IsWriteUnique() && req->GetExpCompAck()) {
 					req->SetWaitingForCompAck(true);
 				}
 
-				TransmitToRequestNode(rsp);
+				m_router->RouteRsp(rsp);
+
 			} else if (req->IsDataLess()) {
-				RspMsg *rsp = new RspMsg(req, Rsp::Comp);
+				RspMsg rsp(req, Rsp::Comp);
 
 				if (req->GetExpCompAck()) {
-					rsp->GetCHIAttr()->SetHomeNID(NODE_ID);
-					rsp->SetDBID(m_ids->GetID());
+					rsp.GetCHIAttr()->SetHomeNID(NODE_ID);
+					rsp.SetDBID(m_ids->GetID());
 
-					m_ongoingTxn[rsp->GetDBID()] = req;
+					m_ongoingTxn[rsp.GetDBID()] = req;
 
 					req->SetWaitingForCompAck(true);
 				} else {
@@ -2307,19 +2322,20 @@ private:
 					RequestDone(req);
 				}
 
-				TransmitToRequestNode(rsp);
+				m_router->RouteRsp(rsp);
+
 			} else if (req->IsAtomic() || req->IsDVMOp()) {
 				//
 				// AtomicStore i handled as an IsWrite, so only
 				// the non store atomics are handled here
 				//
-				RspMsg *rsp = new RspMsg(req, Rsp::DBIDResp);
+				RspMsg rsp(req, Rsp::DBIDResp);
 
 				// HomeNID not used, see 2.6.3 [1]
-				rsp->SetDBID(m_ids->GetID());
-				m_ongoingTxn[rsp->GetDBID()] = req;
+				rsp.SetDBID(m_ids->GetID());
+				m_ongoingTxn[rsp.GetDBID()] = req;
 
-				TransmitToRequestNode(rsp);
+				m_router->RouteRsp(rsp);
 			} else {
 				RequestDone(req);
 			}
@@ -2482,10 +2498,10 @@ private:
 		//
 		void ProcessDat_SN(DatMsg& datSN)
 		{
-			DatMsg *dat = new DatMsg(datSN);
+			DatMsg dat(datSN);
 			ReqTxn *req = m_ongoingTxn[datSN.GetTxnID()];
 
-			dat->SetupNonDMT(req);
+			dat.SetupNonDMT(req);
 
 			//
 			// ReadNoSnp / ReadOnce without CompAck and atomics are
@@ -2503,7 +2519,7 @@ private:
 				req->SetWaitingForCompAck(true);
 			}
 
-			TransmitToRequestNode(dat);
+			m_router->RouteDat(dat);
 		}
 
 		void ProcessResp_SN(RspMsg& rsp)
@@ -2705,6 +2721,8 @@ private:
 
 		// IDVMOpProcessor
 		IDVMOpProcessor *m_poc;
+
+		IPacketRouter *m_router;
 	};
 
 	//
@@ -3183,12 +3201,17 @@ private:
 
 		void RouteRsp(RspMsg& rsp)
 		{
+			Port_RN_F *port_RN_F;
+
 			if (rsp.GetTgtID() == NODE_ID) {
 				if (rsp.IsSnpResp() || rsp.IsSnpRespFwded()) {
 					m_poc.ProcessResp(rsp);
 				} else {
 					m_txnProcessor.ProcessResp(rsp);
 				}
+			} else if ((port_RN_F = LookupPortRNF(rsp.GetTgtID()))) {
+
+				port_RN_F->Transmit(new RspMsg(rsp));
 			}
 		}
 
@@ -3207,6 +3230,15 @@ private:
 		void RouteRsp_SN(RspMsg& rsp)
 		{
 			m_txnProcessor.ProcessResp_SN(rsp);
+		}
+
+		void TransmitToRequestNode(RspMsg *t)
+		{
+			Port_RN_F *port = LookupPortRNF(t->GetTgtID());
+
+			if (port) {
+				port->Transmit(t);
+			}
 		}
 
 	private:
@@ -3255,7 +3287,8 @@ public:
 				&m_ids,
 				m_ongoingTxn,
 				&m_reqOrderer,
-				&m_poc),
+				&m_poc,
+				&m_router),
 
 		m_poc(port_RN_F,
 			&m_ids,
