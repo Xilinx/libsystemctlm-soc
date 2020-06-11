@@ -578,3 +578,41 @@ the delay is waited for before the message's CHI signal wiggling starts.
 If a TLM generic payload issued by the bridges (type RN-F or SN) through
 one of the initatior sockets returns with an anotatted delay that delay is
 waited for before processing of the next CHI message starts.
+
+TLM to CXS
+----------
+
+The TLM to CXS bridge packs incoming CCIX messages on it's TLM target
+socket (described with TLM generic payloads with an attached CCIX
+attributes extension) into CCIX TLPs. The TLPs are thereafter translated
+by the bridge into CXS data flits and CXS signal wiggling (right hand
+side of the picture below).
+
+Incoming CCIX TLPs captured on the CXS RX link signals are parsed and
+unpacked. The CCIX messages contained in the TLPs are translated into TLM
+generic payload representations (using CCIX attributes extensions) and
+forwarded through the bridge's TLM initiator socket (left hand side of the
+picture below).
+
+                     .----------.
+ TLM target sockets |           |
+     b_transport()  |           | CXS TX Link
+    (CCIX messages) | TLM-2-CXS |
+  ----------------->|  Bridge   |------------------->
+                    |           |
+    TLM initiator   |           |                   (CXS)
+       socket       |           | CXS RX Link
+    (CCIX messages) |           |<-------------------
+  <-----------------|           |
+                    '-----------'
+
+Timing
+------
+
+If incoming CCIX messages enter the bridge with an anottated delay, the
+delay is waited for before the message's (TLP's) CXS signal wiggling
+starts.
+
+If a TLM generic payload issued by the bridge through the initatior
+sockets returns with an anotatted delay that delay is waited for before
+processing of the next CCIX message starts.

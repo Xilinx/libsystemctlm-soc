@@ -97,9 +97,10 @@ iconnect_chi
 ------------
 
 The iconnect_chi operates in TLM as an HN-F and also contains an MN
-handling DVM operations. It contains ports, of type Port_RN_F, for
-connecting RN-Fs and a port, of type Port_SN, for connecting an SN.
-The ICN also contains a snoop filter.
+handling DVM operations. It contains ports of three different types, of
+type Port_RN_F, for connecting RN-Fs, of type Port_CCIX, for generating
+and receiving CCIX messages and finally of type Port_SN, for connecting an
+SN. The ICN also contains a snoop filter.
 
 The CHI ICN receives request messages from masters, RN-Fs, through the
 ports (Port_RN_Fs). If the requests require snooping the ICN will then
@@ -157,6 +158,26 @@ and therafter processed by the HN-F/MN.
   '-----------'<---------------------
 
 
+The CCIX ports translate between CHI and CCIX. The ICN routes CHI
+transactions based on the configuration in an internal System Address Map
+(SAM). When CHI transactions are routed through a CCIX port, the CCIX port
+translates the CHI transaction to a CCIX equivalent and outputs the
+required CCIX messages through its TLM initiator socket. Similarly, the
+CCIX ports translate CCIX transactions incoming through the port's TLM
+target socket into CHI transactions (flows).
+
+The CCIX ports also handles CCIX protocol request, data, snoop and misc
+credits (both TX and RX credits).
+
+   .----------.
+  |           | TLM initiator socket (CCIX messages)
+  |           |--------------------->
+  | Port_CCIX |
+  |           |<---------------------
+  |           |  TLM target socket (CCIX messages)
+  '-----------'        b_transport()
+
+
 CHI traffic generation
 ----------------------
 
@@ -189,3 +210,17 @@ messages.
 |               '---------|       '---------------'        wiggling
 |                         |
 '-------------------------'
+
+CCIX traffic generation
+----------------------
+
+CCIX traffic can be generated (or received) by connecting the CCIX port on
+the CHI interconnect to a TLM to CXS bridge. The TLM to CXS bridge will
+pack (unpack) CCIX messages into (from) TLPs and also handle required CXS
+signal wiggling.
+
+ .--------------------------. TLM   .---------------.
+| iconnect_chi  | Port_CCIX | <--> | tlm2cxs_bridge | ----> CXS signal
+|               '-----------|       '---------------'        wiggling
+|                           |
+'--------------------------'
