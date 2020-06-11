@@ -55,6 +55,10 @@ pc_chi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/checkers/chi/"), '*-test')
 tests_pc_chi = ['./checkers/chi/{0}'.format(i) for i in pc_chi_tests]
 
+tg_ccix_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/traffic-generators/ccix/"), '*-tg-test')
+tests_tg_ccix = ['./traffic-generators/ccix/{0}'.format(i) for i in tg_ccix_tests]
+
 hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-master')
 hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-slave')
 hwb_axi_tests = ['./rtl-bridges/axi/{0}'.format(i) for i in hwb_axi_testnames]
@@ -142,6 +146,12 @@ def test_tg_chi_tests(filename):
 
 @pytest.mark.parametrize("filename", tests_pc_chi)
 def test_checker_chi_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.ccix
+@pytest.mark.parametrize("filename", tests_tg_ccix)
+def test_tg_ccix_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
 
