@@ -678,6 +678,11 @@ private:
 			return m_gotSnpData;
 		}
 
+		bool IsSnpDataPtl()
+		{
+			return m_isSnpDataPtl;
+		}
+
 		void SetGotSnpData(bool val) { m_gotSnpData = val; }
 
 		enum {
@@ -2158,7 +2163,8 @@ private:
 
 				m_port_SN[0]->Transmit(wrReq);
 
-			} else if (req->GotSnpData() && req->IsSnpRead()) {
+			} else if (req->GotSnpData() && req->IsSnpRead() &&
+					!req->IsSnpDataPtl()) {
 
 				DatMsg *dat = new DatMsg(req);
 
