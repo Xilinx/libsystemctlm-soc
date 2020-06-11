@@ -2465,6 +2465,10 @@ private:
 				m_ongoingTxn[datSN.GetTxnID()] = NULL;
 
 				RequestDone(req);
+			} else {
+				assert(!req->GetCompAckReceived());
+
+				req->SetWaitingForCompAck(true);
 			}
 
 			TransmitToRequestNode(dat);
