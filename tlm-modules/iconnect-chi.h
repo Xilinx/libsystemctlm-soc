@@ -38,13 +38,15 @@
 #include "tlm-extensions/chiattr.h"
 #include "tlm-bridges/amba-chi.h"
 #include "tlm-modules/private/chi/txnids.h"
+#include "tlm-modules/private/ccix/ccixport.h"
 
 using namespace AMBA::CHI;
 
 template<
 	int NODE_ID = 20,
 	int SLAVE_NODE_ID = 10,
-	int NUM_CHI_RN_F = 2
+	int NUM_CHI_RN_F = 2,
+	int NUM_CCIX_PORTS = 0
 	>
 class iconnect_chi :
 	public sc_core::sc_module
@@ -2208,6 +2210,13 @@ private:
 		uint16_t m_nodeID;
 	};
 
+	typedef iconnect_chi<NODE_ID, SLAVE_NODE_ID,
+				NUM_CHI_RN_F, NUM_CCIX_PORTS> iconnect_chi_t;
+
+	friend class CCIX::CCIXPort<iconnect_chi_t>;
+
+	typedef CCIX::CCIXPort<iconnect_chi_t> Port_CCIX;
+
 	class IDVMOpProcessor
 	{
 	public:
@@ -2220,6 +2229,7 @@ private:
 	{
 	public:
 		TxnProcessor(Port_RN_F **port_RN_F,
+				Port_CCIX **port_CCIX,
 				Port_SN **port_SN,
 				TxnIDs *ids,
 				ReqTxn **ongoingTxn,
@@ -2227,6 +2237,7 @@ private:
 				IDVMOpProcessor *poc,
 				IPacketRouter *router) :
 			m_port_RN_F(port_RN_F),
+			m_port_CCIX(port_CCIX),
 			m_port_SN(port_SN),
 			m_ids(ids),
 			m_ongoingTxn(ongoingTxn),
@@ -2726,13 +2737,28 @@ private:
 			TransmitToRequestNode(rsp);
 		}
 
+		Port_CCIX *LookupPortCCIX(uint16_t nodeID)
+		{
+			for (int i = 0; i < NUM_CCIX_PORTS; i++) {
+				if (m_port_CCIX[i]->Contains(nodeID)) {
+					return m_port_CCIX[i];
+				}
+			}
+			return NULL;
+		}
+
 	private:
 		void UpdatePortRNFSnoopFilter(ReqTxn *req)
 		{
 			Port_RN_F *port = LookupPortRNF(req->GetSrcID());
+			Port_CCIX *port_CCIX;
 
 			if (port) {
 				port->GetSnoopFilter().Update(req);
+
+			} else if ((port_CCIX = LookupPortCCIX(req->GetSrcID()))) {
+
+				port_CCIX->UpdateSnoopFilter(req);
 			}
 		}
 
@@ -2750,6 +2776,11 @@ private:
 		// Request Node ports
 		//
 		Port_RN_F **m_port_RN_F;
+
+		//
+		// CCIX ports
+		//
+		Port_CCIX **m_port_CCIX;
 
 		//
 		// Slave Node port
@@ -2780,26 +2811,31 @@ private:
 	{
 	public:
 		PointOfCoherence(Port_RN_F **port_RN_F,
+				Port_CCIX **port_CCIX,
 				TxnIDs *ids,
 				ReqTxn **ongoingTxn,
 				TxnProcessor& txnProcessor) :
 			m_port_RN_F(port_RN_F),
+			m_port_CCIX(port_CCIX),
 			m_ids(ids),
 			m_ongoingTxn(ongoingTxn),
 			m_txnProcessor(txnProcessor),
-			m_DCT_enabled(true)
+			m_DCT_enabled(NUM_CCIX_PORTS == 0)
 		{}
 
 		void ProcessReq(ReqTxn *req)
 		{
 			std::list<Port_RN_F*> ports;
-			typename std::list<Port_RN_F*>::iterator it;
+			std::list<Port_CCIX*> ports_CCIX;
 
-			FillPortsToSnoop(req, ports);
+			FillPortsToSnoop(req, ports, ports_CCIX);
 
-			if (ports.empty()) {
+			if (ports.empty() && ports_CCIX.empty()) {
 				m_txnProcessor.ProcessReq(req);
 			} else {
+				typename std::list<Port_RN_F*>::iterator it;
+				typename std::list<Port_CCIX*>::iterator ccixIt;
+
 				//
 				// Do DCT only to one port and Exclusive don't
 				// allow DCT 6.3.1 [1]
@@ -2828,6 +2864,28 @@ private:
 
 					port->Transmit(snp);
 				}
+
+				//
+				// Iterate CCIX ports now
+				//
+				// allowsSnpFwd is always false when using CCIX
+				// ports
+				//
+				for (ccixIt = ports_CCIX.begin();
+					ccixIt != ports_CCIX.end(); ccixIt++) {
+
+					//
+					// Never allow SnpFwd*
+					//
+					SnpMsg snp(req, m_ids->GetID(), false);
+
+					Port_CCIX *port_CCIX = (*ccixIt);
+
+					req->WaitForSnpTxn(snp.GetTxnID());
+					m_ongoingTxn[snp.GetTxnID()] = req;
+
+					port_CCIX->Transmit(req, snp);
+				}
 			}
 		}
 
@@ -2850,7 +2908,9 @@ private:
 			}
 		}
 
-		void FillPortsToSnoop(ReqTxn *req, std::list<Port_RN_F*>& ports)
+		void FillPortsToSnoop(ReqTxn *req,
+					std::list<Port_RN_F*>& ports,
+					std::list<Port_CCIX*>& ports_CCIX)
 		{
 			for (int i = 0; i < NUM_CHI_RN_F; i++) {
 				Port_RN_F *port = m_port_RN_F[i];
@@ -2867,6 +2927,14 @@ private:
 					}
 				}
 			}
+
+			for (int i = 0; i < NUM_CCIX_PORTS; i++) {
+				Port_CCIX *port = m_port_CCIX[i];
+
+				if (port->NeedsSnoop(req)) {
+					ports_CCIX.push_back(port);
+				}
+			}
 		}
 
 		void ProcessResp(RspMsg& rsp)
@@ -2881,6 +2949,8 @@ private:
 				uint8_t resp = rsp.GetCHIAttr()->GetResp();
 				Port_RN_F *port =
 					m_txnProcessor.LookupPortRNF(id);
+				Port_CCIX *port_CCIX =
+					m_txnProcessor.LookupPortCCIX(id);
 				bool noFwdedData;
 				bool fwdedDataGotCompAck;
 
@@ -2889,6 +2959,8 @@ private:
 				//
 				if (port) {
 					port->GetSnoopFilter().Update(rsp, req);
+				} else if (port_CCIX) {
+					port_CCIX->UpdateSnoopFilter(rsp, req);
 				}
 
 				//
@@ -2946,6 +3018,8 @@ private:
 					uint16_t id = dat.GetSrcID();
 					Port_RN_F *port =
 						m_txnProcessor.LookupPortRNF(id);
+					Port_CCIX *port_CCIX =
+						m_txnProcessor.LookupPortCCIX(id);
 					bool noFwdedData;
 					bool fwdedDataGotCompAck;
 
@@ -2954,6 +3028,8 @@ private:
 					//
 					if (port) {
 						port->GetSnoopFilter().Update(dat, req);
+					} else if (port_CCIX) {
+						port_CCIX->UpdateSnoopFilter(dat, req);
 					}
 
 					//
@@ -3021,6 +3097,7 @@ private:
 		void EnableDCT(bool enable) { m_DCT_enabled = enable; }
 	private:
 		Port_RN_F **m_port_RN_F;
+		Port_CCIX **m_port_CCIX;
 
 		TxnIDs *m_ids;
 		ReqTxn **m_ongoingTxn;
@@ -3193,14 +3270,31 @@ private:
 		PacketRouter(SystemAddressMap& sam,
 				PointOfCoherence& poc,
 				TxnProcessor& txnProcessor,
-				Port_RN_F **port_RN_F) :
+				Port_RN_F **port_RN_F,
+				Port_CCIX **port_CCIX) :
 			m_sam(sam),
 			m_poc(poc),
 			m_txnProcessor(txnProcessor),
-			m_port_RN_F(port_RN_F)
+			m_port_RN_F(port_RN_F),
+			m_port_CCIX(port_CCIX)
 		{}
 
 		void RouteReq(ReqTxn *req)
+		{
+			Port_CCIX *port_CCIX;
+
+			m_sam.UpdateTgtID(req);
+
+			port_CCIX = LookupPortCCIX(req->GetTgtID());
+
+			if (port_CCIX) {
+				port_CCIX->ProcessReq(req);
+			} else {
+				RouteInternal(req);
+			}
+		}
+
+		void RouteInternal(ReqTxn *req)
 		{
 			bool exclusivePassed = true;
 
@@ -3230,6 +3324,7 @@ private:
 		void RouteDat(DatMsg& dat)
 		{
 			Port_RN_F *port_RN_F;
+			Port_CCIX *port_CCIX;
 
 			if (dat.GetTgtID() == NODE_ID) {
 				bool isSnpResp = dat.IsSnpRespData() ||
@@ -3244,11 +3339,16 @@ private:
 			} else if ((port_RN_F = LookupPortRNF(dat.GetTgtID()))) {
 
 				port_RN_F->Transmit(new DatMsg(dat));
+
+			} else if ((port_CCIX = LookupPortCCIX(dat.GetTgtID()))) {
+
+				port_CCIX->ProcessDat(dat);
 			}
 		}
 
 		void RouteRsp(RspMsg& rsp)
 		{
+			Port_CCIX *port_CCIX;
 			Port_RN_F *port_RN_F;
 
 			if (rsp.GetTgtID() == NODE_ID) {
@@ -3260,6 +3360,10 @@ private:
 			} else if ((port_RN_F = LookupPortRNF(rsp.GetTgtID()))) {
 
 				port_RN_F->Transmit(new RspMsg(rsp));
+
+			} else if ((port_CCIX = LookupPortCCIX(rsp.GetTgtID()))) {
+
+				port_CCIX->ProcessResp(rsp);
 			}
 		}
 
@@ -3307,11 +3411,21 @@ private:
 			return NULL;
 		}
 
+		Port_CCIX *LookupPortCCIX(uint16_t nodeID)
+		{
+			for (int i = 0; i < NUM_CCIX_PORTS; i++) {
+				if (m_port_CCIX[i]->Contains(nodeID)) {
+					return m_port_CCIX[i];
+				}
+			}
+			return NULL;
+		}
 
 		SystemAddressMap& m_sam;
 		PointOfCoherence& m_poc;
 		TxnProcessor& m_txnProcessor;
 		Port_RN_F **m_port_RN_F;
+		Port_CCIX **m_port_CCIX;
 		ExclusiveMonitor m_exmon;
 	};
 
@@ -3329,6 +3443,8 @@ public:
 	Port_RN_F *port_RN_F[NUM_CHI_RN_F];
 	Port_SN   *port_SN;
 
+	Port_CCIX *port_CCIX[NUM_CCIX_PORTS];
+
 	SC_HAS_PROCESS(iconnect_chi);
 
 	iconnect_chi(sc_module_name name) :
@@ -3338,6 +3454,7 @@ public:
 				&m_router),
 
 		m_txnProcessor(port_RN_F,
+				port_CCIX,
 				&port_SN,
 				&m_ids,
 				m_ongoingTxn,
@@ -3346,6 +3463,7 @@ public:
 				&m_router),
 
 		m_poc(port_RN_F,
+			port_CCIX,
 			&m_ids,
 			m_ongoingTxn,
 			m_txnProcessor),
@@ -3353,7 +3471,8 @@ public:
 		m_router(m_sam,
 			m_poc,
 			m_txnProcessor,
-			port_RN_F)
+			port_RN_F,
+			port_CCIX)
 	{
 		for (int portID = 0; portID < NUM_CHI_RN_F; portID++) {
 			std::ostringstream name;
@@ -3367,6 +3486,19 @@ public:
 		}
 
 		port_SN = new Port_SN("Port-SN", &m_router, SLAVE_NODE_ID);
+
+		for (int portID = 0; portID < NUM_CCIX_PORTS; portID++) {
+			std::ostringstream name;
+
+			name << "port-CCIX" << portID;
+
+			port_CCIX[portID] = new Port_CCIX(name.str().c_str(),
+							NODE_ID,
+							&m_router,
+							&m_reqOrderer,
+							&m_ids,
+							m_ongoingTxn);
+		}
 
 		memset(m_ongoingTxn,
 			0x0,
@@ -3383,6 +3515,9 @@ public:
 			delete port_RN_F[i];
 		}
 		delete port_SN;
+		for (int i = 0; i < NUM_CCIX_PORTS; i++) {
+			delete port_CCIX[i];
+		}
 	}
 };
 
