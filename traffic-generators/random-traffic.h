@@ -66,6 +66,7 @@ public:
 	~RandomTraffic()
 	{
 		delete[] m_data;
+		delete[] m_byte_enables;
 	}
 
 	virtual tlm::tlm_command getCmd()
