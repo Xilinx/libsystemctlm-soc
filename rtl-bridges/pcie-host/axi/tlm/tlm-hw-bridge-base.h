@@ -30,6 +30,7 @@
 
 #include <unistd.h>
 #include <assert.h>
+#include <iostream>
 #include "systemc.h"
 
 #include "tlm-modules/tlm-aligner.h"
@@ -130,7 +131,13 @@ protected:
 			"pcie-axi4lite-slave",
 		};
 
-		assert(t < (sizeof(type2str) / sizeof(*type2str)));
+		if (t >= (sizeof(type2str) / sizeof(*type2str))) {
+			std::ostringstream ostr;
+
+			ostr << "Unknown or unsupported bridge type " << std::hex << t;
+			SC_REPORT_ERROR("tlm-hw-bridge", ostr.str().c_str());
+			return "unknown";
+		}
 		return type2str[t];
 	}
 
