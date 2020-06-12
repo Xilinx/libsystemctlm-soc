@@ -84,7 +84,7 @@ public:
 
 		dma_unmap.iova = iova;
 		dma_unmap.size = size;
-		dma_unmap.flags = flags;
+		dma_unmap.flags = 0;
 		r = ioctl(container, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
 		if (r < 0) {
 			printf("vfio-dma-unmap: addr=%" PRIx64 " size=%" PRIx64
