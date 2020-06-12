@@ -7,22 +7,21 @@ PCIE Hardware Bridge.
 
 |Acronyms|                                               |
 |--------|-----------------------------------------------|
-|QEMU	 | Quick Emulator                                |
-|AXI	 | Advanced eXtensible Interface                 |
 |ACE	 | AXI Coherency Extensions                      |
-|XDMA	 | Xilinx DMA IP                                 |
-|FPGA	 | Field Programmable Gate Array                 |
-|PCIe	 | Peripheral Component Interconnect Express     |
+|AXI	 | Advanced eXtensible Interface                 |
+|BAR	 | Base Address Register                         |
+|C2H	 | Card to Host                                  |
+|DESC	 | Descriptor                                    |
 |DUT	 | Device Under Test                             |
 |EP	 | End Point                                     |
+|FPGA	 | Field Programmable Gate Array                 |
+|H2C	 | Host to card                                  |
 |MSI	 | Message Signaled Interrupt                    |
 |MSI-X	 | Message Signaled Interrupt - Extended         |
-|BAR	 | Base Address Register                         |
 |TLM	 | Transaction-level Modeling                    |
-|DESC	 | Descriptor                                    |
-|C2H	 | Card to Host                                  |
-|H2C	 | Host to card                                  |
-
+|PCIe	 | Peripheral Component Interconnect Express     |
+|QEMU	 | Quick Emulator                                |
+|XDMA	 | Xilinx DMA IP                                 |
 
 # System Details
 
