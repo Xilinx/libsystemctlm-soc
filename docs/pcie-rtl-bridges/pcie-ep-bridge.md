@@ -210,3 +210,41 @@ Same as AXI Master, Slave Bridge
 
 Bridge generates Errors in case of protocol violations as per individual
 PCIe-AXI Master and Slave Bridge.
+
+# Bridge Discovery Mechanism
+
+Following is the sequence to identify number of bridges in the design and their
+addresses.
+
+While building design using bridges,
+
+- User will have to make sure that Bridges are connected to BAR-0 starting from
+  offset 0x0.
+- All bridges should be connected to consecutive locations without any gap in
+  between. [ Every 128 KB from ( BAR-0 + 0x0 ) will have a new Bridge ]. Also,
+  all PCIe-AXI Bridges will be connected consecutively without any gap or any
+  other kind of bridge in between.
+- In the last PCIe-AXI-bridge of PCIe Bridge, user will have to set parameter
+  PCIE_LAST_BRIDGE=1, which will be propagated into the field PCIE_LAST_BRIDGE
+  of register BRIDE_POSITION_REG and available for software to read.
+- In the last bridge of design, user will have to set parameter LAST_BRIDGE=1,
+  which will be propagated into the field LAST_BRIDGE of register
+  BRIDE_POSITION_REG and available for software to read.
+
+For software to identify bridges,
+
+- Upon start, Software will start traversing through BAR-0 offset 0x0.
+- Software will read the PCIE_LAST_BRIDGE Field of BRIDGE_POSITON_REG for each
+  PCIe-AXI Master or Slave bridge. And software will read the LAST_BRIDGE Field
+  of BRIDGE_POSITON_REG for each bridge.
+  - If PCIE_LAST_BRIDGE of PCIe-AXI Master or Slave Bridge is "1", It will stop
+    finding more PCIe-AXI bridges, else Software will go to next 128 KB offset
+    and do the same process until it gets PCIE_LAST_BRIDGE = "1".  
+  - If LAST_BRIDGE is "1", It will stop finding more bridges, else Software will
+    go to next 128 KB offset and do the same process until it gets LAST_BRIDGE =
+    "1". 
+
+> **NOTE** : If a PCIe-AXI Bridge's PCIE_LAST_BRIDGE and LAST_BRIDGE in
+BRIDGE_POSITON_REG is "1", it means the Bridge is last PCIe-AXI Bridge in PCIe
+Bridge and last Bridge in EndPoint.
+
