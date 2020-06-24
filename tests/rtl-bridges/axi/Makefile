@@ -91,6 +91,9 @@ TEST_PCIE_AXI4_SLAVE_OBJS += $(VERILATED_O)
 TEST_PCIE_AXI4_MASTER_VFIO_OBJS += test-pcie-axi4-master-vfio.o
 TEST_PCIE_AXI4_SLAVE_CDMA_VFIO_OBJS += test-pcie-axi4-slave-cdma-vfio.o
 
+TEST_SLAVE_DIRECTED_OBJS += test-slave-directed.o
+TEST_SLAVE_DIRECTED_OBJS += $(VERILATED_O)
+
 ifeq "$(VM_TRACE)" "1"
 VFLAGS += --trace
 VERILATED_OBJS_COMMON += verilated_vcd_c.o
@@ -117,6 +120,8 @@ TARGETS += axilite-test-pcie-slave
 
 TARGETS += test-pcie-axi4-master-vfio
 TARGETS += test-pcie-axi4-slave-cdma-vfio
+
+TARGETS += test-slave-directed
 
 ################################################################################
 
@@ -188,6 +193,11 @@ GEN_FLAGS=../../traffic-generators/gen-axi-tg-test-cflags.py
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(shell $(GEN_FLAGS) $@) -c -o $@ $<
 
 %-test-pcie-slave: %-test-pcie-slave.o $(TEST_PCIE_AXI4_SLAVE_OBJS) $(VERILATED_OBJS_COMMON) $(RTL_BRIDGE_AXI4_SLAVE_LIB) $(V_LDLIBS)
+	$(LINK.cc) $^ $(LDLIBS) -o $@
+
+$(TEST_SLAVE_DIRECTED_OBJS): $(RTL_BRIDGE_AXI4_SLAVE_LIB)
+
+test-slave-directed: $(TEST_SLAVE_DIRECTED_OBJS) $(VERILATED_OBJS_COMMON) $(RTL_BRIDGE_AXI4_SLAVE_LIB) $(V_LDLIBS)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 clean:
