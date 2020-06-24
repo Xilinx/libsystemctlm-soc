@@ -105,6 +105,11 @@ private:
 			bridge_type == TYPE_PCIE_AXI4_LITE_SLAVE;
 	}
 
+	bool is_axi4_slave(void) {
+		return bridge_type == TYPE_AXI4_SLAVE ||
+			bridge_type == TYPE_PCIE_AXI4_SLAVE;
+	}
+
 	virtual void we_b_transport(tlm::tlm_generic_payload& gp, sc_time& delay) {
 		init_socket->b_transport(gp, delay);
 	}
@@ -261,6 +266,7 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	uint64_t axaddr;
 	unsigned int axburst;
 	unsigned int axprot;
+	unsigned int axlock;
 	uint32_t data_offset;
 	uint32_t axsize;
 	uint32_t axid;
@@ -308,13 +314,19 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	axid = dev_read32(desc_addr + DESC_0_AXID_0_REG_ADDR_SLAVE);
 	attr = dev_read32(desc_addr + DESC_0_ATTR_REG_ADDR_SLAVE);
 	axburst = attr & 3;
+	axlock = (attr >> 2) & 3;
 	axprot = (attr >> 8) & 7;
 
 	if (is_axilite_slave()) {
 		axburst = AXI_BURST_INCR;
+		axlock = 0;
+	} else if (is_axi4_slave()) {
+		axlock &= 1;
 	}
 
 	genattr->set_wrap(axburst == AXI_BURST_WRAP);
+	genattr->set_exclusive(axlock == AXI_LOCK_EXCLUSIVE);
+	genattr->set_locked(axlock == AXI_LOCK_LOCKED);
 	genattr->set_non_secure(axprot & AXI_PROT_NS);
 
 	D(printf("desc[%d]: axaddr=%lx type=%x is_write=%d axsize=%d "
