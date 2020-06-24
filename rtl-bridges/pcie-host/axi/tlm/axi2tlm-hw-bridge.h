@@ -260,6 +260,7 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	unsigned int number_bytes;
 	uint64_t axaddr;
 	unsigned int axburst;
+	unsigned int axprot;
 	uint32_t data_offset;
 	uint32_t axsize;
 	uint32_t axid;
@@ -307,12 +308,14 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	axid = dev_read32(desc_addr + DESC_0_AXID_0_REG_ADDR_SLAVE);
 	attr = dev_read32(desc_addr + DESC_0_ATTR_REG_ADDR_SLAVE);
 	axburst = attr & 3;
+	axprot = (attr >> 8) & 7;
 
 	if (is_axilite_slave()) {
 		axburst = AXI_BURST_INCR;
 	}
 
 	genattr->set_wrap(axburst == AXI_BURST_WRAP);
+	genattr->set_non_secure(axprot & AXI_PROT_NS);
 
 	D(printf("desc[%d]: axaddr=%lx type=%x is_write=%d axsize=%d "
 		 "num-bytes=%d size=%d data_offset=%x axid=%d\n",
