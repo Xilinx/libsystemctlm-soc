@@ -267,6 +267,7 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	unsigned int axburst;
 	unsigned int axprot;
 	unsigned int axlock;
+	unsigned int axqos = 0;
 	uint32_t data_offset;
 	uint32_t axsize;
 	uint32_t axid;
@@ -322,12 +323,14 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 		axlock = 0;
 	} else if (is_axi4_slave()) {
 		axlock &= 1;
+		axqos = (attr >> 11) & 0xf;
 	}
 
 	genattr->set_wrap(axburst == AXI_BURST_WRAP);
 	genattr->set_exclusive(axlock == AXI_LOCK_EXCLUSIVE);
 	genattr->set_locked(axlock == AXI_LOCK_LOCKED);
 	genattr->set_non_secure(axprot & AXI_PROT_NS);
+	genattr->set_qos(axqos);
 
 	D(printf("desc[%d]: axaddr=%lx type=%x is_write=%d axsize=%d "
 		 "num-bytes=%d size=%d data_offset=%x axid=%d\n",
