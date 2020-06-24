@@ -31,6 +31,7 @@
 #include "systemc.h"
 
 #include "tlm-modules/tlm-aligner.h"
+#include "tlm-modules/tlm-wrap-expander.h"
 #include "tlm-extensions/genattr.h"
 
 #include "tlm-bridges/tlm2vfio-bridge.h"
@@ -81,6 +82,10 @@ private:
 	bool mode1;
 	bool debug;
 
+	tlm_utils::simple_initiator_socket<axi2tlm_hw_bridge> we_init_socket;
+	tlm_utils::simple_target_socket<axi2tlm_hw_bridge> we_target_socket;
+	tlm_wrap_expander wrap_expander;
+
 	// MAX AXI4 transaction size.
 #define MAX_DATA_BYTES (MAX_NR_DESCRIPTORS * AXI4_MAX_BURSTLENGTH * 1024 / 8)
 	uint32_t data32[MAX_DATA_BYTES / 4];
@@ -94,6 +99,15 @@ private:
 	bool process_be(uint32_t data_offset, uint32_t size, uint32_t *in32, uint32_t *out32);
 	void process_desc_free(unsigned int d, uint32_t r_avail);
 	unsigned int process(uint32_t r_avail);
+
+	bool is_axilite_slave(void) {
+		return bridge_type == TYPE_AXI4_LITE_SLAVE ||
+			bridge_type == TYPE_PCIE_AXI4_LITE_SLAVE;
+	}
+
+	virtual void we_b_transport(tlm::tlm_generic_payload& gp, sc_time& delay) {
+		init_socket->b_transport(gp, delay);
+	}
 };
 
 axi2tlm_hw_bridge::axi2tlm_hw_bridge(sc_module_name name,
@@ -101,13 +115,20 @@ axi2tlm_hw_bridge::axi2tlm_hw_bridge(sc_module_name name,
 				vfio_dev *vdev) :
 	tlm_hw_bridge_base(name, base_addr, offset),
 	init_socket("init-socket"),
-	desc_busy(0)
+	desc_busy(0),
+	we_init_socket("we-init-socket"),
+	we_target_socket("we-target-socket"),
+	wrap_expander("wrap-expander", true)
 {
 	mode1 = true;
 	if (mode1) {
 		mm = new tlm_mm_vfio(MAX_NR_DESCRIPTORS,
 				AXI4_MAX_BURSTLENGTH * 1024 / 8, vdev);
 	}
+
+	we_target_socket.register_b_transport(this, &axi2tlm_hw_bridge::we_b_transport);
+	we_init_socket.bind(wrap_expander.target_socket);
+	wrap_expander.init_socket(we_target_socket);
 
 	SC_THREAD(reset_thread);
 	SC_THREAD(work_thread);
@@ -238,14 +259,17 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	unsigned int offset = 0;
 	unsigned int number_bytes;
 	uint64_t axaddr;
+	unsigned int axburst;
 	uint32_t data_offset;
 	uint32_t axsize;
 	uint32_t axid;
+	uint32_t attr;
 	uint32_t size;
 	uint32_t type;
 	bool is_write;
 	bool be_needed = false;
 	tlm::tlm_generic_payload &gp = mm ?  *mm->allocate(d) : this->gp;
+	genattr_extension *genattr;
 	uint32_t *data32;
 	uint32_t *be32;
 
@@ -255,9 +279,18 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 		data32 = (uint32_t *) gp.get_data_ptr();
 		be32 = (uint32_t *) gp.get_byte_enable_ptr();
 		desc_gp[d] = &gp;
+
+		// Pick up pre-allocated extension
+		gp.get_extension(genattr);
 	} else {
 		data32 = this->data32;
 		be32 = this->be32;
+	}
+
+	// Lazy allocation of extensions.
+	if (!genattr) {
+		genattr = new(genattr_extension);
+		gp.set_extension(genattr);
 	}
 
 	axaddr = dev_read32(desc_addr + DESC_0_AXADDR_1_REG_ADDR_SLAVE);
@@ -272,6 +305,14 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	size = dev_read32(desc_addr + DESC_0_SIZE_REG_ADDR_SLAVE);
 	data_offset = dev_read32(desc_addr + DESC_0_DATA_OFFSET_REG_ADDR_SLAVE);
 	axid = dev_read32(desc_addr + DESC_0_AXID_0_REG_ADDR_SLAVE);
+	attr = dev_read32(desc_addr + DESC_0_ATTR_REG_ADDR_SLAVE);
+	axburst = attr & 3;
+
+	if (is_axilite_slave()) {
+		axburst = AXI_BURST_INCR;
+	}
+
+	genattr->set_wrap(axburst == AXI_BURST_WRAP);
 
 	D(printf("desc[%d]: axaddr=%lx type=%x is_write=%d axsize=%d "
 		 "num-bytes=%d size=%d data_offset=%x axid=%d\n",
@@ -300,7 +341,13 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	gp.set_byte_enable_ptr(be_needed ? (unsigned char *)be32 + offset: NULL);
 	gp.set_byte_enable_length(be_needed ? size - offset: 0);
 	gp.set_command(is_write ? tlm::TLM_WRITE_COMMAND : tlm::TLM_READ_COMMAND);
-	init_socket->b_transport(gp, delay);
+
+	if (axburst == AXI_BURST_WRAP) {
+		// Wrap expander.
+		we_init_socket->b_transport(gp, delay);
+	} else {
+		init_socket->b_transport(gp, delay);
+	}
 
 	if (!is_write) {
 		D(hexdump("read-data32", (unsigned char *)data32 + offset, size - offset));
@@ -322,6 +369,8 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	if (mm) {
 		gp.set_data_ptr((uint8_t *) data32);
 		gp.set_byte_enable_ptr((uint8_t *) be32);
+	} else {
+		gp.release_extension(genattr);
 	}
 }
 
