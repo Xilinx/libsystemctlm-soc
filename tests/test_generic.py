@@ -61,6 +61,7 @@ tests_tg_ccix = ['./traffic-generators/ccix/{0}'.format(i) for i in tg_ccix_test
 
 hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-master')
 hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-slave')
+hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), 'test-slave-directed')
 hwb_axi_tests = ['./rtl-bridges/axi/{0}'.format(i) for i in hwb_axi_testnames]
 
 hwb_ace_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
