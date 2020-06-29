@@ -331,9 +331,16 @@ private:
 			unsigned int dataLen = m_gp.get_data_length();
 			uint32_t burst_width = GetBurstWidth();
 			uint64_t alignedAddress;
+			unsigned int alignment;
 
 			alignedAddress = (address / burst_width) * burst_width;
-			dataLen += address - alignedAddress;
+			alignment = address - alignedAddress;
+
+			if (m_burstType == AXI_BURST_FIXED) {
+				burst_width -= alignment;
+			} else {
+				dataLen += alignment;
+			}
 
 			m_numBeats = (dataLen + burst_width - 1) / burst_width;
 		}
