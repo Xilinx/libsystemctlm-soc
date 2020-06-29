@@ -263,16 +263,22 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	sc_time delay(SC_ZERO_TIME);
 	unsigned int offset = 0;
 	unsigned int number_bytes;
+	unsigned int burst_length;
 	uint64_t axaddr;
 	unsigned int axburst;
 	unsigned int axprot;
 	unsigned int axlock;
+	unsigned int axlen;
 	unsigned int axqos = 0;
 	uint32_t data_offset;
 	uint32_t axsize;
 	uint32_t axid;
 	uint32_t attr;
 	uint32_t size;
+	// tx_size holds the size of the TLM transfer + offset. Most of the
+	// time it's the same as the AXI transfer but for some specific burst
+	// types (narrow bursts) it differs.
+	uint32_t tx_size;
 	uint32_t type;
 	bool is_write;
 	bool be_needed = false;
@@ -318,6 +324,9 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	axlock = (attr >> 2) & 3;
 	axprot = (attr >> 8) & 7;
 
+	axlen = (size - 1) / data_bytewidth;
+	burst_length = axlen + 1;
+
 	if (is_axilite_slave()) {
 		axburst = AXI_BURST_INCR;
 		axlock = 0;
@@ -337,7 +346,9 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 		 d, axaddr, type, is_write, axsize, number_bytes,
 		 size, data_offset, axid));
 
-	offset = axaddr % number_bytes;
+	// A3.4.2 addr - (INT(addr/Data_Bus_Bytes)) * Data_Bus_Bytes;
+	offset = axaddr - ((axaddr / data_bytewidth) * data_bytewidth);
+	tx_size = size;
 
 	if (is_write) {
 		if (!mode1) {
@@ -348,17 +359,72 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 		if (type & 2) {
 			be_needed = process_be(data_offset, size, mode1 ? be32 : NULL, be32);
 		}
-		D(hexdump("axi-wr-data32", (unsigned char *)data32 + offset, size - offset));
-		D(hexdump("axi-wr-be32", (unsigned char *)be32 + offset, size - offset));
+
+		D(hexdump("axi-wr-data32", (unsigned char *)data32, size));
+		D(hexdump("axi-wr-be32", (unsigned char *)be32, size));
+
+		if (burst_length > 1 &&
+		    (axburst == AXI_BURST_FIXED || number_bytes < data_bytewidth)) {
+			uint8_t *d8, *be8;
+			unsigned int src_pos, pos, len, addr = axaddr;
+			unsigned int b;
+			int i;
+
+			d8 = (unsigned char *)data32;
+			be8 = (unsigned char *)be32;
+
+			D(printf("Narrow write BURST\n"));
+			len = number_bytes;
+			len -= axaddr & (number_bytes - 1);
+			pos = offset + len;
+			D(printf("off=%d len=%d src_pos=%d pos=%d\n",
+				offset, len, src_pos, pos));
+			for (b = 1; b < burst_length; b++) {
+				if (axburst != AXI_BURST_FIXED) {
+					len = number_bytes;
+					src_pos = pos % data_bytewidth;
+				} else {
+					// For fixed bursts, length remains
+					// unmodified each beat (due to possible unalignment).
+					src_pos = offset;
+				}
+				src_pos += b * data_bytewidth;
+
+				D(printf("copy pos=%x src_pos=%x len=%d\n",
+						pos, src_pos, len));
+				memmove(d8 + pos, d8 + src_pos, len);
+				memmove(be8 + pos, be8 + src_pos, len);
+				pos += len;
+			}
+			tx_size = pos;
+			D(hexdump("narrow-wr-data32", (unsigned char *)data32, tx_size));
+			D(hexdump("narrow-wr-be32", (unsigned char *)be32, tx_size));
+		}
+	} else {
+		if (burst_length > 1 && number_bytes < data_bytewidth) {
+			// Narrow read, we need to adjust the total size
+			// we're going to read on the TLM side.
+			tx_size = offset + number_bytes * burst_length;
+			tx_size -= axaddr & (number_bytes - 1);
+		}
 	}
 
 	gp.set_address(axaddr);
 	gp.set_data_ptr((unsigned char *)data32 + offset);
-	gp.set_data_length(size - offset);
-	gp.set_streaming_width(size - offset);
+	gp.set_data_length(tx_size - offset);
+	gp.set_streaming_width(tx_size - offset);
 	gp.set_byte_enable_ptr(be_needed ? (unsigned char *)be32 + offset: NULL);
-	gp.set_byte_enable_length(be_needed ? size - offset: 0);
+	gp.set_byte_enable_length(be_needed ? tx_size - offset: 0);
 	gp.set_command(is_write ? tlm::TLM_WRITE_COMMAND : tlm::TLM_READ_COMMAND);
+
+	if (axburst == AXI_BURST_FIXED) {
+		unsigned int sw;
+
+		// A FIXED burst does cannot cross number_bytes boundaries.
+		sw = number_bytes;
+		sw -= axaddr & (number_bytes - 1);
+		gp.set_streaming_width(sw);
+	}
 
 	if (axburst == AXI_BURST_WRAP) {
 		// Wrap expander.
@@ -368,7 +434,40 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	}
 
 	if (!is_write) {
-		D(hexdump("read-data32", (unsigned char *)data32 + offset, size - offset));
+		D(hexdump("read-data32", (unsigned char *)data32, tx_size));
+
+		if (burst_length > 1 &&
+		    (axburst == AXI_BURST_FIXED || number_bytes < data_bytewidth)) {
+			uint8_t *d8 = (unsigned char *)data32;
+			unsigned int pos, len, dst_pos;
+			uint8_t bounce_d8[4096];
+			unsigned int b;
+
+			// We need to use a bounce buffer so that the buffer
+			// expansion does not overwrite it's own source data.
+			memcpy(bounce_d8, data32, tx_size);
+
+			D(printf("Narrow read BURST\n"));
+			len = number_bytes;
+			len -= axaddr & (number_bytes - 1);
+			pos = offset + len;
+			for (b = 1; b < burst_length; b++) {
+				if (axburst != AXI_BURST_FIXED) {
+					len = number_bytes;
+					dst_pos = pos % data_bytewidth;
+				} else {
+					dst_pos = offset;
+				}
+				dst_pos += b * data_bytewidth;
+
+				D(printf("copy pos=%x dst_pos=%x len=%d\n",
+					pos, dst_pos, number_bytes));
+				memmove(d8 + dst_pos, bounce_d8 + pos, len);
+				pos += len;
+			}
+			D(hexdump("narrow-rd-data32", (unsigned char *)data32, size));
+		}
+
 		if (!mode1) {
 			dev_copy_to(DRAM_OFFSET_READ_SLAVE + data_offset,
 				(unsigned char *)data32, size);
