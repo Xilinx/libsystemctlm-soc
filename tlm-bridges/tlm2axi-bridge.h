@@ -797,6 +797,7 @@ private:
 			uint64_t data64 = 0;
 			unsigned int bitoffset = 0;
 			unsigned int pos = 0;
+			unsigned int addr_pos = 0;
 			unsigned int streaming_width = 0;
 
 			while (len || tr == NULL) {
@@ -847,18 +848,26 @@ private:
 						break;
 					}
 
-					addr = trans->get_address() + (pos % streaming_width);
+					addr = trans->get_address() + (addr_pos % streaming_width);
 					bitoffset = (addr * 8) % DATA_WIDTH;
 					readlen = (DATA_WIDTH - bitoffset) / 8;
 					readlen = readlen <= len ? readlen : len;
 					// Respect the genattr burstwidh attribute
 					readlen = readlen <= tr->GetBurstWidth() ? readlen : tr->GetBurstWidth();
+					if (tr->GetBurstType() == AXI_BURST_FIXED ||
+					    tr->IsFirstBeat()) {
+						unsigned int t;
+
+						// For narrow bursts, the lanes need to be aligned.
+						t = addr & (tr->GetBurstWidth() - 1);
+						t = tr->GetBurstWidth() - t;
+						readlen = readlen > t ? t : readlen;
+					}
 
 					for (w = 0; w < readlen; w += sizeof data64) {
 						unsigned int copylen = readlen - w;
 
 						copylen = copylen <= sizeof data64 ? copylen : sizeof data64;
-
 						data128 = rdata.read() >> (w * 8 + bitoffset);
 						data64 = data128.to_uint64();
 
@@ -880,6 +889,9 @@ private:
 						D(printf("Read addr=%x data64=%lx len=%d readlen=%d pos=%d w=%d sw=%d ofset=%d, copylen=%d\n",
 							addr, data64, len, readlen, pos, w, streaming_width,
 							(w * 8 + bitoffset), copylen));
+						if (tr->GetBurstType() != AXI_BURST_FIXED) {
+							addr_pos += copylen;
+						}
 						pos += copylen;
 						len -= copylen;
 					}
