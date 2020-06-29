@@ -422,6 +422,8 @@ private:
 
 		void IncBeat() { m_beat++; }
 
+		bool IsFirstBeat() { return m_beat == 1; }
+
 		bool IsLastBeat() { return m_beat == m_numBeats; }
 
 		bool IsExclusive() { return m_genattr.get_exclusive(); }
@@ -471,7 +473,7 @@ private:
 		uint32_t m_numBeats;
 	};
 
-	int prepare_wbeat(Transaction *tr, unsigned int offset);
+	int prepare_wbeat(Transaction *tr, unsigned int offset, unsigned int data_offset);
 
 	bool validate(uint64_t t_addr,
 			unsigned int t_len,
@@ -940,7 +942,7 @@ private:
 			Transaction *tr = wrDataFifo.read();
 			tlm::tlm_generic_payload& trans = tr->GetGP();
 			unsigned int len = trans.get_data_length();
-			unsigned int pos = 0;
+			unsigned int pos = 0, addr_pos = 0;
 
 			//
 			// Start the data transfer if not in reset. ACE write
@@ -948,7 +950,13 @@ private:
 			//
 			if (!reset_asserted() && tr->hasData()) {
 				while (pos < len) {
-					pos += prepare_wbeat(tr, pos);
+					unsigned int d;
+
+					d = prepare_wbeat(tr, addr_pos, pos);
+					pos += d;
+					if (tr->GetBurstType() != AXI_BURST_FIXED) {
+						addr_pos += d;
+					}
 
 					wlast.write(tr->IsLastBeat());
 
@@ -1220,7 +1228,7 @@ int tlm2axi_bridge<ADDR_WIDTH,
 		ACE_MODE,
 		CD_DATA_WIDTH,
 		CACHELINE_SZ>
-::prepare_wbeat(Transaction *tr, unsigned int offset)
+::prepare_wbeat(Transaction *tr, unsigned int offset, unsigned int data_offset)
 {
 	tlm::tlm_generic_payload& trans = tr->GetGP();
 	unsigned int streaming_width = trans.get_streaming_width();
@@ -1238,8 +1246,8 @@ int tlm2axi_bridge<ADDR_WIDTH,
 
 	assert(streaming_width);
 	addr += (offset % streaming_width);
-	data += offset;
-	len -= offset;
+	data += data_offset;
+	len -= data_offset;
 
 	bitoffset = (addr * 8) % DATA_WIDTH;
 	maxlen = (DATA_WIDTH - bitoffset) / 8;
@@ -1249,6 +1257,17 @@ int tlm2axi_bridge<ADDR_WIDTH,
 	wlen = len <= maxlen ? len : maxlen;
 	// Respect the genattr burstwidh attribute
 	wlen = wlen <= tr->GetBurstWidth() ? wlen : tr->GetBurstWidth();
+
+	if (tr->GetBurstType() == AXI_BURST_FIXED || tr->IsFirstBeat()) {
+		unsigned int t;
+
+		// For narrow bursts, the lanes need to be aligned.
+		t = addr & (tr->GetBurstWidth() - 1);
+		t = tr->GetBurstWidth() - t;
+		D(printf("realign wlen=%d t=%d bw=%d offset=%d\n",
+			wlen, t, tr->GetBurstWidth(), offset));
+		wlen = wlen > t ? t : wlen;
+	}
 
 	D(printf("WBEAT: pos=%d wlen=%d bitoffset=%d\n", offset, wlen, bitoffset));
 
