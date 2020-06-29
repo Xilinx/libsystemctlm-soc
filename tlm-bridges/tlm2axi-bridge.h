@@ -308,7 +308,11 @@ private:
 				m_burstType = AXI_BURST_INCR;
 			} else if (streaming_width == DATA_BUS_BYTES) {
 				m_burstType = AXI_BURST_FIXED;
-			} else if (streaming_width < DATA_BUS_BYTES) {
+			} else if (streaming_width < DATA_BUS_BYTES &&
+				   m_genattr.get_burst_width() >= streaming_width) {
+				m_burstType = AXI_BURST_FIXED;
+			} else if (streaming_width < DATA_BUS_BYTES &&
+				   m_genattr.get_burst_width() == 0) {
 				//
 				// Specify this with burst_width if streaming
 				// width is less than the data bus width
