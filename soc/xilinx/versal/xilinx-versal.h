@@ -104,5 +104,6 @@ public:
 	sc_vector<sc_signal<bool> > pl_reset;
 
 	xilinx_versal(sc_core::sc_module_name name, const char *sk_descr,
-			Iremoteport_tlm_sync *sync = NULL);
+			Iremoteport_tlm_sync *sync = NULL,
+			bool blocking_socket = true);
 };

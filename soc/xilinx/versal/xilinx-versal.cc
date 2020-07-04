@@ -44,8 +44,9 @@ using namespace std;
 #define VERSAL_NUM_PS2PL_WIRES VERSAL_NUM_PL_RESET
 
 xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
-				Iremoteport_tlm_sync *sync)
-	: remoteport_tlm(name, -1, sk_descr),
+				Iremoteport_tlm_sync *sync,
+				bool blocking_socket)
+	: remoteport_tlm(name, -1, sk_descr, sync, blocking_socket),
 	  rp_m_axi_fpd("rp_m_axi_fpd"),
 	  rp_m_axi_lpd("rp_m_axi_lpd"),
 	  rp_fpd_cci_noc_0("rp_fpd_cci_noc_0"),
