@@ -35,21 +35,30 @@ using namespace std;
 
 #include "memory.h"
 
-memory::memory(sc_module_name name, sc_time latency, int size_)
-	: sc_module(name), socket("socket"), LATENCY(latency)
+memory::memory(sc_module_name name, sc_time latency, int size_,
+	       uint8_t *buf)
+	: sc_module(name), socket("socket"), LATENCY(latency),
+	  mem(buf),
+	  free_mem(false)
 {
 	socket.register_b_transport(this, &memory::b_transport);
 	socket.register_get_direct_mem_ptr(this, &memory::get_direct_mem_ptr);
 	socket.register_transport_dbg(this, &memory::transport_dbg);
 
 	size = size_;
-	mem = new uint8_t[size];
-	memset(&mem[0], 0, size);
+
+	if (mem == NULL) {
+		mem = new uint8_t[size];
+		memset(&mem[0], 0, size);
+		free_mem = true;
+	}
 }
 
 memory::~memory()
 {
-	delete[] mem;
+	if (free_mem) {
+		delete[] mem;
+	}
 }
 
 void memory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
