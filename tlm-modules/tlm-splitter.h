@@ -24,7 +24,7 @@
 #define TLM_SPLITTER_H__
 
 #include <stdint.h>
-#include "tests/test-modules/hexdump.h"
+#include "utils/hexdump.h"
 
 #define TLM_SPLITTER_ERROR "TLM Splitter Error"
 

@@ -38,7 +38,7 @@
 #include "rtl-bridges/pcie-host/axi/tlm/tlm-hw-bridge-base.h"
 #include "rtl-bridges/pcie-host/axi/tlm/private/user_master_addr.h"
 
-#include "tests/test-modules/hexdump.h"
+#include "utils/hexdump.h"
 
 #undef D
 #define D(x) do {		\

@@ -55,7 +55,7 @@ using namespace std;
 #include "test-modules/utils.h"
 
 #include "trace/trace.h"
-#include "tests/test-modules/hexdump.h"
+#include "utils/hexdump.h"
 
 #include <verilated_vcd_sc.h>
 #include "Vaxi3_slave.h"
