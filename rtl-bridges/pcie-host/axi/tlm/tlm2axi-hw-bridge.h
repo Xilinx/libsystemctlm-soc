@@ -478,7 +478,14 @@ void tlm2axi_hw_bridge::b_transport(tlm::tlm_generic_payload& trans,
 	// advance in the calls with the lock taken while competing threads
 	// are stuck waiting for the lock(). Once this thread releases the
 	// lock it may keep re-taking it for-ever.
-	// Avoid that by yielding.
-	wait(SC_ZERO_TIME);
+	// Avoid that by yielding, now baked into the wires processing loop
+	// below.
+
+	// For transactions that are non-Early-Ack, any wire update as side
+	// effects should be visible before we response.
+	process_wires_ev.notify();
+	do {
+		wait(SC_ZERO_TIME);
+	} while (processing_wires);
 }
 #endif
