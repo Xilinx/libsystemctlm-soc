@@ -38,6 +38,7 @@
 #include "rtl-bridges/pcie-host/axi/tlm/tlm-hw-bridge-base.h"
 #include "rtl-bridges/pcie-host/axi/tlm/private/user_slave_addr.h"
 
+#include "utils/bindump.h"
 #include "utils/hexdump.h"
 
 #undef D
@@ -552,6 +553,9 @@ unsigned int axi2tlm_hw_bridge::process(uint32_t r_avail)
 	//
 	// TODO: We probably need to enforce in-order handling of descriptors
 	// to avoid reordering when not allowed by the AXI rules.
+	D(print_binary("\ndb", desc_busy));
+	D(print_binary("\nbusy", busy));
+	D(print_binary("\nown", own));
 	return desc_busy == 0xffff;
 }
 
