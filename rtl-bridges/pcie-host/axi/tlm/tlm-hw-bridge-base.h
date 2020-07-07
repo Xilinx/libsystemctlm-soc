@@ -161,7 +161,10 @@ protected:
 	// Bridge probing
 	void bridge_probe(void);
 	void process_wires(void);
+	uint64_t c2h_wires_toggled(void);
 	int nr_connected_irq;
+	static sc_event process_wires_ev;
+	static unsigned int processing_wires;
 
 	void base_before_end_of_elaboration(void)
 	{
@@ -199,6 +202,9 @@ private:
 		base_before_end_of_elaboration();
 	}
 };
+
+unsigned int tlm_hw_bridge_base::processing_wires = 0;
+sc_event tlm_hw_bridge_base::process_wires_ev;
 
 tlm_hw_bridge_base::tlm_hw_bridge_base(sc_module_name name,
 				uint64_t base_addr, uint64_t offset) :
@@ -245,6 +251,19 @@ void tlm_hw_bridge_base::bridge_probe(void)
 	printf("Bridge nr-descriptors: %d\n", nr_descriptors);
 }
 
+uint64_t tlm_hw_bridge_base::c2h_wires_toggled(void)
+{
+	uint64_t r_toggles;
+
+	processing_wires++;
+	r_toggles = dev_read32(INTR_C2H_TOGGLE_STATUS_1_REG_ADDR_SLAVE);
+	r_toggles <<= 32;
+	r_toggles |= dev_read32(INTR_C2H_TOGGLE_STATUS_0_REG_ADDR_SLAVE);
+	processing_wires--;
+
+	return r_toggles;
+}
+
 void tlm_hw_bridge_base::process_wires(void)
 {
 	while (true) {
@@ -255,16 +274,15 @@ void tlm_hw_bridge_base::process_wires(void)
 		if (nr_connected_irq == 0)
 			return;
 
-		if (!irq.read())
-			wait(irq.posedge_event());
+		do {
+			r_toggles = c2h_wires_toggled();
+			if (!r_toggles) {
+				if (!irq.read())
+					wait(irq.posedge_event() | process_wires_ev);
+			}
+		} while (r_toggles == 0);
 
-		r_toggles = dev_read32(INTR_C2H_TOGGLE_STATUS_1_REG_ADDR_SLAVE);
-		r_toggles <<= 32;
-		r_toggles |= dev_read32(INTR_C2H_TOGGLE_STATUS_0_REG_ADDR_SLAVE);
-
-		if (!r_toggles)
-			continue;
-
+		processing_wires++;
 		dev_write32(INTR_C2H_TOGGLE_CLEAR_0_REG_ADDR_SLAVE,
 				r_toggles);
 		dev_write32(INTR_C2H_TOGGLE_CLEAR_1_REG_ADDR_SLAVE,
@@ -282,6 +300,8 @@ void tlm_hw_bridge_base::process_wires(void)
 			}
 			r_irqs >>= 1;
 		}
+
+		processing_wires--;
 	}
 }
 
