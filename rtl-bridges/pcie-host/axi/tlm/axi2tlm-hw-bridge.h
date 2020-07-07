@@ -542,9 +542,17 @@ unsigned int axi2tlm_hw_bridge::process(uint32_t r_avail)
 			r_avail, busy, own, ack, num_pending_mask);
 	}
 
-	// Since we only ACK when all descriptors are done, we only
-	// have pending work when the top descriptor is busy.
-	return busy & (1 << (nr_descriptors - 1));
+	// When write transactions come in with AW phase active but delayed
+	// W phase, a descriptor will get allocated but not become available
+	// for processing until data comes. If a read transaction comes in
+	// in between, another descriptor will be allocated and the read
+	// will become available before the write (reordered descriptors).
+	// So it's not enough to check for the top bit to be set here, we
+	// need to check that all bits are set before we issue an ACK.
+	//
+	// TODO: We probably need to enforce in-order handling of descriptors
+	// to avoid reordering when not allowed by the AXI rules.
+	return desc_busy == 0xffff;
 }
 
 void axi2tlm_hw_bridge::work_thread(void)
