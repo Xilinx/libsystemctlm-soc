@@ -36,6 +36,7 @@
 #include "tlm-modules/tlm-aligner.h"
 #include "tlm-extensions/genattr.h"
 #include "utils/dev-access.h"
+#include "utils/bitops.h"
 
 #include "rtl-bridges/pcie-host/axi/tlm/private/user_slave_addr.h"
 
@@ -269,7 +270,9 @@ void tlm_hw_bridge_base::process_wires(void)
 		D(printf("process-wires toggles=%lx r_irqs=%lx\n",
 			 r_toggles, r_irqs));
 		for (i = 0; i < c2h_irq.size(); i++) {
-			c2h_irq[i].write(r_irqs & 1);
+			if (r_toggles & bitops_mask64(i, 1)) {
+				c2h_irq[i].write(r_irqs & 1);
+			}
 			r_irqs >>= 1;
 		}
 	}
