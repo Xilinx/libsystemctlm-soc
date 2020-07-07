@@ -462,7 +462,8 @@ void tlm2axi_hw_bridge::b_transport(tlm::tlm_generic_payload& trans,
 		dev_copy_to(DRAM_OFFSET_WRITE_MASTER + offset, data, len);
 	}
 
-	D(printf("hw bridge addr=%lx len=%d sw=%d be_len=%d\n", (uint64_t)addr, len, sw, be_len));
+	D(printf("hw bridge %s addr=%lx len=%d sw=%d be_len=%d\n",
+		is_write ? "write" : "read", (uint64_t)addr, len, sw, be_len));
 	resp = desc_access(0, addr, is_write, len, be, be_len, genattr);
 
 	if (!is_write && (resp == AXI_OKAY || resp == AXI_EXOKAY)) {
