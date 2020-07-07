@@ -161,14 +161,18 @@ protected:
 	// Bridge probing
 	void bridge_probe(void);
 	void process_wires(void);
+	int nr_connected_irq;
 
 	void base_before_end_of_elaboration(void)
 	{
 		unsigned int i;
 
+		nr_connected_irq = 0;
 		for (i = 0; i < c2h_irq.size(); i++) {
-			if (c2h_irq[i].size())
+			if (c2h_irq[i].size()) {
+				nr_connected_irq++;
 				continue;
+			}
 
 			c2h_irq[i](sig_dummy_bool[i]);
 		}
@@ -247,6 +251,9 @@ void tlm_hw_bridge_base::process_wires(void)
 		uint64_t r_toggles;
 		uint64_t r_irqs;
 		unsigned int i;
+
+		if (nr_connected_irq == 0)
+			return;
 
 		if (!irq.read())
 			wait(irq.posedge_event());
