@@ -565,6 +565,7 @@ unsigned int axi2tlm_hw_bridge::process(uint32_t r_avail)
 
 void axi2tlm_hw_bridge::work_thread(void)
 {
+	static const bool use_irq = true;
 	unsigned int num_pending;
 	uint32_t r_avail;
 	unsigned int num_loops;
@@ -573,8 +574,10 @@ void axi2tlm_hw_bridge::work_thread(void)
 		wait(probed_event);
 
 	while (true) {
-		if (!irq.read()) {
+		if (use_irq && !irq.read()) {
 			wait(irq.posedge_event());
+		} else {
+			wait(1, SC_NS);
 		}
 
 		// Read-out which descriptors are pending.
