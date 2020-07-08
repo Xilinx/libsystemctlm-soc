@@ -106,6 +106,9 @@ protected:
 
 	sc_vector<sc_signal<bool > > sig_dummy_bool;
 
+	bool probed;
+	sc_event probed_event;
+
 	const char *bridge_type2str(unsigned int t) {
 		static const char *type2str[] = {
 			"axi3-master",
@@ -213,7 +216,9 @@ tlm_hw_bridge_base::tlm_hw_bridge_base(sc_module_name name,
 	rst("rst"),
 	irq("irq"),
 	c2h_irq("c2h-intr", 64),
-	sig_dummy_bool("sig-dummy-bool", 64)
+	sig_dummy_bool("sig-dummy-bool", 64),
+	probed(false),
+	probed_event("probed-event")
 {
 	this->base_addr = base_addr;
 	this->base_offset = base_offset;

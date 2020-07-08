@@ -75,9 +75,6 @@ private:
 
 	sc_mutex mutex;
 
-	bool probed;
-	sc_event probed_event;
-
 	sc_vector<sc_signal<bool > > sig_dummy_bool_h2c;
 
 	bool is_axilite_master(void);
@@ -129,14 +126,11 @@ tlm2axi_hw_bridge::tlm2axi_hw_bridge(sc_module_name name,
 	tgt_socket("tgt-socket"),
 	h2c_irq("h2c-irq", 128),
 	base_offset(base_offset),
-	probed_event("probed-event"),
 	sig_dummy_bool_h2c("sig-dummy-bool_h2c", 128),
 	aligner(NULL),
 	proxy_init_socket(NULL),
 	proxy_target_socket(NULL)
 {
-	probed = false;
-
 	if (aligner_enable) {
 		aligner = new tlm_aligner("aligner", 128,
 				AXI4_MAX_BURSTLENGTH * 16, /* MAX AXI length.  */
