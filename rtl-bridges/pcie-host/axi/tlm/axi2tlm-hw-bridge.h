@@ -218,6 +218,9 @@ void axi2tlm_hw_bridge::reset_thread(void)
 				dev_write32(desc_addr + DESC_0_WSTRB_HOST_ADDR_3_REG_ADDR_SLAVE, 0);
 			}
 		}
+
+		probed = true;
+		probed_event.notify();
 	}
 }
 
@@ -565,6 +568,9 @@ void axi2tlm_hw_bridge::work_thread(void)
 	unsigned int num_pending;
 	uint32_t r_avail;
 	unsigned int num_loops;
+
+	if (!probed)
+		wait(probed_event);
 
 	while (true) {
 		if (!irq.read()) {
