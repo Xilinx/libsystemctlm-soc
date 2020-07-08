@@ -124,7 +124,8 @@ axi2tlm_hw_bridge::axi2tlm_hw_bridge(sc_module_name name,
 	desc_busy(0),
 	we_init_socket("we-init-socket"),
 	we_target_socket("we-target-socket"),
-	wrap_expander("wrap-expander", true)
+	wrap_expander("wrap-expander", true),
+	mm(NULL)
 {
 	mode1 = true;
 	if (mode1) {
@@ -284,7 +285,7 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	bool is_write;
 	bool be_needed = false;
 	tlm::tlm_generic_payload &gp = mm ?  *mm->allocate(d) : this->gp;
-	genattr_extension *genattr;
+	genattr_extension *genattr = NULL;
 	uint32_t *data32;
 	uint32_t *be32;
 
