@@ -412,23 +412,8 @@ void tlm_hw_bridge_base::desc_wait_ownership(int d)
 void tlm_hw_bridge_base::dev_copy_to(uint64_t offset, unsigned char *buf,
 				     unsigned int len)
 {
-	unsigned int word_offset = offset % 4;
-	uint32_t v;
-	unsigned int i = 0;
-
-	offset -= word_offset;
-	while (i < len) {
-		size_t len_to_copy = MIN(len - i, sizeof(v) - word_offset);
-
-		v = 0;
-		memcpy(&v, buf + i, len_to_copy);
-		v <<= word_offset * 8;
-		dev_write32(offset, v);
-
-		word_offset = 0;
-		i += len_to_copy;
-		offset += 4;
-	}
+	dev_access(tlm::TLM_WRITE_COMMAND, offset, buf, len);
+	return;
 }
 
 void tlm_hw_bridge_base::dev_copy_from(uint64_t offset, unsigned char *buf,
@@ -438,6 +423,11 @@ void tlm_hw_bridge_base::dev_copy_from(uint64_t offset, unsigned char *buf,
 	unsigned int word_offset = offset % 4;
 	uint32_t v;
 	unsigned int i = 0;
+
+	if (!be_len) {
+		dev_access(tlm::TLM_READ_COMMAND, offset, buf, len);
+		return;
+	}
 
 	offset -= word_offset;
 	while (i < len) {
