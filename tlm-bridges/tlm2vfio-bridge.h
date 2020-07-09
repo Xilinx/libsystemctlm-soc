@@ -285,7 +285,8 @@ void tlm2vfio_bridge::b_transport(tlm::tlm_generic_payload& trans,
 	// Any access to the device is potentially ACK:ing interrupts.
 	// We don't know which access, so we'll potentially be retriggering
 	// multiple times per real IRQ.
-	irq_ack();
+	if (len < 8)
+		irq_ack();
 
 	trans.set_dmi_allowed(true);
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);
