@@ -224,6 +224,12 @@ void tlm2axi_hw_bridge::reset_thread(void)
 			// We only support 64bit addresses at the moment.
 			dev_write32(d_base + DESC_0_AXADDR_2_REG_ADDR_MASTER, 0);
 			dev_write32(d_base + DESC_0_AXADDR_3_REG_ADDR_MASTER, 0);
+
+			// AxID - For the moment, we always use zero AxIDs.
+			dev_write32(d_base + DESC_0_AXID_0_REG_ADDR_MASTER, 0);
+			dev_write32(d_base + DESC_0_AXID_1_REG_ADDR_MASTER, 0);
+			dev_write32(d_base + DESC_0_AXID_2_REG_ADDR_MASTER, 0);
+			dev_write32(d_base + DESC_0_AXID_3_REG_ADDR_MASTER, 0);
 		}
 
 		probed = true;
@@ -392,11 +398,6 @@ int tlm2axi_hw_bridge::desc_access(int d, uint64_t addr, bool is_write,
 	// INCR bursts
 	v |= 1;
 	dev_write32(d_base + DESC_0_ATTR_REG_ADDR_MASTER, v);
-	// AXID
-	dev_write32(d_base + DESC_0_AXID_0_REG_ADDR_MASTER, 0);
-	dev_write32(d_base + DESC_0_AXID_1_REG_ADDR_MASTER, 0);
-	dev_write32(d_base + DESC_0_AXID_2_REG_ADDR_MASTER, 0);
-	dev_write32(d_base + DESC_0_AXID_3_REG_ADDR_MASTER, 0);
 
 	// Total size
 	dev_write32(d_base + DESC_0_SIZE_REG_ADDR_MASTER, total_size);
