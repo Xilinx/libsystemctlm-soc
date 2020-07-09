@@ -321,19 +321,16 @@ void tlm_hw_bridge_base::dev_access(tlm::tlm_command cmd, uint64_t offset,
 	// DMI is disabled for now until we find a way to issue IRQ acks
 	// on memory transactions. VFIO INTX handling is a bit peculiar
 	// in that interrupts need to explicitely be ACK:ed.
-	if (0 && dmi_ptr_valid && cmd == tlm::TLM_READ_COMMAND &&
+	if (dmi_ptr_valid && len > 8 &&
 	    offset >= dmi_ptr_addr &&
 	    (offset + len) <= dmi_ptr_addr_end) {
+                offset -= dmi_ptr_addr;
 		if (cmd == tlm::TLM_READ_COMMAND) {
 			memcpy_from_io((uint8_t *) buf, dmi_ptr + offset, len);
-
-			if (dmi_ptr_read_latency != SC_ZERO_TIME)
-				wait(dmi_ptr_read_latency);
+			wait(dmi_ptr_read_latency);
 		} else {
 			memcpy_to_io(dmi_ptr + offset, (uint8_t *) buf, len);
-
-			if (dmi_ptr_write_latency != SC_ZERO_TIME)
-				wait(dmi_ptr_write_latency);
+			wait(dmi_ptr_write_latency);
 		}
 		return;
 	}
@@ -350,7 +347,7 @@ void tlm_hw_bridge_base::dev_access(tlm::tlm_command cmd, uint64_t offset,
 	assert(dev_tr.get_response_status() == tlm::TLM_OK_RESPONSE);
 
 	// See comment about DMI above.
-	if (0 && !dmi_ptr_valid && dev_tr.is_dmi_allowed()) {
+	if (!dmi_ptr_valid && dev_tr.is_dmi_allowed()) {
 		tlm::tlm_dmi dmi_data;
 		bool valid;
 
