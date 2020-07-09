@@ -85,7 +85,7 @@ void memcpy_to_io(void *dst, uint8_t *buf, size_t len)
 	if (len == 1) {
 		p.u8[0] = buf[0];
 	} else {
-		memcpy(&v.u64, buf, MAX(len, sizeof v));
+		memcpy(&v.u64, buf, MIN(len, sizeof v));
 		if (len == 2 && (addr & 1) == 0) {
 			p.u16[0] = v.u16;
 		} else if (len == 4 && (addr & 3) == 0) {
@@ -94,7 +94,7 @@ void memcpy_to_io(void *dst, uint8_t *buf, size_t len)
 			p.u64[0] = v.u64;
 		} else {
 			// Assume this is an access to memory and fallback to memcpy.
-			memcpy(buf, p.u8, len);
+			memcpy(p.u8, buf, len);
 		}
 	}
 	barrier();
