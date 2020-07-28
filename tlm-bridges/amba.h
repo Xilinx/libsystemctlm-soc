@@ -152,6 +152,32 @@ static inline void tlm_gp_set_axi_resp(tlm::tlm_generic_payload& trans,
 	}
 }
 
+// Dig into a generic payload and it's optional generic attributes
+// and return a derived AXI response code.
+static inline int tlm_gp_get_axi_resp(tlm::tlm_generic_payload& trans)
+{
+	genattr_extension *genattr;
+	int r;
+
+	trans.get_extension(genattr);
+
+	switch (trans.get_response_status()) {
+	case tlm::TLM_OK_RESPONSE:
+		r = AXI_OKAY;
+		if (genattr && genattr->get_exclusive_handled()) {
+			r = AXI_EXOKAY;
+		}
+		break;
+	case tlm::TLM_ADDRESS_ERROR_RESPONSE:
+		r = AXI_DECERR;
+		break;
+	default:
+		r = AXI_SLVERR;
+		break;
+	}
+	return r;
+}
+
 template<int N>
 struct __AXISignal
 {
