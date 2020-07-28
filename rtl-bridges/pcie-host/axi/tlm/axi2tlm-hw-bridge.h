@@ -285,6 +285,7 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	// types (narrow bursts) it differs.
 	uint32_t tx_size;
 	uint32_t type;
+	int axi_resp;
 	bool is_write;
 	bool be_needed = false;
 	tlm::tlm_generic_payload &gp = mm ?  *mm->allocate(d) : this->gp;
@@ -479,8 +480,9 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 		}
 	}
 
+	axi_resp = tlm_gp_get_axi_resp(gp);
 	r_resp &= ~(3 << (d * 2));
-	r_resp |= AXI_OKAY << (d * 2);
+	r_resp |= axi_resp << (d * 2);
 	dev_write32_strong(STATUS_RESP_REG_ADDR_SLAVE, r_resp);
 	dev_write32_strong(RESP_ORDER_REG_ADDR_SLAVE, d | (1U << 31));
 
