@@ -2661,7 +2661,7 @@ sync_fifo #(
           //Ref:  .WIDTH		                                        (1+2+RUSER_WIDTH+ID_WIDTH+DATA_WIDTH+DESC_IDX_WIDTH)
           .WIDTH		                                        (R_FIFO_WIDTH)  
          ,.DEPTH		                                        (32)        //Any random number
-         ,.ALMOST_FULL_DEPTH		                                (32-4)      //DEPTH-4           
+         ,.ALMOST_FULL_DEPTH		                                (32-5)      //DEPTH-5
          ,.ALMOST_EMPTY_DEPTH		                                (2)         //Not used
 ) R_fifo (
           .dout	                                                        (R_dout)
