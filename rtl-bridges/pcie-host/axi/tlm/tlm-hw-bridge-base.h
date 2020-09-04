@@ -42,7 +42,7 @@
 
 #undef D
 #define D(x) do {		\
-	if (0) {		\
+	if (debug_level) {	\
 		x;		\
 	}			\
 } while (0)
@@ -65,6 +65,10 @@ public:
 		wait(10, SC_NS);
 		usleep(1000);
 		dev_write32(RESET_REG_ADDR_SLAVE, 31);
+	}
+
+	void set_debuglevel(int l) {
+		debug_level = l;
 	}
 
 	sc_in<bool> rst;
@@ -103,6 +107,8 @@ protected:
 	uint64_t base_addr;
 	// Offset applied to all addresses.
 	uint64_t base_offset;
+
+	int debug_level;
 
 	sc_vector<sc_signal<bool > > sig_dummy_bool;
 

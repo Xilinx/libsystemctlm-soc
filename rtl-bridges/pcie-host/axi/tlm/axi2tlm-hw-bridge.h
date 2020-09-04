@@ -43,7 +43,7 @@
 
 #undef D
 #define D(x) do {		\
-	if (0) {		\
+	if (debug_level) {	\
 		x;		\
 	}			\
 } while (0)
