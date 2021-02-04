@@ -13,15 +13,15 @@ Download the the Ubuntu cloud image.
 
 ```
 ~$ cd ~/Downloads/
-~$ wget https://cloud-images.ubuntu.com/focal/20210125/focal-server-cloudimg-amd64.img
-~$ wget https://cloud-images.ubuntu.com/focal/20210125/unpacked/focal-server-cloudimg-amd64-vmlinuz-generic
-~$ wget https://cloud-images.ubuntu.com/focal/20210125/unpacked/focal-server-cloudimg-amd64-initrd-generic
+~$ wget https://cloud-images.ubuntu.com/releases/focal/release-20210125/ubuntu-20.04-server-cloudimg-amd64.img
+~$ wget https://cloud-images.ubuntu.com/releases/focal/release-20210125/unpacked/ubuntu-20.04-server-cloudimg-amd64-vmlinuz-generic
+~$ wget https://cloud-images.ubuntu.com/releases/focal/release-20210125/unpacked/ubuntu-20.04-server-cloudimg-amd64-initrd-generic
 ```
 
 Resize the image to 10G.
 
 ```
-~$ qemu-img resize ~/Downloads/focal-server-cloudimg-amd64.img 10G
+~$ qemu-img resize ~/Downloads/ubuntu-20.04-server-cloudimg-amd64.img 10G
 ```
 
 Create a disk image with user-data to be used for starting the cloud
@@ -47,17 +47,18 @@ change 'accel=kvm' to 'accel=tcg' and remove '-enable-kvm' in case the user is
 not allowed to use kvm):
 
 ```
-$ qemu-system-x86_64                                                       \
-    -M q35,accel=kvm,kernel-irqchip=split -m 4G -smp 4 -enable-kvm         \
-    -device virtio-net-pci,netdev=net0 -netdev type=user,id=net0           \
-    -serial mon:stdio -machine-path /tmp/qemu   -display none              \
-    -device intel-iommu,intremap=on,device-iotlb=on                        \
-    -device ioh3420,id=rootport,slot=0 -device ioh3420,id=rootport1,slot=1 \
-    -drive file=~/Downloads/focal-server-cloudimg-amd64.img,format=qcow2   \
-    -drive file=~/Downloads/user-data.img,format=raw                       \
-    -kernel ~/Downloads/focal-server-cloudimg-amd64-vmlinuz-generic        \
-    -append "root=/dev/sda1 ro console=tty1 console=ttyS0 intel_iommu=on"  \
-    -initrd ~/Downloads/focal-server-cloudimg-amd64-initrd-generic
+$ mkdir /tmp/machine-x86
+$ qemu-system-x86_64                                                              \
+    -M q35,accel=kvm,kernel-irqchip=split -m 4G -smp 4 -enable-kvm                \
+    -device virtio-net-pci,netdev=net0 -netdev type=user,id=net0                  \
+    -serial mon:stdio -machine-path /tmp/machine-x86 -display none                \
+    -device intel-iommu,intremap=on,device-iotlb=on                               \
+    -device ioh3420,id=rootport,slot=0 -device ioh3420,id=rootport1,slot=1        \
+    -drive file=~/Downloads/ubuntu-20.04-server-cloudimg-amd64.img,format=qcow2   \
+    -drive file=~/Downloads/user-data.img,format=raw                              \
+    -kernel ~/Downloads/ubuntu-20.04-server-cloudimg-amd64-vmlinuz-generic        \
+    -append "root=/dev/sda1 ro console=tty1 console=ttyS0 intel_iommu=on"         \
+    -initrd ~/Downloads/ubuntu-20.04-server-cloudimg-amd64-initrd-generic
 ```
 
 Above command provides network access through a virtio-net-pci device. Once the
@@ -137,7 +138,8 @@ $ ls test-pcie-ep-master-vfio test-pcie-ep-slave-vfio
 
 Instructions on how to hotplug the PCIe EP in the refdesign-sim demo into QEMU
 can be found inside:
-[../../../docs/pcie-rtl-bridges/overview.md](../../../docs/pcie-rtl-bridges/overview.md).
+[../../../docs/pcie-rtl-bridges/overview.md](../../../docs/pcie-rtl-bridges/overview.md)
+(please note to use the following machine path: /tmp/machine-x86).
 
 ## Exercising the refdesign-sim demo with VFIO test applications
 
