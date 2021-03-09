@@ -143,11 +143,27 @@ struct rp_pkt_hello {
     struct rp_capabilities caps;
 } PACKED;
 
+enum {
+    /* Remote port responses. */
+    RP_RESP_OK                  =  0x0,
+    RP_RESP_BUS_GENERIC_ERROR   =  0x1,
+    RP_RESP_ADDR_ERROR          =  0x2,
+    RP_RESP_MAX                 =  0xF,
+};
 
 enum {
     RP_BUS_ATTR_EOP        =  (1 << 0),
     RP_BUS_ATTR_SECURE     =  (1 << 1),
     RP_BUS_ATTR_EXT_BASE   =  (1 << 2),
+
+    /*
+     * Bits [11:8] are allocated for storing transaction response codes.
+     * These new response codes are backward compatible as existing
+     * implementations will not set/read these bits.
+     * For existing implementations, these bits will be zero which is RESP_OKAY.
+     */
+    RP_BUS_RESP_SHIFT    =  8,
+    RP_BUS_RESP_MASK     =  (RP_RESP_MAX << RP_BUS_RESP_SHIFT),
 };
 
 struct rp_pkt_busaccess {
@@ -467,4 +483,9 @@ void rp_dpkt_invalidate(RemotePortDynPkt *dpkt);
 
 void rp_dpkt_free(RemotePortDynPkt *dpkt);
 
+static inline int rp_get_busaccess_response(struct rp_pkt *pkt)
+{
+    return (pkt->busaccess_ext_base.attributes & RP_BUS_RESP_MASK) >>
+                                                            RP_BUS_RESP_SHIFT;
+}
 #endif

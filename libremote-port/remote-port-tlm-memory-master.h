@@ -55,7 +55,7 @@ public:
 private:
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_master> *tieoff_sk;
 
-	void rp_bus_access(struct rp_pkt &pkt,
+	int rp_bus_access(struct rp_pkt &pkt,
                                    tlm::tlm_command cmd,
                                    unsigned char *data, size_t len);
 };

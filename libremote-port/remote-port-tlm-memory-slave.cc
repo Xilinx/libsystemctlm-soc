@@ -134,13 +134,24 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		adaptor->rp_write(be, in.byte_enable_len);
 	}
 
-	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 	if (is_posted) {
 		return;
 	}
 
 	ri = response_wait(in.id);
 	assert(resp[ri].pkt.pkt->hdr.id == in.id);
+
+	switch (rp_get_busaccess_response(resp[ri].pkt.pkt)) {
+	case RP_RESP_OK:
+		trans.set_response_status(tlm::TLM_OK_RESPONSE);
+		break;
+	case RP_RESP_ADDR_ERROR:
+		trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+		break;
+	default:
+		trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+		break;
+	}
 
 	if (cmd == tlm::TLM_READ_COMMAND) {
 		uint8_t *rx_data = rp_busaccess_rx_dataptr(&adaptor->peer,

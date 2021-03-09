@@ -47,13 +47,14 @@ extern "C" {
 using namespace sc_core;
 using namespace std;
 
-void remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
+int remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 				   tlm::tlm_command cmd,
 				   unsigned char *data, size_t len)
 {
 	tlm::tlm_generic_payload tr;
 	sc_time delay;
 	genattr_extension *genattr;
+	int resp;
 
 	delay = adaptor->sync->get_local_time();
 	assert(pkt.busaccess.width == 0);
@@ -75,15 +76,25 @@ void remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	tr.set_extension(genattr);
 
 	sk->b_transport(tr, delay);
-	if (tr.get_response_status() != tlm::TLM_OK_RESPONSE) {
-		/* Handle errors.  */
-		printf("bus error\n");
+
+	switch (tr.get_response_status()) {
+	case tlm::TLM_OK_RESPONSE:
+		resp = RP_RESP_OK;
+		break;
+	case tlm::TLM_ADDRESS_ERROR_RESPONSE:
+		resp = RP_RESP_ADDR_ERROR;
+		break;
+	default:
+		resp = RP_RESP_BUS_GENERIC_ERROR;
+		break;
 	}
+
 	adaptor->sync->set_local_time(delay);
 
 	tr.release_extension(genattr);
 
 	wait(SC_ZERO_TIME);
+	return resp;
 }
 
 void remoteport_tlm_memory_master::cmd_read_null(
@@ -96,6 +107,7 @@ void remoteport_tlm_memory_master::cmd_read_null(
 	unsigned char *data;
 	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
+	int resp = RP_RESP_OK;
 
 	adaptor->sync->pre_memory_master_cmd(pkt.sync.timestamp, can_sync);
 
@@ -106,7 +118,7 @@ void remoteport_tlm_memory_master::cmd_read_null(
 				       &pkt_tx.pkt->busaccess_ext_base);
 
 	if (dev) {
-		dev->rp_bus_access(pkt, tlm::TLM_READ_COMMAND,
+		resp = dev->rp_bus_access(pkt, tlm::TLM_READ_COMMAND,
 					data, pkt.busaccess.len);
 	} else {
 		memset(data, 0x0, pkt.busaccess.len);
@@ -114,6 +126,7 @@ void remoteport_tlm_memory_master::cmd_read_null(
 
 	in.clk = adaptor->rp_map_time(adaptor->sync->get_local_time());
 	in.clk += pkt.busaccess.timestamp;
+	in.attr |= resp << RP_BUS_RESP_SHIFT;
 	plen = rp_encode_busaccess(&adaptor->peer,
 				   &pkt_tx.pkt->busaccess_ext_base,
 				   &in);
@@ -133,11 +146,12 @@ void remoteport_tlm_memory_master::cmd_write_null(
 	sc_time delay;
 	remoteport_packet pkt_tx;
 	struct rp_encode_busaccess_in in;
+	int resp = RP_RESP_OK;
 
 	adaptor->sync->pre_memory_master_cmd(pkt.sync.timestamp, can_sync);
 
 	if (dev) {
-		dev->rp_bus_access(pkt, tlm::TLM_WRITE_COMMAND, data, len);
+		resp = dev->rp_bus_access(pkt, tlm::TLM_WRITE_COMMAND, data, len);
 	}
 
 	if (!(pkt.hdr.flags & RP_PKT_FLAGS_posted)) {
@@ -145,6 +159,7 @@ void remoteport_tlm_memory_master::cmd_write_null(
 
 		in.clk = adaptor->rp_map_time(adaptor->sync->get_local_time());
 		in.clk += pkt.busaccess.timestamp;
+		in.attr |= resp << RP_BUS_RESP_SHIFT;
 
 		plen = rp_encode_busaccess(&adaptor->peer,
 					   &pkt_tx.pkt->busaccess_ext_base,
