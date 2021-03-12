@@ -52,6 +52,7 @@ private:
 	remoteport_tlm_memory_master rp_cpm_pcie_noc_1;
 	remoteport_tlm_memory_master rp_noc_lpd_axi_0;
 	remoteport_tlm_memory_master rp_pmc_noc_axi_0;
+	remoteport_tlm_memory_master rp_reserved_0;
 
 	remoteport_tlm_memory_slave rp_s_axi_fpd;
 	remoteport_tlm_memory_slave rp_s_axi_gp_2;
@@ -85,6 +86,8 @@ public:
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *cpm_pcie_noc_1;
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *noc_lpd_axi_0;
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *pmc_noc_axi_0;
+
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *s_reserved_0;
 
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_fpd;
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_gp_2;

@@ -47,6 +47,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 				Iremoteport_tlm_sync *sync,
 				bool blocking_socket)
 	: remoteport_tlm(name, -1, sk_descr, sync, blocking_socket),
+	  rp_reserved_0("rp_reserved_0"),
 	  rp_m_axi_fpd("rp_m_axi_fpd"),
 	  rp_m_axi_lpd("rp_m_axi_lpd"),
 	  rp_fpd_cci_noc_0("rp_fpd_cci_noc_0"),
@@ -81,6 +82,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 {
 	int i;
 
+	s_reserved_0 = &rp_reserved_0.sk;
 	m_axi_fpd = &rp_m_axi_fpd.sk;
 	m_axi_lpd = &rp_m_axi_lpd.sk;
 	fpd_cci_noc_0 = &rp_fpd_cci_noc_0.sk;
@@ -116,6 +118,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 		rp_wires_out.wires_out[i](pl_reset[i]);
 	}
 
+	register_dev(2, &rp_reserved_0);
 	register_dev(10, &rp_s_axi_fpd);
 	register_dev(12, &rp_s_axi_gp_2);
 	register_dev(14, &rp_s_axi_lpd);
