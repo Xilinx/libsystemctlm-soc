@@ -50,7 +50,7 @@ void remoteport_tlm_pci_ep::propagate_rst(void) {
 
 // Connect all remote-port objects to public members.
 void remoteport_tlm_pci_ep::connect_rp_devs(int rp_dev_base) {
-	int i;
+	unsigned int i;
 
 	if (rp_io.size() + rp_mmio.size() > 6) {
 		SC_REPORT_ERROR("rp-pci-ep", "Too many BARs!\n");
@@ -81,7 +81,7 @@ void remoteport_tlm_pci_ep::connect_rp_devs(int rp_dev_base) {
 }
 
 void remoteport_tlm_pci_ep::bind(pci_device_base &dev) {
-	int i;
+	unsigned int i;
 
 	config->bind(dev.config);
 	dev.dma.bind(dma);
