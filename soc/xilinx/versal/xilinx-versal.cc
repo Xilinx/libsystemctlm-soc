@@ -80,7 +80,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	  pl2ps_irq("pl2ps_irq", VERSAL_NUM_PL2PS_IRQ),
 	  pl_reset("pl_reset", VERSAL_NUM_PL_RESET)
 {
-	int i;
+	unsigned int i;
 
 	s_reserved_0 = &rp_reserved_0.sk;
 	m_axi_fpd = &rp_m_axi_fpd.sk;
