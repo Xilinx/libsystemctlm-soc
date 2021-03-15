@@ -128,7 +128,7 @@ void remoteport_tlm_wires::wire_update(void)
 	while (true) {
 		int nr_events = 0;
 		uint32_t flags = RP_PKT_FLAGS_posted;
-		uint32_t id;
+		uint32_t id = 0;
 
 		wait();
 	        for (i = 0; i < cfg.nr_wires_in; i++) {
