@@ -39,7 +39,7 @@ pci_device_base::pci_device_base(sc_module_name name,
 	  dma("dma"),
 	  irq("irq", nr_irqs)
 {
-	int i;
+	unsigned int i;
 
 	config.register_b_transport(this, &pci_device_base::config_b_transport);
 
