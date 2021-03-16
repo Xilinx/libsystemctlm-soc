@@ -170,9 +170,9 @@ module chi_register_interface
     output wire 			  rxreq_rxsnp_ownership,
     output wire 			  rxrsp_ownership,
     output wire 			  rxdat_ownership,
-    output [14:0] 			  rxreq_rxsnp_ownership_flip_pulse,
-    output [14:0] 			  rxrsp_ownership_flip_pulse,
-    output [14:0] 			  rxdat_ownership_flip_pulse,
+    output wire [14:0] 			  rxreq_rxsnp_ownership_flip_pulse,
+    output wire [14:0] 			  rxrsp_ownership_flip_pulse,
+    output wire [14:0] 			  rxdat_ownership_flip_pulse,
     output 				  CHI_TXRSP_Pending,
     output 				  CHI_TXRSP_Valid,
     output [CHI_CHN_RSP_WIDTH -1 :0] 	  CHI_TXRSP_Data,
@@ -412,9 +412,6 @@ module chi_register_interface
    reg [14:0] 					rxrsp_ownership_reg;
    reg [31:0] 					rxreq_rxsnp_ownership_flip_reg;
    reg [31:0] 					rxreq_rxsnp_ownership_flip_reg_ff;
-   wire [14:0] 					rxreq_rxsnp_ownership_flip_pulse;
-   wire [14:0] 					rxdat_ownership_flip_pulse;
-   wire [14:0] 					rxrsp_ownership_flip_pulse;
    reg [31:0] 					rxdat_ownership_flip_reg;
    reg [31:0] 					rxdat_ownership_flip_reg_ff;
    reg [31:0] 					rxrsp_ownership_flip_reg;
