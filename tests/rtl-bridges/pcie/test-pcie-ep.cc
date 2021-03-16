@@ -121,6 +121,10 @@ SC_MODULE(Top)
 		irq_req_bool.write(!!v);
 	}
 
+	void set_debuglevel(int l) {
+		tlm2axi_sw_bridge.set_debuglevel(l);
+	}
+
 	SC_HAS_PROCESS(Top);
 
 	Top(sc_module_name name, unsigned int ram_size = 1 * 1024) :
@@ -268,6 +272,12 @@ int sc_main(int argc, char *argv[])
 		tfp->open("vlt_dump.vcd");
 	}
 #endif
+
+	if (argc > 1 && !strcmp(argv[1], "--debug")) {
+		// We only have one level at the moment.
+		top.set_debuglevel(1);
+	}
+
 	sc_start(2, SC_MS);
 
 	if (trace_fp) {
