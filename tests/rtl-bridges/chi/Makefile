@@ -30,6 +30,7 @@ VFLAGS += --output-split-cfuncs 500
 # FIXME: These should really go away
 VFLAGS += -Wno-PINMISSING -Wno-COMBDLY
 
+VM_SC=1
 VM_TRACE=1
 
 ifeq "$(VM_TRACE)" "1"

@@ -31,6 +31,7 @@ VFLAGS += --output-split-cfuncs 500
 # FIXME: These should really go away
 VFLAGS += -Wno-PINMISSING -Wno-COMBDLY
 
+VM_SC=1
 # Enable tracing of internal signals with +trace
 VM_TRACE=1
 
