@@ -51,7 +51,7 @@
 
 
 #define RP_VERSION_MAJOR 4
-#define RP_VERSION_MINOR 2
+#define RP_VERSION_MINOR 3
 
 #if defined(_WIN32) && defined(__MINGW32__)
 /* mingw GCC has a bug with packed attributes.  */
