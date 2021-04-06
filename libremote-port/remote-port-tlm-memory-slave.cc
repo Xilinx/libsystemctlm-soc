@@ -43,6 +43,7 @@ extern "C" {
 #include "remote-port-tlm-memory-slave.h"
 
 #include "tlm-extensions/genattr.h"
+#include "tlm-extensions/atsattr.h"
 
 using namespace sc_core;
 using namespace std;
@@ -89,6 +90,7 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 	unsigned int wid = trans.get_streaming_width();
 	remoteport_packet pkt_tx;
 	genattr_extension *genattr;
+	atsattr_extension *atsattr;
 	uint16_t master_id = 0;
 	uint64_t attr = 0;
 	unsigned int ri;
@@ -105,6 +107,10 @@ void remoteport_tlm_memory_slave::b_transport(tlm::tlm_generic_payload& trans,
 		master_id = genattr->get_master_id();
 		attr |= genattr_to_rpattr(genattr);
 		is_posted = genattr->get_posted();
+	}
+	trans.get_extension(atsattr);
+	if (atsattr) {
+		attr |= atsattr->is_phys_addr() ? RP_BUS_ATTR_PHYS_ADDR : 0;
 	}
 
 	pkt_tx.alloc(sizeof pkt_tx.pkt->busaccess + len);
