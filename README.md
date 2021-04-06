@@ -114,5 +114,7 @@ Include this in your Makefile for all projects:
   SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-memory-master.o
   SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-memory-slave.o
   SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-wires.o
+  SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-ats.o
+  SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-pci-ep.o
   CPPFLAGS += -I $(LIBRP_PATH)
 ```
