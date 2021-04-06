@@ -28,6 +28,7 @@
 #include "systemc.h"
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
+#include "tlm-extensions/atsattr.h"
 
 #include "remote-port-tlm-pci-ep.h"
 
@@ -46,6 +47,7 @@ void remoteport_tlm_pci_ep::propagate_rst(void) {
  * 3            DMA from the End-point towards us.
  * 4 - 9        Reserved
  * 10 - 20      IO or Memory Mapped BARs (6 + 4 reserved)
+ * 21           ATS
  */
 
 // Connect all remote-port objects to public members.
@@ -78,6 +80,8 @@ void remoteport_tlm_pci_ep::connect_rp_devs(int rp_dev_base) {
 		bar[rp_io.size() + i] = &rp_mmio[i].sk;
 		adaptor->register_dev(rp_dev_base + 10 + rp_io.size() + i, &rp_mmio[i]);
 	}
+
+	adaptor->register_dev(rp_dev_base + 21, &rp_ats);
 }
 
 void remoteport_tlm_pci_ep::bind(pci_device_base &dev) {
@@ -94,4 +98,7 @@ void remoteport_tlm_pci_ep::bind(pci_device_base &dev) {
 		irq[i](signals_irq[i]);
 		dev.irq[i](signals_irq[i]);
 	}
+
+	dev.ats_req.bind(ats_req);
+	ats_inv.bind(dev.ats_inv);
 }

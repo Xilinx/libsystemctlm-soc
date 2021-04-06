@@ -33,6 +33,7 @@
 #include "remote-port-tlm-memory-master.h"
 #include "remote-port-tlm-memory-slave.h"
 #include "remote-port-tlm-wires.h"
+#include "remote-port-tlm-ats.h"
 
 #include "soc/pci/core/pci-device-base.h"
 
@@ -44,6 +45,7 @@ class remoteport_tlm_pci_ep
 private:
 	remoteport_tlm_memory_slave rp_dma;
 	remoteport_tlm_wires rp_irq;
+	remoteport_tlm_ats rp_ats;
 
 public:
 	sc_in<bool> rst;
@@ -53,6 +55,9 @@ public:
 	// BARs (IO or MMIO).
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *bar[6];
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> &dma;
+
+	tlm_utils::simple_target_socket<remoteport_tlm_ats> &ats_req;
+	tlm_utils::simple_initiator_socket<remoteport_tlm_ats> &ats_inv;
 
 	// Interrupts.
 	// For legacy interrupts, this will be a vector of size 1.
@@ -76,8 +81,11 @@ public:
 		: sc_module(name),
 		  rp_dma("rp-dma"),
 		  rp_irq("rp-irq", nr_irqs, 0),
+		  rp_ats("rp-ats"),
 		  rst("rst"),
 		  dma(rp_dma.sk),
+		  ats_req(rp_ats.req),
+		  ats_inv(rp_ats.inv),
 		  irq(rp_irq.wires_in),
 		  signals_irq("signals-irq", nr_irqs),
 		  free_adaptor(true),
@@ -105,8 +113,11 @@ public:
 		: sc_module(name),
 		  rp_dma("rp-dma"),
 		  rp_irq("rp-irq", nr_irqs, 0),
+		  rp_ats("rp-ats"),
 		  rst("rst"),
 		  dma(rp_dma.sk),
+		  ats_req(rp_ats.req),
+		  ats_inv(rp_ats.inv),
 		  irq(rp_irq.wires_in),
 		  signals_irq("signals-irq", nr_irqs),
 		  adaptor(adaptor),
