@@ -266,6 +266,15 @@
 				<ipxact:isIncludeFile>true</ipxact:isIncludeFile>
 			</ipxact:file>
 			<ipxact:file>
+				<ipxact:name>../../../../../../libremote-port/remote-port-tlm-ats.cc</ipxact:name>
+				<ipxact:fileType>systemCSource</ipxact:fileType>
+			</ipxact:file>
+			<ipxact:file>
+				<ipxact:name>../../../../../../libremote-port/remote-port-tlm-ats.h</ipxact:name>
+				<ipxact:fileType>systemCSource</ipxact:fileType>
+				<ipxact:isIncludeFile>true</ipxact:isIncludeFile>
+			</ipxact:file>
+			<ipxact:file>
 				<ipxact:name>../../../../../../libremote-port/safeio.c</ipxact:name>
 				<ipxact:fileType>systemCSource</ipxact:fileType>
 			</ipxact:file>
