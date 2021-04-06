@@ -459,6 +459,7 @@ void remoteport_tlm::rp_say_hello(void)
 	uint32_t caps[] = {
 		CAP_BUSACCESS_EXT_BASE,
 		CAP_WIRE_POSTED_UPDATES,
+		CAP_ATS,
 	};
 	struct rp_pkt_hello pkt = {0};
 	size_t len;

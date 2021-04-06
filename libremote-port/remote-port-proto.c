@@ -463,6 +463,9 @@ void rp_process_caps(struct rp_peer_state *peer,
         case CAP_WIRE_POSTED_UPDATES:
             peer->caps.wire_posted_updates = true;
             break;
+        case CAP_ATS:
+            peer->caps.ats = true;
+            break;
         }
     }
 }

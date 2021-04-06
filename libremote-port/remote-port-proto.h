@@ -137,6 +137,8 @@ enum {
      * of the posted header-flag.
      */
     CAP_WIRE_POSTED_UPDATES = 3,
+
+    CAP_ATS = 4, /* Address translation services */
 };
 
 struct rp_pkt_hello {
@@ -296,6 +298,7 @@ struct rp_peer_state {
         bool busaccess_ext_base;
         bool busaccess_ext_byte_en;
         bool wire_posted_updates;
+        bool ats;
     } caps;
 
     /* Used to normalize our clk.  */
