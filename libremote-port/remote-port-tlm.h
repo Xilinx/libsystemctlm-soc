@@ -95,6 +95,7 @@ public:
 			       unsigned char *data, size_t len);
 	virtual void cmd_read(struct rp_pkt &pkt, bool can_sync);
 	virtual void cmd_interrupt(struct rp_pkt &pkt, bool can_sync);
+	virtual void cmd_ats_inv(struct rp_pkt &pkt, bool can_sync);
 	virtual void tie_off(void) {} ;
 };
 
@@ -137,6 +138,8 @@ public:
 	virtual void post_wire_cmd(int64_t rclk, bool can_sync) { }
 	virtual void pre_memory_master_cmd(int64_t rclk, bool can_sync) { }
 	virtual void post_memory_master_cmd(int64_t rclk, bool can_sync) { }
+	virtual void pre_ats_inv_cmd(int64_t rclk, bool can_sync) { }
+	virtual void post_ats_inv_cmd(int64_t rclk, bool can_sync) { }
 };
 
 #define RP_MAX_DEVS 512

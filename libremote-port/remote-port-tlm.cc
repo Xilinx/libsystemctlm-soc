@@ -47,6 +47,7 @@ extern "C" {
 #include "remote-port-tlm.h"
 #include "remote-port-tlm-wires.h"
 #include "remote-port-tlm-memory-master.h"
+#include "remote-port-tlm-ats.h"
 
 using namespace sc_core;
 using namespace std;
@@ -506,6 +507,11 @@ void remoteport_tlm_dev::cmd_read(struct rp_pkt &pkt, bool can_sync)
 				adaptor, pkt, can_sync, NULL);
 }
 
+void remoteport_tlm_dev::cmd_ats_inv(struct rp_pkt &pkt, bool can_sync)
+{
+	remoteport_tlm_ats::cmd_ats_inv_null(adaptor, pkt, can_sync, NULL);
+}
+
 bool remoteport_tlm::rp_process(bool can_sync)
 {
 	remoteport_packet pkt_rx;
@@ -581,6 +587,9 @@ bool remoteport_tlm::rp_process(bool can_sync)
 			break;
 		case RP_CMD_interrupt:
 			dev->cmd_interrupt(*pkt_rx.pkt, can_sync);
+			break;
+		case RP_CMD_ats_inv:
+			dev->cmd_ats_inv(*pkt_rx.pkt, can_sync);
 			break;
 		case RP_CMD_sync:
                         rp_cmd_sync(*pkt_rx.pkt, can_sync);
