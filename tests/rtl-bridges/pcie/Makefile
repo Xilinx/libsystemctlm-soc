@@ -61,6 +61,7 @@ OBJS_COMMON += ../../../libremote-port/remote-port-tlm-wires.o
 OBJS_COMMON += ../../../libremote-port/remote-port-tlm-memory-master.o
 OBJS_COMMON += ../../../libremote-port/remote-port-tlm-memory-slave.o
 OBJS_COMMON += ../../../libremote-port/remote-port-tlm-pci-ep.o
+OBJS_COMMON += ../../../libremote-port/remote-port-tlm-ats.o
 
 RTL_BRIDGE_PCIE_DIR = ../../../rtl-bridges/pcie-host/pcie/rtl/
 RTL_BRIDGE_AXI_DIR = ../../../rtl-bridges/pcie-host/axi/rtl/
