@@ -159,6 +159,7 @@ enum {
     RP_BUS_ATTR_EOP        =  (1 << 0),
     RP_BUS_ATTR_SECURE     =  (1 << 1),
     RP_BUS_ATTR_EXT_BASE   =  (1 << 2),
+    RP_BUS_ATTR_PHYS_ADDR  =  (1 << 3),
 
     /*
      * Bits [11:8] are allocated for storing transaction response codes.
