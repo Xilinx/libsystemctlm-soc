@@ -87,6 +87,8 @@ static const char *rp_cmd_names[RP_CMD_max + 1] = {
     [RP_CMD_write] = "write",
     [RP_CMD_interrupt] = "interrupt",
     [RP_CMD_sync] = "sync",
+    [RP_CMD_ats_req] = "ats_request",
+    [RP_CMD_ats_inv] = "ats_invalidation",
 };
 
 const char *rp_cmd_to_string(enum rp_cmd cmd)
@@ -187,6 +189,13 @@ int rp_decode_payload(struct rp_pkt *pkt)
     case RP_CMD_sync:
         pkt->sync.timestamp = be64toh(pkt->interrupt.timestamp);
         used += pkt->hdr.len;
+        break;
+    case RP_CMD_ats_req:
+    case RP_CMD_ats_inv:
+        pkt->ats.attributes = be64toh(pkt->ats.attributes);
+        pkt->ats.addr = be64toh(pkt->ats.addr);
+        pkt->ats.len = be64toh(pkt->ats.len);
+        pkt->ats.result = be32toh(pkt->ats.result);
         break;
     default:
         break;
@@ -371,6 +380,41 @@ size_t rp_encode_interrupt(uint32_t id, uint32_t dev,
                            uint32_t line, uint64_t vector, uint8_t val)
 {
     return rp_encode_interrupt_f(id, dev, pkt, clk, line, vector, val, 0);
+}
+
+static size_t rp_encode_ats_common(uint32_t cmd, uint32_t id, uint32_t dev,
+                         struct rp_pkt_ats *pkt,
+                         int64_t clk, uint64_t attr, uint64_t addr,
+                         uint64_t len, uint64_t result, uint32_t flags)
+{
+    rp_encode_hdr(&pkt->hdr, cmd, id, dev,
+                  sizeof *pkt - sizeof pkt->hdr, flags);
+    pkt->timestamp = htobe64(clk);
+    pkt->attributes = htobe64(attr);
+    pkt->addr = htobe64(addr);
+    pkt->len = htobe64(len);
+    pkt->result = htobe32(result);
+    return sizeof *pkt;
+}
+
+size_t rp_encode_ats_req(uint32_t id, uint32_t dev,
+                         struct rp_pkt_ats *pkt,
+                         int64_t clk, uint64_t attr, uint64_t addr,
+                         uint64_t len, uint64_t result, uint32_t flags)
+{
+    return rp_encode_ats_common(RP_CMD_ats_req, id, dev,
+                                pkt, clk, attr,
+                                addr, len, result, flags);
+}
+
+size_t rp_encode_ats_inv(uint32_t id, uint32_t dev,
+                         struct rp_pkt_ats *pkt,
+                         int64_t clk, uint64_t attr, uint64_t addr,
+                         uint64_t len, uint64_t result, uint32_t flags)
+{
+    return rp_encode_ats_common(RP_CMD_ats_inv, id, dev,
+                                pkt, clk, attr,
+                                addr, len, result, flags);
 }
 
 static size_t rp_encode_sync_common(uint32_t id, uint32_t dev,

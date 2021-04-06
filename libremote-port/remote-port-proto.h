@@ -69,7 +69,9 @@ enum rp_cmd {
     RP_CMD_write       = 4,
     RP_CMD_interrupt   = 5,
     RP_CMD_sync        = 6,
-    RP_CMD_max         = 6
+    RP_CMD_ats_req     = 7,
+    RP_CMD_ats_inv     = 8,
+    RP_CMD_max         = 8
 };
 
 enum {
@@ -246,6 +248,30 @@ struct rp_pkt_sync {
     uint64_t timestamp;
 } PACKED;
 
+enum {
+    RP_ATS_ATTR_exec     = 1 << 0,
+    RP_ATS_ATTR_read     = 1 << 1,
+    RP_ATS_ATTR_write    = 1 << 2,
+};
+
+enum {
+    RP_ATS_RESULT_ok = 0,
+    RP_ATS_RESULT_error = 1,
+};
+
+struct rp_pkt_ats {
+    struct rp_pkt_hdr hdr;
+    uint64_t timestamp;
+    uint64_t attributes;
+    uint64_t addr;
+    uint64_t len;
+    uint32_t result;
+    uint64_t reserved0;
+    uint64_t reserved1;
+    uint64_t reserved2;
+    uint64_t reserved3;
+} PACKED;
+
 struct rp_pkt {
     union {
         struct rp_pkt_hdr hdr;
@@ -254,6 +280,7 @@ struct rp_pkt {
         struct rp_pkt_busaccess_ext_base busaccess_ext_base;
         struct rp_pkt_interrupt interrupt;
         struct rp_pkt_sync sync;
+        struct rp_pkt_ats ats;
     };
 };
 
@@ -450,6 +477,16 @@ size_t rp_encode_sync(uint32_t id, uint32_t dev,
 size_t rp_encode_sync_resp(uint32_t id, uint32_t dev,
                            struct rp_pkt_sync *pkt,
                            int64_t clk);
+
+size_t rp_encode_ats_req(uint32_t id, uint32_t dev,
+                             struct rp_pkt_ats *pkt,
+                             int64_t clk, uint64_t attr, uint64_t addr,
+                             uint64_t size, uint64_t result, uint32_t flags);
+
+size_t rp_encode_ats_inv(uint32_t id, uint32_t dev,
+                             struct rp_pkt_ats *pkt,
+                             int64_t clk, uint64_t attr, uint64_t addr,
+                             uint64_t size, uint64_t result, uint32_t flags);
 
 void rp_process_caps(struct rp_peer_state *peer,
                      void *caps, size_t caps_len);
