@@ -37,6 +37,8 @@ pci_device_base::pci_device_base(sc_module_name name,
 	  config("config"),
 	  bar("bar", nr_bars),
 	  dma("dma"),
+	  ats_req("ats-req"),
+	  ats_inv("ats-inv"),
 	  irq("irq", nr_irqs)
 {
 	unsigned int i;
@@ -48,6 +50,9 @@ pci_device_base::pci_device_base(sc_module_name name,
 					    &pci_device_base::bar_b_transport,
 					    i);
 	}
+
+	ats_inv.register_b_transport(this,
+					&pci_device_base::b_transport_ats_inv);
 }
 
 void pci_device_base::config_b_transport(tlm::tlm_generic_payload& trans,
@@ -67,4 +72,10 @@ void pci_device_base::bar_b_transport(int bar_nr,
 				      sc_time& delay)
 {
 	trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+}
+
+void pci_device_base::b_transport_ats_inv(tlm::tlm_generic_payload& trans,
+					 sc_time& delay)
+{
+	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }

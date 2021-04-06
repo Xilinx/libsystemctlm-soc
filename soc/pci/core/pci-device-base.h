@@ -37,6 +37,9 @@ public:
 	// A DMA port for end-point access into the host.
 	tlm_utils::simple_initiator_socket<pci_device_base> dma;
 
+	tlm_utils::simple_initiator_socket<pci_device_base> ats_req;
+	tlm_utils::simple_target_socket<pci_device_base> ats_inv;
+
 	// Interrupts. Normally this vector will be of size 1.
 	// Depending on where device connects there may be infrastructure
 	// to handle multiple interrupts (mapping these signals into MSI).
@@ -54,6 +57,9 @@ protected:
 
 	// Tagged callback for BAR access. ID represents the BAR nr.
 	virtual void bar_b_transport(int bar_nr, tlm::tlm_generic_payload& trans,
+				     sc_time& delay);
+
+	virtual void b_transport_ats_inv(tlm::tlm_generic_payload& trans,
 				     sc_time& delay);
 };
 #endif
