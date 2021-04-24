@@ -284,11 +284,10 @@ remoteport_tlm::remoteport_tlm(sc_module_name name,
 		printf("open socket\n");
 		this->fd = sk_open(sk_descr);
 		if (this->fd == -1) {
-			printf("Failed to create remote-port socket connection!\n");
 			if (sk_descr) {
 				perror(sk_descr);
 			}
-			exit(EXIT_FAILURE);
+			SC_REPORT_FATAL("Remote-port", "Failed to create remote-port socket connection!\n");
 		}
 	}
 
