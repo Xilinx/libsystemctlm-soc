@@ -190,6 +190,7 @@ private:
 	pthread_t rp_pkt_thread;
 	pthread_mutex_t rp_pkt_mutex;
 
+	void rp_sk_open(void);
 	void rp_say_hello(void);
 	void rp_cmd_hello(struct rp_pkt &pkt);
 	void rp_cmd_sync(struct rp_pkt &pkt, bool can_sync);

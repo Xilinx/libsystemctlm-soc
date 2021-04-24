@@ -255,6 +255,20 @@ static void *thread_trampoline(void *arg) {
         return NULL;
 }
 
+void remoteport_tlm::rp_sk_open(void)
+{
+	if (fd == -1) {
+		printf("open socket\n");
+		this->fd = sk_open(sk_descr);
+		if (this->fd == -1) {
+			if (sk_descr) {
+				perror(sk_descr);
+			}
+			SC_REPORT_FATAL("Remote-port", "Failed to create remote-port socket connection!\n");
+		}
+	}
+}
+
 remoteport_tlm::remoteport_tlm(sc_module_name name,
 			int fd,
 			const char *sk_descr,
@@ -280,22 +294,10 @@ remoteport_tlm::remoteport_tlm(sc_module_name name,
 
 	dev_null.adaptor = this;
 
-	if (fd == -1) {
-		printf("open socket\n");
-		this->fd = sk_open(sk_descr);
-		if (this->fd == -1) {
-			if (sk_descr) {
-				perror(sk_descr);
-			}
-			SC_REPORT_FATAL("Remote-port", "Failed to create remote-port socket connection!\n");
-		}
-	}
 
 	pthread_mutex_init(&rp_pkt_mutex, NULL);
 	SC_THREAD(process);
 
-	if (!blocking_socket)
-		pthread_create(&rp_pkt_thread, NULL, thread_trampoline, this);
 }
 
 void remoteport_tlm::rp_pkt_main(void)
@@ -611,6 +613,10 @@ bool remoteport_tlm::current_process_is_adaptor(void)
 void remoteport_tlm::process(void)
 {
 	adaptor_proc = sc_get_current_process_handle();
+
+	rp_sk_open();
+	if (!blocking_socket)
+		pthread_create(&rp_pkt_thread, NULL, thread_trampoline, this);
 
 	sync->reset();
 	wait(rst.negedge_event());
