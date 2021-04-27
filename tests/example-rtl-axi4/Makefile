@@ -26,16 +26,16 @@ include ../Rules.mk
 
 VFLAGS=-Wno-fatal --pins-bv 2
 
-CPPFLAGS += -I $(VOBJ_DIR)
+CPPFLAGS += -I $(CC_VOBJ_DIR)
 CPPFLAGS += -I $(VERILATOR_ROOT)/include
 
 CPPFLAGS += -I ../../ -I ../ -I .
 CXXFLAGS += -Wall -O3 -g
 
 AXIFULL_DEV_V += axifull_dev.v
-AXIFULL_DEV_H += $(VOBJ_DIR)/Vaxifull_dev.h
-AXIFULL_DEV_LIB += $(VOBJ_DIR)/Vaxifull_dev__ALL.a
-EXAMPLE_RTL_AXI4_OBJS += example-rtl-axi4.o $(VERILATED_O)
+AXIFULL_DEV_H += $(CC_VOBJ_DIR)/Vaxifull_dev.h
+AXIFULL_DEV_LIB += $(CC_VOBJ_DIR)/Vaxifull_dev__ALL.a
+EXAMPLE_RTL_AXI4_OBJS += example-rtl-axi4.o $(CC_VERILATED_O)
 ALL_OBJS += $(OBJS_COMMON) $(EXAMPLE_RTL_AXI4_OBJS)
 
 TARGETS += example-rtl-axi4

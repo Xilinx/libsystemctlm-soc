@@ -45,8 +45,10 @@ VERILATOR ?=verilator
 
 VERILATOR_ROOT?=$(shell $(VERILATOR) --getenv VERILATOR_ROOT 2>/dev/null || echo -n /usr/share/verilator)
 VOBJ_DIR ?=obj_dir
+CC_VOBJ_DIR ?=cc_obj_dir
 VENV=SYSTEMC_INCLUDE=$(SYSTEMC_INCLUDE) SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR)
 VERILATED_O=$(VOBJ_DIR)/verilated.o
+CC_VERILATED_O=$(CC_VOBJ_DIR)/verilated.o
 
 # VM_TRACE enables internal signals tracing with verilator
 # if the SystemC application supports it.
@@ -70,3 +72,8 @@ $(VOBJ_DIR)/V%__ALL.a $(VOBJ_DIR)/V%.h: %.v
 	$(VENV) $(VERILATOR) $(VFLAGS) -sc $^
 	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)"
 	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)" verilated.o
+
+$(CC_VOBJ_DIR)/V%__ALL.a $(CC_VOBJ_DIR)/V%.h: %.v
+	$(VENV) $(VERILATOR) $(VFLAGS) -cc -Mdir $(CC_VOBJ_DIR) $^
+	$(MAKE) -C $(CC_VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)"
+	$(MAKE) -C $(CC_VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)" verilated.o
