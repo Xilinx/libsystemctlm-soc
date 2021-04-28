@@ -31,6 +31,7 @@ VM_TRACE=1
 ifeq "$(VM_TRACE)" "1"
 VFLAGS += --trace -CFLAGS -DVL_TIME_STAMP64
 CC_VERILATED_OBJS_COMMON += verilated_vcd_c.o
+CC_VERILATED_OBJS_COMMON += verilated_dpi.o
 VERILATED_OBJS_COMMON += verilated_vcd_sc.o
 CXXFLAGS += -DVM_TRACE=1 -DVL_TIME_STAMP64
 endif

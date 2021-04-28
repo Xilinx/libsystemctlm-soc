@@ -45,29 +45,14 @@ using namespace std;
 #include "test-modules/signals-axilite.h"
 #include "test-modules/utils.h"
 
+#include "svdpi.h"
 #include <verilated.h>
 #include "Vaxilite_dev_dpi.h"
+#include "Vaxilite_dev_dpi__Dpi.h"
 
 using namespace utils;
 
 #define CONNECT_DUT(DUT, SIGS, SIGNAME) DUT.s00_axi_ ## SIGNAME(SIGS.SIGNAME)
-
-TrafficDesc transactions(merge({
-	// Write something to address 8
-        Write(8, DATA(0x1, 0x2, 0x3, 0x4)),
-	// Read it back and check that we get the expected data.
-        Read(8, 4),
-		Expect(DATA(0x1, 0x2, 0x3, 0x4), 4)
-}));
-
-AXILitePCConfig checker_config()
-{
-	AXILitePCConfig cfg;
-
-	cfg.enable_all_checks();
-
-	return cfg;
-}
 
 // Top simulation module.
 SC_MODULE(Top)
@@ -88,6 +73,7 @@ SC_MODULE(Top)
 void *verilator_thread(void *arg)
 {
 	Top *top = (Top *) arg;
+	svScope scope = svGetScopeFromName("dut.axilite_dev_dpi");
 	int i;
 
 	top->dut.resetn = 0;
@@ -102,6 +88,9 @@ void *verilator_thread(void *arg)
 	while (!Verilated::gotFinish() && !top->stop) {
 		top->dut.clk = !top->dut.clk;
 		top->dut.eval();
+
+		svSetScope(scope);
+		xtor_write(0xa, 0xedde);
 	}
 	return NULL;
 }
