@@ -198,18 +198,18 @@ SC_MODULE(Top)
                 rand_xfers1(0, ram_size - 4, UINT64_MAX,
 				1, ram_size, ram_size, NUM_TXNS_MSTR1),
 
-		m0("ace-master0"),
+		m0("ace_master0"),
 		t2a_hw_bridge0("tlm2ace-hw-bridge0", ACE_MST_BASE_ADDR),
 
 		a2t_hw_bridge0("ace2tlm-hw-bridge0", ACE_SLV_BASE_ADDR),
-		iconnect("ace-iconnect"),
+		iconnect("ace_iconnect"),
 
-		m1("ace-master1", rand_xfers1),
-		t2a_bridge1("tlm2ace-bridge1"),
-		a2t_bridge1("ace2tlm-bridge1"),
+		m1("ace_master1", rand_xfers1),
+		t2a_bridge1("tlm2ace_bridge1"),
+		a2t_bridge1("ace2tlm_bridge1"),
 
 		vdev(devname, iommu_group),
-		tlm2vfio("tlm2vfio-bridge", 2, vdev, 0),
+		tlm2vfio("tlm2vfio_bridge", 2, vdev, 0),
 
 		ram("ram", SC_ZERO_TIME, ram_size)
 	{

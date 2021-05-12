@@ -853,7 +853,7 @@ private:
 
 		tr = LookupAxID(wrResponses, bid_u32);
 		if (!tr) {
-			SC_REPORT_ERROR("tlm2axi-bridge",
+			SC_REPORT_ERROR("tlm2axi_bridge",
 				"Received a write response "
 				"with an unexpected transaction ID");
 		}
@@ -1132,7 +1132,7 @@ public:
 		sc_module(name),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		version_major(0),
 		version_minor(0),
@@ -1150,10 +1150,10 @@ public:
 		proxy_init_socket(NULL),
 		proxy_target_socket(NULL),
 
-		tgt_socket("target-socket"),
+		tgt_socket("target_socket"),
 		snoop_init_socket(m_snp_chnls->snoop_init_socket),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		clk("clk"),
 		resetn("resetn"),

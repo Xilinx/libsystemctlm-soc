@@ -117,19 +117,19 @@ protected:
 
 	const char *bridge_type2str(unsigned int t) {
 		static const char *type2str[] = {
-			"axi3-master",
-			"axi3-slave",
-			"axi4-master",
-			"axi4-slave",
-			"axi4lite-master",
-			"axi4lite-slave",
-			"axi4stream-master",
-			"axi4stream-slave",
-			"ace-master",
-			"ace-slave",
-			"chi-master",
-			"chi-slave",
-			"cxs-bridge",
+			"axi3_master",
+			"axi3_slave",
+			"axi4_master",
+			"axi4_slave",
+			"axi4lite_master",
+			"axi4lite_slave",
+			"axi4stream_master",
+			"axi4stream_slave",
+			"ace_master",
+			"ace_slave",
+			"chi_master",
+			"chi_slave",
+			"cxs_bridge",
 			"unknown",		/* 13 */
 			"unknown",		/* 14 */
 			"unknown",		/* 15 */
@@ -218,13 +218,13 @@ sc_event tlm_hw_bridge_base::process_wires_ev;
 tlm_hw_bridge_base::tlm_hw_bridge_base(sc_module_name name,
 				uint64_t base_addr, uint64_t offset) :
 	sc_module(name),
-	bridge_socket("bridge-socket"),
+	bridge_socket("bridge_socket"),
 	rst("rst"),
 	irq("irq"),
-	c2h_irq("c2h-intr", 64),
+	c2h_irq("c2h_intr", 64),
 	sig_dummy_bool("sig-dummy-bool", 64),
 	probed(false),
-	probed_event("probed-event")
+	probed_event("probed_event")
 {
 	this->base_addr = base_addr;
 	this->base_offset = base_offset;

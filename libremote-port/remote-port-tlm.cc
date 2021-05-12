@@ -264,7 +264,7 @@ void remoteport_tlm::rp_sk_open(void)
 			if (sk_descr) {
 				perror(sk_descr);
 			}
-			SC_REPORT_FATAL("Remote-port", "Failed to create remote-port socket connection!\n");
+			SC_REPORT_FATAL("Remote_port", "Failed to create remote-port socket connection!\n");
 		}
 	}
 }

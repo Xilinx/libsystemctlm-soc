@@ -216,7 +216,7 @@ public:
 		ruser("ruser"),
 		rid("rid"),
 		rlast("rlast"),
-		dummy("axi-dummy")
+		dummy("axi_dummy")
 	{
 		sc_report_handler::set_handler(error_handler);
 

@@ -12,7 +12,7 @@ def pytest_html_results_table_header(cells):
 def pytest_html_results_table_row(report, cells):
 	waveform = html.td("N/A")
 	if report.trace:
-		waveform = html.td(html.a("waveform-trace", href=report.trace))
+		waveform = html.td(html.a("waveform_trace", href=report.trace))
 
 	cells.insert(2, waveform)
 	cells.pop()

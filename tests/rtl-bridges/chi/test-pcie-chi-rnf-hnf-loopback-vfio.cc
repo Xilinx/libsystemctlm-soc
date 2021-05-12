@@ -168,7 +168,7 @@ SC_MODULE(Top)
 		clk("clk", sc_time(1, SC_US)),
 		rst_n("rst_n"),
 		irq("irq"),
-		signals1("chi-signals1"),
+		signals1("chi_signals1"),
 
 		rand_traffic0(0, RAM_SIZE, (~(0x3llu)),
 					1, RAM_SIZE, RAM_SIZE, NUM_TXNS_RNF0),
@@ -179,17 +179,17 @@ SC_MODULE(Top)
 		rnf1("rnf1", rand_traffic1),
 
 		t2c_hw_bridge0("tlm2chi-hw-bridge0", CHI_RNF_BASE_ADDR),
-		c2t_hw_bridge0("chi2tlm-bridge0", CHI_HNF_BASE_ADDR),
+		c2t_hw_bridge0("chi2tlm_bridge0", CHI_HNF_BASE_ADDR),
 
-		t2c_bridge1("tlm2chi-bridge1"),
-		c2t_bridge1("chi2tlm-bridge1"),
+		t2c_bridge1("tlm2chi_bridge1"),
+		c2t_bridge1("chi2tlm_bridge1"),
 
-		icn("iconnect-chi"),
+		icn("iconnect_chi"),
 		sn("sn"),
 		mem("mem", sc_time(10, SC_NS), RAM_SIZE),
 
 		vdev(devname, iommu_group),
-		tlm2vfio("tlm2vfio-bridge", 2, vdev, 0)
+		tlm2vfio("tlm2vfio_bridge", 2, vdev, 0)
 	{
 
 		//

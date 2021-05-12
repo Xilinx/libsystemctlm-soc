@@ -102,8 +102,8 @@ public:
 	tlm2cdma_bridge(sc_core::sc_module_name name,
 			uint64_t base_cdma, uint64_t base_bram) :
 		sc_module(name),
-		target_socket("target-socket"),
-		init_socket("init-socket"),
+		target_socket("target_socket"),
+		init_socket("init_socket"),
 		rst("rst"),
 		base_cdma(base_cdma),
 		base_bram(base_bram)
@@ -217,7 +217,7 @@ private:
 
 		if (be) {
 			// The CDMA bridge cannot propagate byte-enables.
-			SC_REPORT_WARNING("cdma-bridge", "Cannot propagate byte-enables");
+			SC_REPORT_WARNING("cdma_bridge", "Cannot propagate byte-enables");
 			trans.set_response_status(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE);
 			return;
 		}
@@ -323,15 +323,15 @@ SC_MODULE(Top)
 		rst_n("rst_n"),
 		irq("irq"),
 		vdev(devname, iommu_group),
-		tlm2vfio("tlm2vfio-bridge", 2, vdev, 0),
+		tlm2vfio("tlm2vfio_bridge", 2, vdev, 0),
 		tlm_master_hw_bridge("tlm-master-hw-bridge", BASE_MASTER_BRIDGE, 0),
 		tlm_slave_hw_bridge("tlm-slave-hw-bridge", BASE_SLAVE_BRIDGE, 0, &vdev),
-		cdma_bridge("cdma-bridge", BASE_CDMA, BASE_BRAM),
-		cdma_aligner("cdma-aligner", 128, 4 * 1024),
+		cdma_bridge("cdma_bridge", BASE_CDMA, BASE_BRAM),
+		cdma_aligner("cdma_aligner", 128, 4 * 1024),
 		splitter("splitter", true),
 		tg("tg", 1),
 		ram("ram", sc_time(1, SC_NS), ram_size),
-		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size)
+		ref_ram("ref_ram", sc_time(1, SC_NS), ram_size)
 	{
 		SC_THREAD(pull_reset);
 		SC_METHOD(gen_rst_n);

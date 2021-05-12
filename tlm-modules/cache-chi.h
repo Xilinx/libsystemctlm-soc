@@ -2377,7 +2377,7 @@ public:
 		m_txDatChannel("TxDatChannel", txdat_init_socket),
 		m_transmitter(m_txRspChannel, m_txDatChannel),
 
-		target_socket("target-socket"),
+		target_socket("target_socket"),
 
 		txreq_init_socket("txreq-init-socket"),
 		txrsp_init_socket("txrsp-init-socket"),

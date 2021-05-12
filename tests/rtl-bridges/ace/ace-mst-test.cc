@@ -284,7 +284,7 @@ SC_MODULE(Top)
 		rst("rst"),
 		rst_n("rst_n"),
 
-		signals_host("signals-host"),
+		signals_host("signals_host"),
 		signals_dut("ace-signals-dut"),
 		signals_m1("ace-signals-m1"),
 
@@ -303,19 +303,19 @@ SC_MODULE(Top)
                 rand_xfers1(0, ram_size - 4, UINT64_MAX,
 				1, ram_size, ram_size, NUM_TXNS_MSTR1),
 
-		bridge_tlm2axilite("bridge-tlm2axilite"),
-		checker_axilite("checker-axilite",
+		bridge_tlm2axilite("bridge_tlm2axilite"),
+		checker_axilite("checker_axilite",
 				AXILitePCConfig::all_enabled()),
 
-		m0("ace-master0"),
-		m1("ace-master1", rand_xfers1),
+		m0("ace_master0"),
+		m1("ace_master1", rand_xfers1),
 
-		a2t_bridge0("ace2tlm-bridge0"),
-		t2a_bridge1("tlm2ace-bridge1"),
-		a2t_bridge1("ace2tlm-bridge1"),
+		a2t_bridge0("ace2tlm_bridge0"),
+		t2a_bridge1("tlm2ace_bridge1"),
+		a2t_bridge1("ace2tlm_bridge1"),
 
 		t2a_hw_bridge0("tlm2ace-hw-bridge0"),
-		iconnect("ace-iconnect"),
+		iconnect("ace_iconnect"),
 
 		dut("dut"),
 

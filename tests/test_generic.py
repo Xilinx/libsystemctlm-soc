@@ -8,7 +8,7 @@ import errno
 tg_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/traffic-generators/axi/"), '*-tg-test')
 testnames_axi = ['./traffic-generators/axi/{0}'.format(i) for i in tg_axi_testnames]
 config_parser_test = ["./traffic-generators/config-parser/config-parser-test",
-"tp=./traffic-generators/config-parser/test_files/", "-p"]
+"tp=./traffic-generators/config-parser/test_files/", "_p"]
 
 pc_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/checkers/axi/"), '*-test')
 pc_axi_tests = ['./checkers/axi/{0}'.format(i) for i in pc_axi_testnames]

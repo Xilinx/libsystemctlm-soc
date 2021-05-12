@@ -181,7 +181,7 @@ public:
 		rid("rid"),
 		rlast("rlast"),
 
-		dummy("axi-dummy"),
+		dummy("axi_dummy"),
 		m_cfg(*reinterpret_cast<__AXIPCConfig*>(&cfg)),
 		m_checker_axi_stable("checker-axi-stable", this),
 		m_check_rd_tx("check-rd-tx", this),

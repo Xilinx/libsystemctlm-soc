@@ -150,8 +150,8 @@ SC_MODULE(Top)
 		rst_n("resetn", true),
 		clk("clk", sc_time(1, SC_US)),
 
-		sgnls_cxs0("cxs-signals0"),
-		sgnls_cxs1("cxs-signals1"),
+		sgnls_cxs0("cxs_signals0"),
+		sgnls_cxs1("cxs_signals1"),
 
 		rand_traffic0(0, RAM_SIZE, (~(0x3llu)),
 				1, RAM_SIZE, RAM_SIZE, NUM_TXNS_RNF0),
@@ -159,7 +159,7 @@ SC_MODULE(Top)
 				1, RAM_SIZE, RAM_SIZE, NUM_TXNS_RNF1),
 
 		chip0("chip0", xfers0, clk, rst_n),
-		chipDut("chip-dut", clk, rst_n),
+		chipDut("chip_dut", clk, rst_n),
 
 		m_tgDoneCB(tgDoneCB)
 	{

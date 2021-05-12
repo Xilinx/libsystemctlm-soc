@@ -343,9 +343,9 @@ int sc_main(int argc, char *argv[])
 	ACEProtocolChecker<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
 			checker("checker", checker_config());
 
-	ACESignals__ signals("ace-signals");
+	ACESignals__ signals("ace_signals");
 
-	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> siggen("sig-gen");
+	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> siggen("sig_gen");
 
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);

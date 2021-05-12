@@ -79,7 +79,7 @@ private:
 					memcpy(ref_data, data, len);
 				} else {
 					if (memcmp(ref_data, data, len)) {
-						hexdump("ref-data", ref_data, len);
+						hexdump("ref_data", ref_data, len);
 						hexdump("data", data, len);
 						SC_REPORT_ERROR(TLM_SPLITTER_ERROR,
 							"Read-data missmatch");

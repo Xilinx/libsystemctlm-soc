@@ -100,10 +100,10 @@ SC_MODULE(Top)
 		tlm_hw_bridge("tlm-hw-bridge",
 			BASE_MASTER_BRIDGE(bridge_idx), BASE_BRAM(bridge_idx)),
 		vdev(devname, iommu_group),
-		tlm2vfio("tlm2vfio-bridge", 1, vdev, 0),
+		tlm2vfio("tlm2vfio_bridge", 1, vdev, 0),
 		splitter("splitter", true),
 		tg("tg", 1),
-		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size)
+		ref_ram("ref_ram", sc_time(1, SC_NS), ram_size)
 	{
 		SC_METHOD(gen_rst_n);
 		sensitive << rst;

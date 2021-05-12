@@ -159,19 +159,19 @@ SC_MODULE(Top)
 		clk("clk", sc_time(10, SC_NS)),
 		rst("rst"),
 		rst_n("rst_n"),
-		signals_host("signals-host"),
+		signals_host("signals_host"),
 		signals_host_dma("signals-host-dma"),
-		signals_dut("signals-dut"),
-		signals_h2c_intr_out("h2c-intr"),
+		signals_dut("signals_dut"),
+		signals_h2c_intr_out("h2c_intr"),
 		signals_h2c_intr_write("h2c-intr-write", 128),
 		signals_h2c_pulse_out("h2c-pulse-out"),
-		signals_c2h_intr("c2h-intr"),
+		signals_c2h_intr("c2h_intr"),
 		signals_c2h_gpio_in("c2h-gpio-in"),
-		bridge_tlm2axilite("bridge-tlm2axilite"),
-		bridge_dut("bridge-dut"),
-		checker_axilite("checker-axilite",
+		bridge_tlm2axilite("bridge_tlm2axilite"),
+		bridge_dut("bridge_dut"),
+		checker_axilite("checker_axilite",
 				AXILitePCConfig::all_enabled()),
-		checker_dut("checker-dut", DUT_CHECKER_CFG),
+		checker_dut("checker_dut", DUT_CHECKER_CFG),
 		tlm_hw_bridge("tlm-hw-bridge"),
 		rtl_hw_bridge("rtl-hw-bridge"),
 		rand_xfers(0, ram_size - 4, UINT64_MAX, 1, ram_size, ram_size, 200000, 1),
@@ -179,7 +179,7 @@ SC_MODULE(Top)
 		splitter("splitter", true),
 		tg("tg", 1),
 		ram("ram", sc_time(1, SC_NS), ram_size),
-		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size)
+		ref_ram("ref_ram", sc_time(1, SC_NS), ram_size)
 	{
 
 		SC_METHOD(gen_rst_n);

@@ -356,29 +356,29 @@ int sc_main(int argc, char *argv[])
 	RequestNode_F<NODE_ID_RNF0, CACHE_SIZE> rnf0("rnf0", transfers0);
 	RequestNode_F<NODE_ID_RNF1, CACHE_SIZE> rnf1("rnf1", transfers1);
 
-	iconnect_chi<> icn("iconnect-chi");
+	iconnect_chi<> icn("iconnect_chi");
 
 	SlaveNode_F<> sn("sn");
 
 	memory mem("mem", sc_time(10, SC_NS), RAM_SIZE);
 
-	tlm2chi_bridge_rnf<> t2c_bridge0("tlm2chi-bridge0");
-	tlm2chi_bridge_rnf<> t2c_bridge1("tlm2chi-bridge1");
+	tlm2chi_bridge_rnf<> t2c_bridge0("tlm2chi_bridge0");
+	tlm2chi_bridge_rnf<> t2c_bridge1("tlm2chi_bridge1");
 
 	tlm2chi_bridge_sn<> t2c_bridge_sn("tlm2chi-bridge-sn");
 
-	chi2tlm_bridge_rnf<> c2t_bridge0("chi2tlm-bridge0");
-	chi2tlm_bridge_rnf<> c2t_bridge1("chi2tlm-bridge1");
+	chi2tlm_bridge_rnf<> c2t_bridge0("chi2tlm_bridge0");
+	chi2tlm_bridge_rnf<> c2t_bridge1("chi2tlm_bridge1");
 
 	chi2tlm_bridge_sn<> c2t_bridge_sn("chi2tlm-bridge-sn");
 
-	CHISignals_t signals0("chi-signals0");
-	CHISignals_t signals1("chi-signals1");
+	CHISignals_t signals0("chi_signals0");
+	CHISignals_t signals1("chi_signals1");
 
 	CHISignals_SN_t signals_sn("chi-signals-sn");
 
-	CHIChecker_t checker0("chi-checker0", checker_config());
-	CHIChecker_t checker1("chi-checker1", checker_config());
+	CHIChecker_t checker0("chi_checker0", checker_config());
+	CHIChecker_t checker1("chi_checker1", checker_config());
 
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);

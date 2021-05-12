@@ -122,7 +122,7 @@ public:
 		txlink_tgt_socket("txlink-tgt-socket"),
 		rxlink_init_socket("rxlink-init-socket"),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		resetn("resetn"),
 		irq("irq"),
@@ -133,10 +133,10 @@ public:
 		m_irq_mode_en(false),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		m_txDone(true),
-		m_txDoneEvent("txdone-event"),
+		m_txDoneEvent("txdone_event"),
 
 		version_major(0),
 		version_minor(0),

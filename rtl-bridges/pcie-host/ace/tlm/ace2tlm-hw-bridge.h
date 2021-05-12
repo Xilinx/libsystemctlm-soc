@@ -1298,7 +1298,7 @@ public:
 		sc_module(name),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		version_major(0),
 		version_minor(0),
@@ -1318,10 +1318,10 @@ public:
 
 		m_irq_mode_en(false),
 
-		socket("init-socket"),
+		socket("init_socket"),
 		snoop_target_socket(m_snp_chnls->snoop_target_socket),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		clk("clk"),
 		resetn("resetn"),

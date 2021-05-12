@@ -38,7 +38,7 @@
 #include "tlm-extensions/genattr.h"
 #include "tlm-bridges/private/ace/snoop-channels.h"
 
-#define TLM2AXI_BRIDGE_MSG "tlm2axi-bridge"
+#define TLM2AXI_BRIDGE_MSG "tlm2axi_bridge"
 
 #define D(x)
 
@@ -75,7 +75,7 @@ public:
 			AXIVersion version = V_AXI4, bool aligner_enable=true) :
 		sc_module(name),
 		axi_common(this),
-		tgt_socket("target-socket"),
+		tgt_socket("target_socket"),
 
 		clk("clk"),
 		resetn("resetn"),
@@ -149,7 +149,7 @@ public:
 		aligner(NULL),
 		proxy_init_socket(NULL),
 		proxy_target_socket(NULL),
-		dummy("axi-dummy")
+		dummy("axi_dummy")
 	{
 		if (ACE_MODE == ACE_MODE_ACE) {
 			m_snp_chnls = new ACESnoopChannels_M__(
@@ -1026,7 +1026,7 @@ private:
 
 			tr = LookupAxID(wrResponses, bid_u32);
 			if (!tr) {
-				SC_REPORT_ERROR("tlm2axi-bridge",
+				SC_REPORT_ERROR("tlm2axi_bridge",
 					"Received a write response "
 					"with an unexpected transaction ID");
 			}

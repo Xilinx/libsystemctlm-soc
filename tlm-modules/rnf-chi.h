@@ -181,7 +181,7 @@ public:
 		sc_module(name),
 		port("port-RN-F"),
 		m_gen("gen", 1),
-		m_cache("cache-chi")
+		m_cache("cache_chi")
 	{
 		ConnectSockets();
 	}
@@ -191,7 +191,7 @@ public:
 		sc_module(name),
 		port("port-RN-F"),
 		m_gen("gen", 1),
-		m_cache("cache-chi")
+		m_cache("cache_chi")
 	{
 		// Configure generator
 		m_gen.addTransfers(transfers, 0);
