@@ -149,7 +149,7 @@ public:
 		aligner(NULL),
 		proxy_init_socket(NULL),
 		proxy_target_socket(NULL),
-		dummy("axi-dummy")
+		dummy("axi_dummy")
 	{
 		if (ACE_MODE == ACE_MODE_ACE) {
 			m_snp_chnls = new ACESnoopChannels_M__(
