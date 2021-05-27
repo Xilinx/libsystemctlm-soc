@@ -614,12 +614,12 @@ void remoteport_tlm::process(void)
 {
 	adaptor_proc = sc_get_current_process_handle();
 
+	sync->reset();
+	wait(rst.negedge_event());
+
 	rp_sk_open();
 	if (!blocking_socket)
 		pthread_create(&rp_pkt_thread, NULL, thread_trampoline, this);
-
-	sync->reset();
-	wait(rst.negedge_event());
 
 	rp_say_hello();
 
