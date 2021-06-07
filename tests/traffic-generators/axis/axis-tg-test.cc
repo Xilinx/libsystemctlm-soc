@@ -71,13 +71,13 @@ TrafficDesc transfers(merge({
 int sc_main(int argc, char *argv[])
 {
 	tlm2axis_bridge<AXI_DATA_WIDTH>
-		tlm2axis_bridge("tlm2axis-bridge");
+		tlm2axis_bridge("tlm2axis_bridge");
 
 	axis2tlm_bridge<AXI_DATA_WIDTH>
-		axis2tlm_bridge("axis2tlm-bridge");
+		axis2tlm_bridge("axis2tlm_bridge");
 
 	AXISSignals<AXI_DATA_WIDTH>
-		signals("axis-signals");
+		signals("axis_signals");
 
 	TLMTrafficGenerator gen("gen", 1);
 	sc_clock clk("clk", sc_time(20, SC_US));

@@ -48,7 +48,7 @@ public:
 
 		ACEPort_M(sc_core::sc_module_name name) :
 			sc_module(name),
-			init_socket("init-socket"),
+			init_socket("init_socket"),
 			snoop_target_socket("snoop-target-socket"),
 			m_target_socket("m-target-socket"),
 			m_snoop_init_socket("m-snoop-init-socket")
@@ -97,8 +97,8 @@ public:
 		sc_module(name),
 		m_ace_port("m-ace-port"),
 		m_gen("gen", 1),
-		m_barrier_processer("barrier-processer"),
-		m_cache("ace-cache", write_policy)
+		m_barrier_processer("barrier_processer"),
+		m_cache("ace_cache", write_policy)
 	{
 		ConnectSockets();
 	}
@@ -109,8 +109,8 @@ public:
 		sc_module(name),
 		m_ace_port("m-ace-port"),
 		m_gen("gen", 1),
-		m_barrier_processer("barrier-processer"),
-		m_cache("ace-cache", write_policy)
+		m_barrier_processer("barrier_processer"),
+		m_cache("ace_cache", write_policy)
 	{
 		// Configure generator
 		m_gen.addTransfers(transfers, 0);
@@ -168,8 +168,8 @@ public:
 
 		ACELitePort_M(sc_core::sc_module_name name) :
 			sc_module(name),
-			init_socket("init-socket"),
-			target_socket("target-socket")
+			init_socket("init_socket"),
+			target_socket("target_socket")
 		{
 			target_socket.register_b_transport(this,
 							&ACELitePort_M::b_transport);

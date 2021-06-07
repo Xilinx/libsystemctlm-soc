@@ -35,8 +35,8 @@ public:
 
 	xilinx_cdma(sc_core::sc_module_name name) :
 		sc_module(name),
-		init_socket("init-socket"),
-		target_socket("target-socket")
+		init_socket("init_socket"),
+		target_socket("target_socket")
 	{
 		target_socket.register_b_transport(this,
 						   &xilinx_cdma::b_transport);

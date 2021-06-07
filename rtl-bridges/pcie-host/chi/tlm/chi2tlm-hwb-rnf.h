@@ -135,7 +135,7 @@ public:
 		txdat_tgt_socket("txdat-tgt-socket"),
 		txsnp_tgt_socket("txsnp-tgt-socket"),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		resetn("resetn"),
 		irq("irq"),
@@ -144,7 +144,7 @@ public:
 		m_sysco_handshake_en(false),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		version_major(0),
 		version_minor(0),

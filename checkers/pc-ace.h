@@ -248,7 +248,7 @@ public:
 		cddata("cddata"),
 		cdlast("cdlast"),
 
-		dummy("axi-dummy"),
+		dummy("axi_dummy"),
 
 		m_ace_mode(ACE_MODE_ACE),
 

@@ -115,17 +115,17 @@ SC_MODULE(Top)
 	Top(sc_module_name name) :
 		clk("clk", sc_time(1, SC_US)),
 		rst_n("rst_n"),
-		tg("traffic-generator"),
+		tg("traffic_generator"),
 
-		signals_axi("signals-axi"),
-		bridge_axi("bridge-axi"),
-                checker_axi("checker-axi", cfg_axi()),
-		dut_axi("dut-axi"),
+		signals_axi("signals_axi"),
+		bridge_axi("bridge_axi"),
+                checker_axi("checker_axi", cfg_axi()),
+		dut_axi("dut_axi"),
 
-		signals_axilite("signals-axilite"),
-		bridge_axilite("bridge-axilite"),
-                checker_axilite("checker-axilite", cfg_axilite()),
-		dut_axilite("dut-axilite")
+		signals_axilite("signals_axilite"),
+		bridge_axilite("bridge_axilite"),
+                checker_axilite("checker_axilite", cfg_axilite()),
+		dut_axilite("dut_axilite")
 
 	{
 		target_socket.register_b_transport(this, &Top::b_transport);

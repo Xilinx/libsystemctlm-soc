@@ -120,11 +120,11 @@ axi2tlm_hw_bridge::axi2tlm_hw_bridge(sc_module_name name,
 				uint64_t base_addr, uint64_t offset,
 				vfio_dev *vdev) :
 	tlm_hw_bridge_base(name, base_addr, offset),
-	init_socket("init-socket"),
+	init_socket("init_socket"),
 	desc_busy(0),
 	we_init_socket("we-init-socket"),
 	we_target_socket("we-target-socket"),
-	wrap_expander("wrap-expander", true),
+	wrap_expander("wrap_expander", true),
 	mm(NULL)
 {
 	mode1 = true;
@@ -440,7 +440,7 @@ void axi2tlm_hw_bridge::process_desc_free(unsigned int d, uint32_t r_avail)
 	}
 
 	if (!is_write) {
-		D(hexdump("read-data32", (unsigned char *)data32, tx_size));
+		D(hexdump("read_data32", (unsigned char *)data32, tx_size));
 
 		if (burst_length > 1 &&
 		    (axburst == AXI_BURST_FIXED || number_bytes < data_bytewidth)) {

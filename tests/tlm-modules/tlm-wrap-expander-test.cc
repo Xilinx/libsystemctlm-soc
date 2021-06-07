@@ -193,7 +193,7 @@ public:
 
 	Dut(sc_module_name name, DataTransferVec &transfers) :
 		tg("tg"),
-		wrap_expander("wrap-expander", true), // generate two gps
+		wrap_expander("wrap_expander", true), // generate two gps
 		ram("ram", sc_time(1, SC_NS), RamSize),
 		xfers(merge(transfers))
 	{

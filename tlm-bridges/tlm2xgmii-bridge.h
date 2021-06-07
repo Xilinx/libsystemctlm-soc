@@ -58,7 +58,7 @@ private:
 
 tlm2xgmii_bridge::tlm2xgmii_bridge(sc_module_name name, enum xgmii_mode mode)
 	: sc_module(name),
-	tgt_socket("tgt-socket"),
+	tgt_socket("tgt_socket"),
 	mode(mode),
 	clk("clk"),
 	xxd("xxd"),
@@ -124,7 +124,7 @@ void tlm2xgmii_bridge::process_packet(unsigned char *data, int len)
 	push_data_buf("sof_preamble",
 			sof_preamble_seq, sizeof(sof_preamble_seq), 1);
 
-	push_data_buf("packet-data", data, len & (~7), 0);
+	push_data_buf("packet_data", data, len & (~7), 0);
 	memset(last.d, 0x07, sizeof(last.d));
 	memcpy(last.d, data + (len & (~7)), last.len);
 

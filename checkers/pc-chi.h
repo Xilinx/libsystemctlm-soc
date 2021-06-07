@@ -141,10 +141,10 @@ public:
 
 		m_cfg(*reinterpret_cast<__CHIPCConfig*>(&cfg)),
 
-		m_check_requests("check-requests", this),
+		m_check_requests("check_requests", this),
 		m_check_data_flits("check-data-flits", this),
 		m_check_snoop_requests("check-snoop-requests", this),
-		m_check_responses("check-responses", this),
+		m_check_responses("check_responses", this),
 		m_check_txn_structures("check-txn-structures", this),
 		m_check_request_retry("check-request-retry", this),
 		m_check_ch_lcredits("check-ch-lcredits", this)

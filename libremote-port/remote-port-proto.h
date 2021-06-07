@@ -83,7 +83,9 @@ struct rp_cfg_state {
 };
 
 enum {
+    // can ignore it
     RP_PKT_FLAGS_optional      = 1 << 0,
+    // req is 0, response is 1
     RP_PKT_FLAGS_response      = 1 << 1,
 
     /* Posted hint.
@@ -96,17 +98,27 @@ enum {
     RP_PKT_FLAGS_posted        = 1 << 2,
 };
 
+// generic packet header
+// all the packet include this header
+// same with bus access and interrupt
 struct rp_pkt_hdr {
     uint32_t cmd;
+    // in bytes
     uint32_t len;
+    // id for any packet, req <-> resp
     uint32_t id;
+    // flags are the above enum: if this is a response or not
     uint32_t flags;
+    // device is target differnet tlm sockets
+    // typically means a whole subsystem
     uint32_t dev;
 } PACKED;
 
 struct rp_pkt_cfg {
     struct rp_pkt_hdr hdr;
+    // not used, be a way for one side to configure the other
     uint32_t opt;
+    // not sued
     uint8_t set;
 } PACKED;
 
@@ -115,6 +127,7 @@ struct rp_version {
     uint16_t minor;
 } PACKED;
 
+// each side can add the other side about capabilities
 struct rp_capabilities {
     /* Offset from start of packet.  */
     uint32_t offset;
@@ -123,6 +136,7 @@ struct rp_capabilities {
 } PACKED;
 
 enum {
+    /* extend base */
     CAP_BUSACCESS_EXT_BASE = 1,    /* New header layout. */
     CAP_BUSACCESS_EXT_BYTE_EN = 2, /* Support for Byte Enables.  */
 
@@ -135,6 +149,8 @@ enum {
      * flag. If the peer doesn't support this capability, senders need to
      * be aware that the peer will not respond to wire updates regardless
      * of the posted header-flag.
+     *
+     * if don't support, need to track response
      */
     CAP_WIRE_POSTED_UPDATES = 3,
 
@@ -195,9 +211,13 @@ struct rp_pkt_busaccess {
 
 
 /* This is the new extended busaccess packet layout.  */
+/* from CAP_BUSACCESS_EXT_BASE */
 struct rp_pkt_busaccess_ext_base {
+    // generic header
     struct rp_pkt_hdr hdr;
     uint64_t timestamp;
+    // needed to describe memory access transaction, also use streaming, c/nc, sec/non-secure
+    // also if slave returned SLAVERR
     uint64_t attributes;
     uint64_t addr;
 
@@ -225,6 +245,7 @@ struct rp_pkt_busaccess_ext_base {
     uint32_t data_offset;       /* Offset to data from start of pkt.  */
     uint32_t next_offset;       /* Offset to next extension. 0 if none.  */
 
+    /* from CAP_BUSACCESS_EXT_BYTE_EN*/
     uint32_t byte_enable_offset;
     uint32_t byte_enable_len;
 
@@ -238,10 +259,16 @@ struct rp_pkt_busaccess_ext_base {
      */
 } PACKED;
 
+/**
+ * more like wire updates
+ * from dev in pkt
+ */
 struct rp_pkt_interrupt {
     struct rp_pkt_hdr hdr;
     uint64_t timestamp;
+    /* Don't use for now*/
     uint64_t vector;
+    /* which line in the device */
     uint32_t line;
     uint8_t val;
 } PACKED;
@@ -287,6 +314,9 @@ struct rp_pkt {
     };
 };
 
+/*
+ * a representation of a remote port connection
+ */
 struct rp_peer_state {
     void *opaque;
 
@@ -295,6 +325,7 @@ struct rp_peer_state {
 
     struct rp_version version;
 
+    // keep track of stuff of the other side
     struct {
         bool busaccess_ext_base;
         bool busaccess_ext_byte_en;
@@ -302,9 +333,12 @@ struct rp_peer_state {
         bool ats;
     } caps;
 
-    /* Used to normalize our clk.  */
+    /* Used to normalize our clk.
+     * clock base means what the peer starts off
+     * with their time*/
     int64_t clk_base;
 
+    /* don't really use */
     struct rp_cfg_state local_cfg;
     struct rp_cfg_state peer_cfg;
 };

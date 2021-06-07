@@ -55,7 +55,7 @@ tlm2native_bridge::tlm2native_bridge(sc_module_name name,
 				     uint8_t *mem, uint64_t size,
 				     sc_time latency) :
 	sc_module(name),
-	target_socket("target-socket"),
+	target_socket("target_socket"),
 	mem(mem),
 	size(size),
 	latency(latency)

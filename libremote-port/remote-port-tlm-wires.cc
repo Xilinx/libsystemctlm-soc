@@ -50,8 +50,8 @@ remoteport_tlm_wires::remoteport_tlm_wires(sc_module_name name,
 					   unsigned int nr_wires_out,
 					   bool posted_updates)
         : sc_module(name),
-	  wires_in("wires-in", nr_wires_in),
-	  wires_out("wires-out", nr_wires_out)
+	  wires_in("wires_in", nr_wires_in),
+	  wires_out("wires_out", nr_wires_out)
 {
 	unsigned int i;
 

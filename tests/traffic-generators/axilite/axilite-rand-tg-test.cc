@@ -66,21 +66,21 @@ int sc_main(int argc, char *argv[])
 {
 	RandomTraffic transfers(0, RAM_SIZE, (~(0x3llu)), 1, RAM_SIZE, RAM_SIZE, 12000);
 	tlm2axilite_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		tlm2axilite_bridge("tlm2axilite-bridge");
+		tlm2axilite_bridge("tlm2axilite_bridge");
 	axilite2tlm_bridge<AXI_ADDR_WIDTH,AXI_DATA_WIDTH>
-		axilite2tlm_bridge("axilite2tlm-bridge");
+		axilite2tlm_bridge("axilite2tlm_bridge");
 	tlm_splitter<2> splitter("splitter", true);
 	AXILiteProtocolChecker<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
 		checker("checker", checker_config());
 	memory mem("mem", sc_time(10, SC_NS), RAM_SIZE);
-	memory ref_mem("ref-mem", sc_time(10, SC_NS), RAM_SIZE);
+	memory ref_mem("ref_mem", sc_time(10, SC_NS), RAM_SIZE);
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);
 	TLMTrafficGenerator gen("gen");
 	AXILiteSignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		signals("axi-signals");
+		signals("axi_signals");
 	trace_axilite<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		trace("trace-axi");
+		trace("trace_axi");
 
 #ifdef DEBUG
 	trace.print_ar();

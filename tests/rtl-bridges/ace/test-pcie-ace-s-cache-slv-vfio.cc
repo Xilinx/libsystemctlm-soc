@@ -267,21 +267,21 @@ SC_MODULE(Top)
 		signals_m1("ace-signals-m1"),
 
 		gen("gen"),
-		atg_bridge0("atg-bridge0", ATG_BASE_ADDR),
+		atg_bridge0("atg_bridge0", ATG_BASE_ADDR),
 
 		a2t_hw_bridge0("ace2tlm-hw-bridge0", ACE_SLV_BASE_ADDR),
-		iconnect("ace-iconnect"),
+		iconnect("ace_iconnect"),
 
-		m1("ace-master1"),
+		m1("ace_master1"),
 
-		t2a_bridge1("tlm2ace-bridge1"),
-		a2t_bridge1("ace2tlm-bridge1"),
+		t2a_bridge1("tlm2ace_bridge1"),
+		a2t_bridge1("ace2tlm_bridge1"),
 
 		vdev(devname, iommu_group),
 		slv_tlm2vfio("ace-slv-tlm2vfio-bridge", 1, vdev, 0),
 		atg_sc_tlm2vfio("atg-tlm2vfio-bridge", 2, vdev, 2, 0, false),
 
-		s_cache("system-cache", SYSTEM_CACHE_BASE_ADDR),
+		s_cache("system_cache", SYSTEM_CACHE_BASE_ADDR),
 
 		ram("ram", SC_ZERO_TIME, ram_size)
 	{

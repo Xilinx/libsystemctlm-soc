@@ -79,19 +79,19 @@ public:
 			Iremoteport_tlm_sync *sync = NULL,
 			bool blocking_socket = false)
 		: sc_module(name),
-		  rp_dma("rp-dma"),
-		  rp_irq("rp-irq", nr_irqs, 0),
-		  rp_ats("rp-ats"),
+		  rp_dma("rp_dma"),
+		  rp_irq("rp_irq", nr_irqs, 0),
+		  rp_ats("rp_ats"),
 		  rst("rst"),
 		  dma(rp_dma.sk),
 		  ats_req(rp_ats.req),
 		  ats_inv(rp_ats.inv),
 		  irq(rp_irq.wires_in),
-		  signals_irq("signals-irq", nr_irqs),
+		  signals_irq("signals_irq", nr_irqs),
 		  free_adaptor(true),
-		  rp_config("rp-config"),
-		  rp_io("rp-io", nr_io_bars),
-		  rp_mmio("rp-mmio", nr_mmio_bars),
+		  rp_config("rp_config"),
+		  rp_io("rp_io", nr_io_bars),
+		  rp_mmio("rp_mmio", nr_mmio_bars),
 		  tieoff_config(NULL)
 	{
 		assert(sk_descr);
@@ -111,20 +111,20 @@ public:
 			remoteport_tlm *adaptor,
 			int rp_dev_base)
 		: sc_module(name),
-		  rp_dma("rp-dma"),
-		  rp_irq("rp-irq", nr_irqs, 0),
-		  rp_ats("rp-ats"),
+		  rp_dma("rp_dma"),
+		  rp_irq("rp_irq", nr_irqs, 0),
+		  rp_ats("rp_ats"),
 		  rst("rst"),
 		  dma(rp_dma.sk),
 		  ats_req(rp_ats.req),
 		  ats_inv(rp_ats.inv),
 		  irq(rp_irq.wires_in),
-		  signals_irq("signals-irq", nr_irqs),
+		  signals_irq("signals_irq", nr_irqs),
 		  adaptor(adaptor),
 		  free_adaptor(false),
-		  rp_config("rp-config"),
-		  rp_io("rp-io", nr_io_bars),
-		  rp_mmio("rp-mmio", nr_mmio_bars),
+		  rp_config("rp_config"),
+		  rp_io("rp_io", nr_io_bars),
+		  rp_mmio("rp_mmio", nr_mmio_bars),
 		  tieoff_config(NULL)
 	{
 		assert(adaptor);
@@ -145,7 +145,7 @@ public:
 	void before_end_of_elaboration(void) {
 		if (!rp_config.sk.size()) {
 			tieoff_config =
-				new tlm_utils::simple_target_socket<remoteport_tlm_pci_ep>("tieoff-config");
+				new tlm_utils::simple_target_socket<remoteport_tlm_pci_ep>("tieoff_config");
 			rp_config.sk.bind(*tieoff_config);
 		}
 	}

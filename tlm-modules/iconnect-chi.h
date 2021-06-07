@@ -3485,12 +3485,12 @@ public:
 							portID);
 		}
 
-		port_SN = new Port_SN("Port-SN", &m_router, SLAVE_NODE_ID);
+		port_SN = new Port_SN("Port_SN", &m_router, SLAVE_NODE_ID);
 
 		for (int portID = 0; portID < NUM_CCIX_PORTS; portID++) {
 			std::ostringstream name;
 
-			name << "port-CCIX" << portID;
+			name << "port_CCIX" << portID;
 
 			port_CCIX[portID] = new Port_CCIX(name.str().c_str(),
 							NODE_ID,

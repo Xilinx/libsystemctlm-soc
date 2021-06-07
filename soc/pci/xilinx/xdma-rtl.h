@@ -54,10 +54,10 @@ public:
 
 	xilinx_xdma_rtl(sc_core::sc_module_name name)
 		: xilinx_xdma<NUM_USR_IRQ>::xilinx_xdma(name),
-		axi_clk("axi-clk"),
-		axi_aresetn("axi-aresetn"),
-		m_axib("m-axib"),
-		s_axib("s-axib"),
+		axi_clk("axi_clk"),
+		axi_aresetn("axi_aresetn"),
+		m_axib("m_axib"),
+		s_axib("s_axib"),
 		usr_irq_req("usr-irq-req"),
 		usr_irq_ack("usr-irq-ack"),
 		signals_usr_irq_reqv("signals-isr-irq-reqv", NUM_USR_IRQ)

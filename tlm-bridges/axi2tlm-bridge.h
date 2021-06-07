@@ -222,7 +222,7 @@ public:
 		m_numWriteBarriers(0),
 		m_maxBurstLength(AXI4_MAX_BURSTLENGTH),
 		m_version(version),
-		dummy("axi-dummy")
+		dummy("axi_dummy")
 	{
 		if (ACE_MODE == ACE_MODE_ACE) {
 			m_snp_chnls = new ACESnoopChannels_S__(
@@ -850,7 +850,7 @@ private:
 	void Validate(Transaction *t)
 	{
 		if (t->GetBurstLength() > m_maxBurstLength) {
-			SC_REPORT_ERROR("axi2tlm-bridge",
+			SC_REPORT_ERROR("axi2tlm_bridge",
 				"AXI transaction burst length exceeds maximum");
 		}
 	}
@@ -1195,7 +1195,7 @@ private:
 				wt = wrDataList.front();
 
 				if(!wt) {
-					SC_REPORT_ERROR("axi2tlm-bridge",
+					SC_REPORT_ERROR("axi2tlm_bridge",
 						"Received unexpected write "
 						"data");
 				}
@@ -1205,13 +1205,13 @@ private:
 				wt = GetFirstWithID(&wrDataList, id);
 
 				if(!wt) {
-					SC_REPORT_ERROR("axi2tlm-bridge",
+					SC_REPORT_ERROR("axi2tlm_bridge",
 						"Transaction with unexpected "
 						"transaction ID");
 				}
 
 				if (!PreviousHaveData(wrDataList, id)) {
-					SC_REPORT_ERROR("axi2tlm-bridge",
+					SC_REPORT_ERROR("axi2tlm_bridge",
 						"The first data item of each "
 						"transaction is not in the same "
 						"order as the order of the "
@@ -1228,7 +1228,7 @@ private:
 
 				// Make sure wlast is set
 				if (wlast.read() == false) {
-					SC_REPORT_ERROR("axi2tlm-bridge",
+					SC_REPORT_ERROR("axi2tlm_bridge",
 						"wlast is not set on the last "
 						"transaction");
 				}

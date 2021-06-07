@@ -147,8 +147,8 @@ SC_MODULE(Top)
 		rst_n("resetn", true),
 		clk("clk", sc_time(1, SC_US)),
 
-		sgnls_cxs0("cxs-signals0"),
-		sgnls_cxs1("cxs-signals1"),
+		sgnls_cxs0("cxs_signals0"),
+		sgnls_cxs1("cxs_signals1"),
 
 		rand_traffic0(0, RAM_SIZE, (~(0x3llu)),
 				1, RAM_SIZE, RAM_SIZE, NUM_TXNS_RNF0),

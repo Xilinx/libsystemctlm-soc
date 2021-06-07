@@ -33,8 +33,8 @@
 
 remoteport_tlm_ats::remoteport_tlm_ats(sc_module_name name) :
 	sc_module(name),
-	req("ats-req"),
-	inv("ats-inv")
+	req("ats_req"),
+	inv("ats_inv")
 {
 	req.register_b_transport(this, &remoteport_tlm_ats::b_transport);
 }

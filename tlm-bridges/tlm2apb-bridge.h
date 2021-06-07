@@ -51,7 +51,7 @@ private:
 template
 <class BOOL_TYPE, template <int> class ADDR_TYPE, int ADDR_WIDTH, template <int> class DATA_TYPE, int DATA_WIDTH>
 tlm2apb_bridge<BOOL_TYPE, ADDR_TYPE, ADDR_WIDTH, DATA_TYPE, DATA_WIDTH> ::tlm2apb_bridge(sc_module_name name)
-	: sc_module(name), tgt_socket("tgt-socket"),
+	: sc_module(name), tgt_socket("tgt_socket"),
 	clk("clk"),
 	psel("psel"),
 	penable("penable"),

@@ -343,11 +343,11 @@ int sc_main(int argc, char *argv[])
 {
 	tlm2axi_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		tlm2axi_bridge("tlm2axi-bridge", version);
+		tlm2axi_bridge("tlm2axi_bridge", version);
 
 	axi2tlm_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		axi2tlm_bridge("axi2tlm-bridge", version);
+		axi2tlm_bridge("axi2tlm_bridge", version);
 
 	AXIProtocolChecker<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
@@ -355,7 +355,7 @@ int sc_main(int argc, char *argv[])
 
 	AXISignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		signals("axi-signals", version);
+		signals("axi_signals", version);
 
 	TLMTrafficGenerator gen("gen", 5);
 	sc_clock clk("clk", sc_time(20, SC_US));

@@ -84,7 +84,7 @@ SC_MODULE(Top)
 	Top(sc_module_name name) :
 		clk("clk", sc_time(1, SC_US)),
 		rst_n("rst_n"),
-		tg("traffic-generator"),
+		tg("traffic_generator"),
 		signals("signals"),
 		bridge("bridge"),
                 checker("checker", checker_config()),

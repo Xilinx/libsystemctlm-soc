@@ -147,7 +147,7 @@ public:
 
 	Dut(sc_module_name name, DataTransferVec &transfers) :
 		tg("tg"),
-		exmon("exclusive-monitor", 0x1), // Monitor max 2 ids
+		exmon("exclusive_monitor", 0x1), // Monitor max 2 ids
 		ram("ram", sc_time(1, SC_NS), RamSize),
 		xfers(merge(transfers))
 	{

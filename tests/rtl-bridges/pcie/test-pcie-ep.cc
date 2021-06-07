@@ -139,7 +139,7 @@ SC_MODULE(Top)
 		m_axi_tlm_bridge("m_axi-tlm-bridge"),
 		m_axi_usr_tlm_bridge("m_axi_usr-tlm-bridge"),
 		tlm2axi_sw_bridge("tlm2axi-sw-bridge"),
-		ep_bridge("ep-bridge"),
+		ep_bridge("ep_bridge"),
 		signals_s_axi_pcie("s_axi_pcie", 1),
 		signals_m_axi_pcie("m_axi_pcie", 1),
 		signals_m_axi_usr("m_axi_usr", 1),
@@ -161,8 +161,8 @@ SC_MODULE(Top)
 		usr_resetn("usr_resetn"),
 
 		ram("ram", sc_time(1, SC_NS), ram_size),
-		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size),
-		dummy_ram("dummy-ram", sc_time(1, SC_NS), ram_size)
+		ref_ram("ref_ram", sc_time(1, SC_NS), ram_size),
+		dummy_ram("dummy_ram", sc_time(1, SC_NS), ram_size)
 	{
 		char pname[128];
 		int i;

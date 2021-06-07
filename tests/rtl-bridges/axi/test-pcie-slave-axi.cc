@@ -150,9 +150,9 @@ SC_MODULE(Top)
 		clk("clk", sc_time(10, SC_NS)),
 		rst("rst"),
 		rst_n("rst_n"),
-		signals_host("signals-host"),
+		signals_host("signals_host"),
 		signals_host_dma("signals-host-dma"),
-		signals_dut("signals-dut", AXI_VERSION),
+		signals_dut("signals_dut", AXI_VERSION),
 		signals_h2c_intr_out("h2c-intr-out"),
 		signals_c2h_intr_in("c2h-intr-in"),
 		signals_c2h_gpio_in("c2h-gpio-in"),
@@ -161,17 +161,17 @@ SC_MODULE(Top)
 		signals_usr_resetn("signals-usr-resetn"),
 		signals_irq_out("signals-irq-out"),
 		signals_irq_ack("signals-irq-ack"),
-		bridge_tlm2axilite("bridge-tlm2axilite"),
+		bridge_tlm2axilite("bridge_tlm2axilite"),
 #ifdef __AXI_VERSION_AXI3__
-		bridge_dut("bridge-dut", V_AXI3),
+		bridge_dut("bridge_dut", V_AXI3),
 #else
-		bridge_dut("bridge-dut"),
+		bridge_dut("bridge_dut"),
 #endif
 		bridge_axi2tlm_dma("bridge-axi2tlm-dma"),
 		bridge_tlm2native_dma("bridge-tlm2native-dma"),
-		checker_axilite("checker-axilite",
+		checker_axilite("checker_axilite",
 				AXILitePCConfig::all_enabled()),
-		checker_dut("checker-dut", checker_axi_config()),
+		checker_dut("checker_dut", checker_axi_config()),
 		tlm_hw_bridge("tlm-hw-bridge", 0, 0, NULL),
 		rtl_hw_bridge("rtl-hw-bridge"),
 		rand_xfers(0, ram_size - 4, UINT64_MAX, 1, ram_size, ram_size, 200000, 1),
@@ -179,7 +179,7 @@ SC_MODULE(Top)
 		splitter("splitter", true),
 		tg("tg", 2),
 		ram("ram", SC_ZERO_TIME, ram_size),
-		ref_ram("ref-ram", SC_ZERO_TIME, ram_size)
+		ref_ram("ref_ram", SC_ZERO_TIME, ram_size)
 	{
 
 		SC_METHOD(gen_rst_n);

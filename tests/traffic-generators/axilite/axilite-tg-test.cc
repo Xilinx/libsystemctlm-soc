@@ -264,19 +264,19 @@ AXILitePCConfig checker_config()
 int sc_main(int argc, char *argv[])
 {
 	tlm2axilite_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		tlm2axilite_bridge("tlm2axilite-bridge");
+		tlm2axilite_bridge("tlm2axilite_bridge");
 
 	axilite2tlm_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		axilite2tlm_bridge("axilite2tlm-bridge");
+		axilite2tlm_bridge("axilite2tlm_bridge");
 
 	AXILiteSignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		signals("axilite-signals");
+		signals("axilite_signals");
 
 	AXILiteProtocolChecker<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
 		checker("checker", checker_config());
 
 	trace_axilite<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-		trace("trace-axilite");
+		trace("trace_axilite");
 
 	TLMTrafficGenerator gen("gen", 5);
 	sc_clock clk("clk", sc_time(20, SC_US));

@@ -71,13 +71,13 @@ public:
 		rand_xfers(0, ram_size - 1024, UINT64_MAX, 1, ram_size, ram_size, 1000),
 		splitter("splitter", true),
 		tg("tg", 1),
-		bridge("tlm2axi-bridge"),
-		signals("signals-axi"),
+		bridge("tlm2axi_bridge"),
+		signals("signals_axi"),
 		clk("clk"),
 		rst_n("rst_n", true),
 		aligner("aligner", 64, 32, 4 * 1024, true, &bridge),
 		ram("ram", sc_time(1, SC_NS), ram_size),
-		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size)
+		ref_ram("ref_ram", sc_time(1, SC_NS), ram_size)
 	{
 		target_socket.register_b_transport(this, &Dut::b_transport);
 

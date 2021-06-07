@@ -1167,7 +1167,7 @@ public:
 		m_txRspChannel("TxRspChannel", txrsp_init_socket),
 		m_txDatChannel("TxDatChannel", txdat_init_socket),
 
-		m_txnProcessor("slave-port",
+		m_txnProcessor("slave_port",
 				init_socket,
 				m_ids,
 				m_txRspChannel,
@@ -1179,7 +1179,7 @@ public:
 		m_reqOrderer("reqOrderer",
 				m_txnProcessor),
 
-		init_socket("init-socket"),
+		init_socket("init_socket"),
 
 		rxreq_tgt_socket("rxreq-tgt-socket"),
 		rxdat_tgt_socket("rxdat-tgt-socket"),

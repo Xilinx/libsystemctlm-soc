@@ -44,8 +44,8 @@ public:
 	SC_HAS_PROCESS(BarrierProcesser);
 	BarrierProcesser(sc_core::sc_module_name name) :
 		sc_core::sc_module(name),
-		target_socket("target-socket"),
-		init_socket("init-socket")
+		target_socket("target_socket"),
+		init_socket("init_socket")
 	{
 		target_socket.register_b_transport(this, &BarrierProcesser::b_transport);
 	}

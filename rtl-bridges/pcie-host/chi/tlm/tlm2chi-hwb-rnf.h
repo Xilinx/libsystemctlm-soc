@@ -136,7 +136,7 @@ public:
 		rxdat_init_socket("rxdat-init-socket"),
 		rxsnp_init_socket("rxsnp-init-socket"),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		resetn("resetn"),
 		irq("irq"),
@@ -145,7 +145,7 @@ public:
 		m_sysco_handshake_en(false),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		version_major(0),
 		version_minor(0),

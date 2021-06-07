@@ -34,7 +34,7 @@
 #include "tlm-modules/tlm-aligner.h"
 #include "tlm-extensions/genattr.h"
 
-#define TLM2AXILITE_BRIDGE_MSG "tlm2axilite-bridge"
+#define TLM2AXILITE_BRIDGE_MSG "tlm2axilite_bridge"
 
 #define D(x)
 
@@ -85,7 +85,7 @@ public:
 				bool aligner_enable=true) :
 		sc_module(name),
 		axi_common(this),
-		tgt_socket("tgt-socket"),
+		tgt_socket("tgt_socket"),
 
 		clk("clk"),
 		resetn("resetn"),

@@ -135,7 +135,7 @@ void vfio_dev::trigger_irq(uint32_t index, uint32_t start)
 	ret = ioctl(device, VFIO_DEVICE_SET_IRQS, &irq_set);
 	if (ret < 0) {
 		printf("%s index=%d.%d (%m)\n", __func__, index, start);
-		perror("vfio-dev");
+		perror("vfio_dev");
 	}
 }
 
@@ -153,7 +153,7 @@ void vfio_dev::mask_irq(uint32_t index, uint32_t start)
 	ret = ioctl(device, VFIO_DEVICE_SET_IRQS, &irq_set);
 	if (ret < 0) {
 		printf("%s index=%d.%d (%m)\n", __func__, index, start);
-		perror("vfio-dev");
+		perror("vfio_dev");
 	}
 }
 
@@ -171,7 +171,7 @@ void vfio_dev::unmask_irq(uint32_t index, uint32_t start)
 	ret = ioctl(device, VFIO_DEVICE_SET_IRQS, &irq_set);
 	if (ret < 0) {
 		printf("%s index=%d.%d (%m)\n", __func__, index, start);
-		perror("vfio-dev");
+		perror("vfio_dev");
 	}
 }
 
@@ -250,7 +250,7 @@ vfio_dev::vfio_dev(const char *devname, int iommu_group)
 	device = ioctl(group, VFIO_GROUP_GET_DEVICE_FD, devname);
 	if (device < 0) {
 		printf("Failed to get device %s\n", devname);
-		perror("vfio-dev");
+		perror("vfio_dev");
 		goto error;
 	}
 
@@ -313,7 +313,7 @@ vfio_dev::vfio_dev(const char *devname, int iommu_group)
 	irq_info.index = VFIO_PCI_INTX_IRQ_INDEX;
 	if (ioctl(device, VFIO_DEVICE_GET_IRQ_INFO, &irq_info)) {
 		printf("Failed to get IRQ info\n");
-		perror("vfio-dev");
+		perror("vfio_dev");
 		goto error;
 	}
 
@@ -366,7 +366,7 @@ error:
 	device = -1;
 	group = -1;
 	container = -1;
-	SC_REPORT_ERROR("vfio-dev", "Setup failure");
+	SC_REPORT_ERROR("vfio_dev", "Setup failure");
 }
 
 #undef basename

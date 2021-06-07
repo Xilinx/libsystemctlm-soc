@@ -76,25 +76,25 @@ int sc_main(int argc, char *argv[])
 	RandomTraffic transfers(0, max_addr, (~(0x3llu)), 1, max_addr, max_addr, 12000);
 	tlm2axi_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		tlm2axi_bridge("tlm2axi-bridge");
+		tlm2axi_bridge("tlm2axi_bridge");
 	axi2tlm_bridge<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		axi2tlm_bridge("axi2tlm-bridge");
+		axi2tlm_bridge("axi2tlm_bridge");
 	tlm_splitter<2> splitter("splitter", true);
 	AXIProtocolChecker<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 			AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
 		checker("checker", checker_config());
 	memory mem("mem", sc_time(10, SC_NS), RAM_SIZE);
-	memory ref_mem("ref-mem", sc_time(10, SC_NS), RAM_SIZE);
+	memory ref_mem("ref_mem", sc_time(10, SC_NS), RAM_SIZE);
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);
 	TLMTrafficGenerator gen("gen");
 	AXISignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 		AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		signals("axi-signals");
+		signals("axi_signals");
 	trace_axi<AXI_ADDR_WIDTH, AXI_DATA_WIDTH, AXI_ID_WIDTH,
 		AXI_AXLEN_WIDTH, AXI_AXLOCK_WIDTH>
-		trace("trace-axi");
+		trace("trace_axi");
 
 //	gen.enableDebug();
 

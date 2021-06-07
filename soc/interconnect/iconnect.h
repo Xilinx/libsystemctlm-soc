@@ -182,13 +182,13 @@ void iconnect<N_INITIATORS, N_TARGETS>::unmap_offset(
 			sc_dt::uint64& addr)
 {
 	if (target_nr >= N_TARGETS) {
-		SC_REPORT_FATAL("TLM-2", "Invalid target_nr in iconnect\n");
+		SC_REPORT_FATAL("TLM_2", "Invalid target_nr in iconnect\n");
 	}
 
 	if (map[target_nr].addrmode == ADDRMODE_RELATIVE) {
 		if (offset >= map[target_nr].size) {
 			printf("offset=%lx\n", (unsigned long) offset);
-			SC_REPORT_FATAL("TLM-2", "Invalid range in iconnect\n");
+			SC_REPORT_FATAL("TLM_2", "Invalid range in iconnect\n");
 		}
 
 		addr = map[target_nr].addr + offset;
@@ -207,7 +207,7 @@ void iconnect<N_INITIATORS, N_TARGETS>::b_transport(int id,
 	unsigned int target_nr;
 
 	if (id >= (int) N_INITIATORS) {
-		SC_REPORT_FATAL("TLM-2", "Invalid socket tag in iconnect\n");
+		SC_REPORT_FATAL("TLM_2", "Invalid socket tag in iconnect\n");
 	}
 
 	addr = trans.get_address();
@@ -232,7 +232,7 @@ bool iconnect<N_INITIATORS, N_TARGETS>::get_direct_mem_ptr(int id,
 	bool r;
 
 	if (id >= (int) N_INITIATORS) {
-		SC_REPORT_FATAL("TLM-2", "Invalid socket tag in iconnect\n");
+		SC_REPORT_FATAL("TLM_2", "Invalid socket tag in iconnect\n");
 	}
 
 	addr = trans.get_address();
@@ -259,7 +259,7 @@ unsigned int iconnect<N_INITIATORS, N_TARGETS>::transport_dbg(int id,
 	unsigned int target_nr;
 
 	if (id >= (int) N_INITIATORS) {
-		SC_REPORT_FATAL("TLM-2", "Invalid socket tag in iconnect\n");
+		SC_REPORT_FATAL("TLM_2", "Invalid socket tag in iconnect\n");
 	}
 
 	addr = trans.get_address();

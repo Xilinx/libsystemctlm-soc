@@ -59,7 +59,7 @@ public:
 				bool aligner_enable=true) :
 		sc_module(name),
 		axi_common(this),
-		tgt_socket("tgt-socket"),
+		tgt_socket("tgt_socket"),
 
 		clk("clk"),
 		resetn("resetn"),

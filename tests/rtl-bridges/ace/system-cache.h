@@ -51,7 +51,7 @@ public:
 			uint32_t base_addr) :
 		sc_module(name),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		m_base_addr(base_addr)
 	{

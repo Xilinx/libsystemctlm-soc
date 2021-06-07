@@ -332,22 +332,22 @@ SC_MODULE(Top)
 
 		dut("dut"),
 		signals_chi_dut("signals-chi-dut"),
-		signals1("chi-signals1"),
+		signals1("chi_signals1"),
 
 		rnf0("rnf0", rand_traffic0),
 		rnf1("rnf1", rand_traffic1),
 
 		t2c_hw_bridge0("tlm2chi-hw-bridge0"),
-		c2t_bridge0("chi2tlm-bridge0"),
+		c2t_bridge0("chi2tlm_bridge0"),
 
-		t2c_bridge1("tlm2chi-bridge1"),
-		c2t_bridge1("chi2tlm-bridge1"),
+		t2c_bridge1("tlm2chi_bridge1"),
+		c2t_bridge1("chi2tlm_bridge1"),
 
-		icn("iconnect-chi"),
+		icn("iconnect_chi"),
 		sn("sn"),
 		mem("mem", sc_time(10, SC_NS), RAM_SIZE),
 
-		checker0("chi-checker0", chi_checker_config()),
+		checker0("chi_checker0", chi_checker_config()),
 
 		h2c_intr_out("h2c_intr_out"),
 		h2c_gpio_out("h2c_gpio_out"),
