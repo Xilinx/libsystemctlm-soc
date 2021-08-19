@@ -57,9 +57,9 @@ public:
 	cache_ace(sc_core::sc_module_name name,
 			WritePolicy write_policy = WriteBack) :
 		sc_core::sc_module(name),
-		target_socket("target-socket"),
-		init_socket("init-socket"),
-		snoop_target_socket("snoop-target-socket"),
+		target_socket("target_socket"),
+		init_socket("init_socket"),
+		snoop_target_socket("snoop_target_socket"),
 		m_genattr(new genattr_extension()),
 		m_cache(NULL)
 	{

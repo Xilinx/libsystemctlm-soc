@@ -85,7 +85,7 @@ public:
 				bool aligner_enable=true) :
 		sc_module(name),
 		axi_common(this),
-		tgt_socket("tgt-socket"),
+		tgt_socket("tgt_socket"),
 
 		clk("clk"),
 		resetn("resetn"),
@@ -126,8 +126,8 @@ public:
 						  true, /* WRAP burst-types require natural alignment.  */
 						  this);
 
-			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axilite_bridge>("proxy-init-socket");
-			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axilite_bridge>("proxy-target-socket");
+			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axilite_bridge>("proxy_init_socket");
+			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axilite_bridge>("proxy_target_socket");
 
 			(*proxy_init_socket)(aligner->target_socket);
 			aligner->init_socket(*proxy_target_socket);

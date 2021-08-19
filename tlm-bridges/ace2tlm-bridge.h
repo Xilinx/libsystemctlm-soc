@@ -175,14 +175,14 @@ public:
 	ace2tlm_bridge(sc_core::sc_module_name name) :
 		sc_module(name),
 
-		m_bridge("tlm2axi-bridge"),
-		m_tgt_socket("target-socket"),
-		m_snoop_init_socket("snoop-init-socket"),
+		m_bridge("tlm2axi_bridge"),
+		m_tgt_socket("target_socket"),
+		m_snoop_init_socket("snoop_init_socket"),
 
 		m_snp_chnls(m_bridge.GetACESnoopChannels()),
 
-		socket("init-socket"),
-		snoop_target_socket("snoop-target-socket"),
+		socket("init_socket"),
+		snoop_target_socket("snoop_target_socket"),
 
 		clk(m_bridge.clk),
 		resetn(m_bridge.resetn),

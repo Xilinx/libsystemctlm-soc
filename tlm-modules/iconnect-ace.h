@@ -741,7 +741,7 @@ public:
 
 		DownstreamPort(sc_core::sc_module_name name) :
 			sc_core::sc_module(name),
-			init_socket("init-socket")
+			init_socket("init_socket")
 		{
 			SC_THREAD(downstream_port_thread);
 		}
@@ -925,7 +925,7 @@ public:
 			OverlappingTxOrderer& overlapping_orderer,
 			int port_id) :
 			sc_core::sc_module(name),
-			target_socket("target-socket"),
+			target_socket("target_socket"),
 			m_overlapping_orderer(overlapping_orderer),
 			m_port_id(port_id)
 		{
@@ -976,8 +976,8 @@ public:
 			ISnoopEngine *snoop_engine,
 			int port_id) :
 			sc_core::sc_module(name),
-			target_socket("target-socket"),
-			snoop_init_socket("snoop-init-socket"),
+			target_socket("target_socket"),
+			snoop_init_socket("snoop_init_socket"),
 			m_overlapping_orderer(overlapping_orderer),
 			m_snoop_engine(snoop_engine),
 			m_port_id(port_id),
@@ -1322,7 +1322,7 @@ public:
 				ACEPort_S **s_ace_port,
 				DownstreamPort& ds_port) :
 			sc_core::sc_module(name),
-			m_exmon("pos-monitor"),
+			m_exmon("pos_monitor"),
 			m_s_ace_port(s_ace_port),
 			m_dvm_completes(s_ace_port),
 			m_ds_port(ds_port)
@@ -1650,11 +1650,11 @@ public:
 
 	iconnect_ace(sc_core::sc_module_name name) :
 		sc_core::sc_module(name),
-		ds_port("ds-port"),
-		m_snoop_engine("snoop-engine",
+		ds_port("ds_port"),
+		m_snoop_engine("snoop_engine",
 				s_ace_port,
 				ds_port),
-		m_overlapping_orderer("overlapping-orderer",
+		m_overlapping_orderer("overlapping_orderer",
 					&m_snoop_engine,
 					ds_port)
 	{
@@ -1663,7 +1663,7 @@ public:
 		for (port_id = 0; port_id < NUM_ACE_MASTERS; port_id++) {
 			std::ostringstream name;
 
-			name << "s-ace-port" << port_id;
+			name << "s_ace_port" << port_id;
 
 			s_ace_port[port_id] = new ACEPort_S(name.str().c_str(),
 						m_overlapping_orderer,
@@ -1675,7 +1675,7 @@ public:
 			std::ostringstream name;
 			int id = Transaction::ACELite_ID_offset + port_id;
 
-			name << "s-acelite-port" << port_id;
+			name << "s_acelite_port" << port_id;
 
 			s_acelite_port[port_id] = new ACELitePort_S(name.str().c_str(),
 						m_overlapping_orderer,

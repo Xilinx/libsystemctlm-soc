@@ -85,11 +85,11 @@ SC_MODULE(Top)
 		rst("rst"),
 		irq("irq"),
 		vdev(devname, iommu_group),
-		tlm2vfio("tlm2vfio-bridge", 2, vdev, 0),
-		tlm_master_hw_bridge("tlm-master-hw-bridge", BASE_MASTER_BRIDGE,
+		tlm2vfio("tlm2vfio_bridge", 2, vdev, 0),
+		tlm_master_hw_bridge("tlm_master_hw_bridge", BASE_MASTER_BRIDGE,
 				     DUT_OFFSET),
-		tlm_slave_hw_bridge("tlm-slave-hw-bridge", BASE_SLAVE_BRIDGE, 0, &vdev),
-		rp_pci_ep("rp-pci-ep", 0, 1, 0, sk_descr),
+		tlm_slave_hw_bridge("tlm_slave_hw_bridge", BASE_SLAVE_BRIDGE, 0, &vdev),
+		rp_pci_ep("rp_pci_ep", 0, 1, 0, sk_descr),
 		xdma("xdma")
 	{
 		m_qk.set_global_quantum(sc_time(10, SC_US));

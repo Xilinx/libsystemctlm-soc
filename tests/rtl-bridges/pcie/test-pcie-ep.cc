@@ -135,20 +135,20 @@ SC_MODULE(Top)
 		rand_xfers(0, ram_size - 4, UINT64_MAX, 1, ram_size, ram_size, 100),
 		splitter("splitter", true),
 		tg("tg", 1),
-		s_axi_tlm_bridge("s_axi-tlm-bridge"),
-		m_axi_tlm_bridge("m_axi-tlm-bridge"),
-		m_axi_usr_tlm_bridge("m_axi_usr-tlm-bridge"),
-		tlm2axi_sw_bridge("tlm2axi-sw-bridge"),
-		ep_bridge("ep-bridge"),
+		s_axi_tlm_bridge("s_axi_tlm_bridge"),
+		m_axi_tlm_bridge("m_axi_tlm_bridge"),
+		m_axi_usr_tlm_bridge("m_axi_usr_tlm_bridge"),
+		tlm2axi_sw_bridge("tlm2axi_sw_bridge"),
+		ep_bridge("ep_bridge"),
 		signals_s_axi_pcie("s_axi_pcie", 1),
 		signals_m_axi_pcie("m_axi_pcie", 1),
 		signals_m_axi_usr("m_axi_usr", 1),
-		signals_m_tieoff("signals-master-tieoff", 5),
-		signals_s_tieoff("signals-slave-tieoff", 6),
-		signals_pcie_m_tieoff("signals-pcie-master-tieoff", signals_m_tieoff.size()),
-		signals_pcie_s_tieoff("signals-pcie-slave-tieoff", signals_s_tieoff.size()),
-		signals_pcie_sm_tieoff("signals-pcie-s-master-tieoff", signals_m_tieoff.size()),
-		signals_pcie_ss_tieoff("signals-pcie-s-slave-tieoff", signals_s_tieoff.size()),
+		signals_m_tieoff("signals_master_tieoff", 5),
+		signals_s_tieoff("signals_slave_tieoff", 6),
+		signals_pcie_m_tieoff("signals_pcie_master_tieoff", signals_m_tieoff.size()),
+		signals_pcie_s_tieoff("signals_pcie_slave_tieoff", signals_s_tieoff.size()),
+		signals_pcie_sm_tieoff("signals_pcie_s_master_tieoff", signals_m_tieoff.size()),
+		signals_pcie_ss_tieoff("signals_pcie_s_slave_tieoff", signals_s_tieoff.size()),
 		irq_req_bool("irq_req_bool"),
 		irq_req("irq_req"),
 		irq_ack("irq_ack"),
@@ -161,8 +161,8 @@ SC_MODULE(Top)
 		usr_resetn("usr_resetn"),
 
 		ram("ram", sc_time(1, SC_NS), ram_size),
-		ref_ram("ref-ram", sc_time(1, SC_NS), ram_size),
-		dummy_ram("dummy-ram", sc_time(1, SC_NS), ram_size)
+		ref_ram("ref_ram", sc_time(1, SC_NS), ram_size),
+		dummy_ram("dummy_ram", sc_time(1, SC_NS), ram_size)
 	{
 		char pname[128];
 		int i;

@@ -58,7 +58,7 @@ private:
 
 tlm2xgmii_bridge::tlm2xgmii_bridge(sc_module_name name, enum xgmii_mode mode)
 	: sc_module(name),
-	tgt_socket("tgt-socket"),
+	tgt_socket("tgt_socket"),
 	mode(mode),
 	clk("clk"),
 	xxd("xxd"),

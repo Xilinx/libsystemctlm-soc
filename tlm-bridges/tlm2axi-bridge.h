@@ -75,7 +75,7 @@ public:
 			AXIVersion version = V_AXI4, bool aligner_enable=true) :
 		sc_module(name),
 		axi_common(this),
-		tgt_socket("target-socket"),
+		tgt_socket("target_socket"),
 
 		clk("clk"),
 		resetn("resetn"),
@@ -153,7 +153,7 @@ public:
 	{
 		if (ACE_MODE == ACE_MODE_ACE) {
 			m_snp_chnls = new ACESnoopChannels_M__(
-						"ace-snp-chnls", clk, resetn);
+						"ace_snp_chnls", clk, resetn);
 		}
 
 		if (m_version == V_AXI3) {
@@ -167,8 +167,8 @@ public:
 						  4 * 1024, /* AXI never allows crossing of 4K boundary.  */
 						  true); /* WRAP burst-types require natural alignment.  */
 
-			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axi_bridge>("proxy-init-socket");
-			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axi_bridge>("proxy-target-socket");
+			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axi_bridge>("proxy_init_socket");
+			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axi_bridge>("proxy_target_socket");
 
 			(*proxy_init_socket)(aligner->target_socket);
 			aligner->init_socket(*proxy_target_socket);

@@ -126,17 +126,17 @@ SC_MODULE(Chip)
 
 		sc_module(name),
 
-		signals_rnf("chi-signals"),
-		signals_sn("chi-signals-sn"),
+		signals_rnf("chi_signals"),
+		signals_sn("chi_signals_sn"),
 
 		rnf("rnf", xfers),
 		icn("icn"),
 
-		t2c_bridge("tlm2chi-bridge"),
-		c2t_bridge("chi2tlm-bridge"),
+		t2c_bridge("tlm2chi_bridge"),
+		c2t_bridge("chi2tlm_bridge"),
 
-		t2c_bridge_sn("tlm2chi-bridge-sn"),
-		c2t_bridge_sn("chi2tlm-bridge-sn"),
+		t2c_bridge_sn("tlm2chi_bridge_sn"),
+		c2t_bridge_sn("chi2tlm_bridge_sn"),
 
 		cxs_bridge("cxs_bridge"),
 

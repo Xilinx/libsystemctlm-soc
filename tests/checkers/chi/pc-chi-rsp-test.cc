@@ -119,9 +119,9 @@ int sc_main(int argc, char *argv[])
 {
 	CHIChecker checker("checker", checker_config());
 
-	CHISignals_t signals("chi-signals");
+	CHISignals_t signals("chi_signals");
 
-	SignalGen<> siggen("sig-gen");
+	SignalGen<> siggen("sig_gen");
 
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);

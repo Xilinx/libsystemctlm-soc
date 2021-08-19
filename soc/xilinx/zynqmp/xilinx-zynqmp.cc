@@ -87,11 +87,11 @@ xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 	  rp_mio_out("mio_out", 0, NUM_MIO_WIRES),
 	  rp_user_master("rp_net_master", 10),
 	  rp_user_slave("rp_net_slave", 10),
-	  proxy_in("proxy-in", 9),
-	  proxy_out("proxy-out", proxy_in.size()),
+	  proxy_in("proxy_in", 9),
+	  proxy_out("proxy_out", proxy_in.size()),
 	  pl2ps_irq("pl2ps_irq", rp_wires_in.wires_in.size()),
 	  ps2pl_irq("ps2pl_irq", rp_irq_out.wires_out.size()),
-	  mio("mio-in", "mio-out", NUM_MIO_WIRES),
+	  mio("mio_in", "mio_out", NUM_MIO_WIRES),
 	  pl_resetn("pl_resetn", 4)
 {
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> * const out[] = {

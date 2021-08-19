@@ -160,10 +160,10 @@ SC_MODULE(ChipDut)
 		//
 		// Signals
 		//
-		signals_rnf("chi-signals"),
-		signals_sn("chi-signals-sn"),
+		signals_rnf("chi_signals"),
+		signals_sn("chi_signals_sn"),
 
-		signals_al("signals-al"),
+		signals_al("signals_al"),
 
 		//
 		// Other signals
@@ -179,8 +179,8 @@ SC_MODULE(ChipDut)
 
 		usr_resetn("usr_resetn"),
 
-		dummy_tx_chk("cxs-tx-chk-signals"),
-		dummy_rx_chk("cxs-rx-chk-signals"),
+		dummy_tx_chk("cxs_tx_chk_signals"),
+		dummy_rx_chk("cxs_rx_chk_signals"),
 
 		//
 		// TLM components
@@ -188,14 +188,14 @@ SC_MODULE(ChipDut)
 		rnf("rnf"),
 		icn("icn"),
 
-		t2c_bridge("tlm2chi-bridge"),
-		c2t_bridge("chi2tlm-bridge"),
+		t2c_bridge("tlm2chi_bridge"),
+		c2t_bridge("chi2tlm_bridge"),
 
-		t2c_bridge_sn("tlm2chi-bridge-sn"),
-		c2t_bridge_sn("chi2tlm-bridge-sn"),
+		t2c_bridge_sn("tlm2chi_bridge_sn"),
+		c2t_bridge_sn("chi2tlm_bridge_sn"),
 
 		cxs_hwb("cxs_hwb"),
-		al_bridge("al-bridge"),
+		al_bridge("al_bridge"),
 		dut("dut"),
 
 		sn("sn"),

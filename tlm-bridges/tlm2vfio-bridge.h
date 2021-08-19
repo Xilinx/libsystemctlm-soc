@@ -172,14 +172,14 @@ tlm2vfio_bridge::tlm2vfio_bridge(sc_module_name name,
 		int region, uint64_t offset,
 		bool handle_irq) :
 	sc_module(name),
-	tgt_socket("tgt-socket", nr_sockets),
+	tgt_socket("tgt_socket", nr_sockets),
 	irq("irq"),
 	dev(dev),
 	offset(offset),
 	region(region),
 	event("ev"),
 	irq_val(false),
-	irq_dummy("irq-dummy"),
+	irq_dummy("irq_dummy"),
 	handle_irq(handle_irq)
 {
 	unsigned int i;

@@ -178,14 +178,14 @@ public:
 	tlm2ace_bridge(sc_core::sc_module_name name, bool aligner_enable=true) :
 		sc_module(name),
 
-		m_bridge("tlm2axi-bridge", V_AXI4, aligner_enable),
-		m_init_socket("init-socket"),
-		m_snoop_tgt_socket("snoop-tgt-socket"),
+		m_bridge("tlm2axi_bridge", V_AXI4, aligner_enable),
+		m_init_socket("init_socket"),
+		m_snoop_tgt_socket("snoop_tgt_socket"),
 
 		m_snp_chnls(m_bridge.GetACESnoopChannels()),
 
-		tgt_socket("target-socket"),
-		snoop_init_socket("snoop-init-socket"),
+		tgt_socket("target_socket"),
+		snoop_init_socket("snoop_init_socket"),
 
 		clk(m_bridge.clk),
 		resetn(m_bridge.resetn),

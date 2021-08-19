@@ -229,10 +229,10 @@ SC_MODULE(Top)
 
 		clk("clk", sc_time(1, SC_US)),
 		rst_n("rst_n"),
-		al_signals_rn("axilite-sgnls-rn"),
-		al_signals_hn("axilite-sgnls-hn"),
-		bridge_rn("bridge-rn"),
-		bridge_hn("bridge-hn"),
+		al_signals_rn("axilite_sgnls_rn"),
+		al_signals_hn("axilite_sgnls_hn"),
+		bridge_rn("bridge_rn"),
+		bridge_hn("bridge_hn"),
                 checker("checker", pc_axilite_config()),
 
 		rand_traffic0(0, RAM_SIZE, (~(0x3llu)),
@@ -240,25 +240,25 @@ SC_MODULE(Top)
 		rand_traffic1(0, RAM_SIZE, (~(0x3llu)),
 				1, RAM_SIZE, RAM_SIZE, NUM_TXNS_RNF1),
 
-		dut_rn("dut-rn"),
-		dut_hn("dut-hn"),
-		signals_chi_dut("signals-chi-dut"),
-		signals1("chi-signals1"),
+		dut_rn("dut_rn"),
+		dut_hn("dut_hn"),
+		signals_chi_dut("signals_chi_dut"),
+		signals1("chi_signals1"),
 
 		rnf0("rnf0"),
 		rnf1("rnf1", rand_traffic1),
 
-		t2c_hw_bridge0("tlm2chi-hw-bridge0"),
-		c2t_hw_bridge0("chi2tlm-hw-bridge0"),
+		t2c_hw_bridge0("tlm2chi_hw_bridge0"),
+		c2t_hw_bridge0("chi2tlm_hw_bridge0"),
 
-		t2c_bridge1("tlm2chi-bridge1"),
-		c2t_bridge1("chi2tlm-bridge1"),
+		t2c_bridge1("tlm2chi_bridge1"),
+		c2t_bridge1("chi2tlm_bridge1"),
 
-		icn("iconnect-chi"),
+		icn("iconnect_chi"),
 		sn("sn"),
 		mem("mem", sc_time(10, SC_NS), RAM_SIZE),
 
-		checker0("chi-checker0", pc_chi_config()),
+		checker0("chi_checker0", pc_chi_config()),
 
 		h2c_intr_out("h2c_intr_out"),
 		h2c_gpio_out("h2c_gpio_out"),

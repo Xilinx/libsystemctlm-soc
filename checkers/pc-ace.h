@@ -248,21 +248,21 @@ public:
 		cddata("cddata"),
 		cdlast("cdlast"),
 
-		dummy("axi-dummy"),
+		dummy("axi_dummy"),
 
 		m_ace_mode(ACE_MODE_ACE),
 
 		m_cfg(*reinterpret_cast<__ACEPCConfig*>(&cfg)),
-		m_check_axi_stable("check-axi-stable", this),
-		m_check_axi_reset("check-axi-reset", this),
-		m_check_ace_stable("check-ace-stable", this),
-		m_check_ace_handshakes("check-ace-handshakes", this),
-		m_check_ace_rd_tx("check-ace-rd-tx", this),
-		m_check_ace_wr_tx("check-ace-wr-tx", this),
-		m_check_ace_snoop_ch("check-ace-snoop-ch", this),
-		m_check_ace_barrier("check-ace-barrier", this),
-		m_check_ace_cd_data("check-ace-cd-data", this),
-		m_check_ace_reset("check-ace-reset", this)
+		m_check_axi_stable("check_axi_stable", this),
+		m_check_axi_reset("check_axi_reset", this),
+		m_check_ace_stable("check_ace_stable", this),
+		m_check_ace_handshakes("check_ace_handshakes", this),
+		m_check_ace_rd_tx("check_ace_rd_tx", this),
+		m_check_ace_wr_tx("check_ace_wr_tx", this),
+		m_check_ace_snoop_ch("check_ace_snoop_ch", this),
+		m_check_ace_barrier("check_ace_barrier", this),
+		m_check_ace_cd_data("check_ace_cd_data", this),
+		m_check_ace_reset("check_ace_reset", this)
 	{
 		m_cfg.set_cacheline_size(CACHELINE_SZ);
 	}

@@ -2377,15 +2377,15 @@ public:
 		m_txDatChannel("TxDatChannel", txdat_init_socket),
 		m_transmitter(m_txRspChannel, m_txDatChannel),
 
-		target_socket("target-socket"),
+		target_socket("target_socket"),
 
-		txreq_init_socket("txreq-init-socket"),
-		txrsp_init_socket("txrsp-init-socket"),
-		txdat_init_socket("txdat-init-socket"),
+		txreq_init_socket("txreq_init_socket"),
+		txrsp_init_socket("txrsp_init_socket"),
+		txdat_init_socket("txdat_init_socket"),
 
-		rxrsp_tgt_socket("rxrsp-tgt-socket"),
-		rxdat_tgt_socket("rxdat-tgt-socket"),
-		rxsnp_tgt_socket("rxsnp-tgt-socket")
+		rxrsp_tgt_socket("rxrsp_tgt_socket"),
+		rxdat_tgt_socket("rxdat_tgt_socket"),
+		rxsnp_tgt_socket("rxsnp_tgt_socket")
 	{
 		m_txRspChannel.SetTransmitter(&m_transmitter);
 		m_txDatChannel.SetTransmitter(&m_transmitter);

@@ -3279,10 +3279,10 @@ public:
 		m_ids(ids),
 		m_ongoingTxn(ongoingTxn),
 
-		m_ccixLink("ccix-link", SrcID, txlink_init_socket),
+		m_ccixLink("ccix_link", SrcID, txlink_init_socket),
 
-		txlink_init_socket("txlink-init-socket"),
-		rxlink_tgt_socket("rxlink-tgt-socket")
+		txlink_init_socket("txlink_init_socket"),
+		rxlink_tgt_socket("rxlink_tgt_socket")
 
 	{
 		rxlink_tgt_socket.register_b_transport(

@@ -123,10 +123,10 @@ tlm2axi_hw_bridge::tlm2axi_hw_bridge(sc_module_name name,
 				uint64_t base_addr, uint64_t base_offset,
 				bool aligner_enable) :
 	tlm_hw_bridge_base(name, base_addr, 0),
-	tgt_socket("tgt-socket"),
-	h2c_irq("h2c-irq", 128),
+	tgt_socket("tgt_socket"),
+	h2c_irq("h2c_irq", 128),
 	base_offset(base_offset),
-	sig_dummy_bool_h2c("sig-dummy-bool_h2c", 128),
+	sig_dummy_bool_h2c("sig_dummy_bool_h2c", 128),
 	aligner(NULL),
 	proxy_init_socket(NULL),
 	proxy_target_socket(NULL)
@@ -136,8 +136,8 @@ tlm2axi_hw_bridge::tlm2axi_hw_bridge(sc_module_name name,
 				AXI4_MAX_BURSTLENGTH * 16, /* MAX AXI length.  */
 				4 * 1024, /* AXI never allows crossing of 4K boundary.  */
 				true); /* WRAP burst-types require natural alignment.  */
-		proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axi_hw_bridge>("proxy-init-socket");
-		proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axi_hw_bridge>("proxy-target-socket");
+		proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2axi_hw_bridge>("proxy_init_socket");
+		proxy_target_socket = new tlm_utils::simple_target_socket<tlm2axi_hw_bridge>("proxy_target_socket");
 		(*proxy_init_socket)(aligner->target_socket);
 		aligner->init_socket(*proxy_target_socket);
 

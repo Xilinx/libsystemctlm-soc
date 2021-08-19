@@ -222,11 +222,11 @@ public:
 		m_numWriteBarriers(0),
 		m_maxBurstLength(AXI4_MAX_BURSTLENGTH),
 		m_version(version),
-		dummy("axi-dummy")
+		dummy("axi_dummy")
 	{
 		if (ACE_MODE == ACE_MODE_ACE) {
 			m_snp_chnls = new ACESnoopChannels_S__(
-						"ace-snp-chnls", clk, resetn);
+						"ace_snp_chnls", clk, resetn);
 		}
 
 		if (m_version == V_AXI3) {

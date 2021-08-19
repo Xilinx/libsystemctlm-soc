@@ -130,9 +130,9 @@ int sc_main(int argc, char *argv[])
 	ACELiteProtocolChecker<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
 			checker("checker", checker_config());
 
-	ACELiteSignals__ signals("acelite-signals");
+	ACELiteSignals__ signals("acelite_signals");
 
-	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> siggen("sig-gen");
+	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH> siggen("sig_gen");
 
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);

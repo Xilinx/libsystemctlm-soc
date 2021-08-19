@@ -37,8 +37,8 @@ pci_device_base::pci_device_base(sc_module_name name,
 	  config("config"),
 	  bar("bar", nr_bars),
 	  dma("dma"),
-	  ats_req("ats-req"),
-	  ats_inv("ats-inv"),
+	  ats_req("ats_req"),
+	  ats_inv("ats_inv"),
 	  irq("irq", nr_irqs)
 {
 	unsigned int i;

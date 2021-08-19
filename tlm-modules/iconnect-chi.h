@@ -1963,13 +1963,13 @@ private:
 				uint16_t nodeID) :
 			sc_core::sc_module(name),
 
-			rxreq_tgt_socket("rxreq-tgt-socket"),
-			rxrsp_tgt_socket("rxrsp-tgt-socket"),
-			rxdat_tgt_socket("rxdat-tgt-socket"),
+			rxreq_tgt_socket("rxreq_tgt_socket"),
+			rxrsp_tgt_socket("rxrsp_tgt_socket"),
+			rxdat_tgt_socket("rxdat_tgt_socket"),
 
-			txrsp_init_socket("txrsp-init-socket"),
-			txdat_init_socket("txdat-init-socket"),
-			txsnp_init_socket("txsnp-init-socket"),
+			txrsp_init_socket("txrsp_init_socket"),
+			txdat_init_socket("txdat_init_socket"),
+			txsnp_init_socket("txsnp_init_socket"),
 
 			m_router(router),
 			m_reqOrderer(reqOrderer),
@@ -2131,11 +2131,11 @@ private:
 				uint16_t nodeID) :
 			sc_core::sc_module(name),
 
-			txreq_init_socket("txreq-init-socket"),
-			txdat_init_socket("txdat-init-socket"),
+			txreq_init_socket("txreq_init_socket"),
+			txdat_init_socket("txdat_init_socket"),
 
-			rxrsp_tgt_socket("rxrsp-tgt-socket"),
-			rxdat_tgt_socket("rxdat-tgt-socket"),
+			rxrsp_tgt_socket("rxrsp_tgt_socket"),
+			rxdat_tgt_socket("rxdat_tgt_socket"),
 
 			m_router(router),
 			m_txReqChannel("TxReqChannel", txreq_init_socket),
@@ -3477,7 +3477,7 @@ public:
 		for (int portID = 0; portID < NUM_CHI_RN_F; portID++) {
 			std::ostringstream name;
 
-			name << "port-RN-F" << portID;
+			name << "port_RN_F" << portID;
 
 			port_RN_F[portID] = new Port_RN_F(name.str().c_str(),
 							&m_router,
@@ -3485,12 +3485,12 @@ public:
 							portID);
 		}
 
-		port_SN = new Port_SN("Port-SN", &m_router, SLAVE_NODE_ID);
+		port_SN = new Port_SN("Port_SN", &m_router, SLAVE_NODE_ID);
 
 		for (int portID = 0; portID < NUM_CCIX_PORTS; portID++) {
 			std::ostringstream name;
 
-			name << "port-CCIX" << portID;
+			name << "port_CCIX" << portID;
 
 			port_CCIX[portID] = new Port_CCIX(name.str().c_str(),
 							NODE_ID,

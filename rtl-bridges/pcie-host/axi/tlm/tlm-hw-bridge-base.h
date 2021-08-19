@@ -218,13 +218,13 @@ sc_event tlm_hw_bridge_base::process_wires_ev;
 tlm_hw_bridge_base::tlm_hw_bridge_base(sc_module_name name,
 				uint64_t base_addr, uint64_t offset) :
 	sc_module(name),
-	bridge_socket("bridge-socket"),
+	bridge_socket("bridge_socket"),
 	rst("rst"),
 	irq("irq"),
-	c2h_irq("c2h-intr", 64),
-	sig_dummy_bool("sig-dummy-bool", 64),
+	c2h_irq("c2h_intr", 64),
+	sig_dummy_bool("sig_dummy_bool", 64),
 	probed(false),
-	probed_event("probed-event")
+	probed_event("probed_event")
 {
 	this->base_addr = base_addr;
 	this->base_offset = base_offset;

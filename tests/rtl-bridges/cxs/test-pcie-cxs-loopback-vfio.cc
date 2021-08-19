@@ -201,8 +201,8 @@ SC_MODULE(Chip)
 		//
 		// Signals
 		//
-		signals_rnf("chi-signals"),
-		signals_sn("chi-signals-sn"),
+		signals_rnf("chi_signals"),
+		signals_sn("chi_signals_sn"),
 
 		//
 		// TLM components
@@ -210,11 +210,11 @@ SC_MODULE(Chip)
 		rnf("rnf"),
 		icn("icn"),
 
-		t2c_bridge("tlm2chi-bridge"),
-		c2t_bridge("chi2tlm-bridge"),
+		t2c_bridge("tlm2chi_bridge"),
+		c2t_bridge("chi2tlm_bridge"),
 
-		t2c_bridge_sn("tlm2chi-bridge-sn"),
-		c2t_bridge_sn("chi2tlm-bridge-sn"),
+		t2c_bridge_sn("tlm2chi_bridge_sn"),
+		c2t_bridge_sn("chi2tlm_bridge_sn"),
 
 		cxs_hwb("cxs_hwb", base_addr),
 
@@ -374,7 +374,7 @@ SC_MODULE(Top)
 		chip1("chip1", CXS_F_BASE_ADDR, clk, rst_n),
 
 		vdev(devname, iommu_group),
-		tlm2vfio("tlm2vfio-bridge", 2, vdev, 0),
+		tlm2vfio("tlm2vfio_bridge", 2, vdev, 0),
 
 		m_tgDoneCB(tgDoneCB)
 	{

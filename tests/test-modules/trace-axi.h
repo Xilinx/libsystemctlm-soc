@@ -156,7 +156,7 @@ public:
 		rid("rid"),
 		rlast("rlast"),
 
-		dummy("axi-dummy"),
+		dummy("axi_dummy"),
 		m_print_all(false),
 		m_print_addr(false),
 		m_print_min_max_addr(false),

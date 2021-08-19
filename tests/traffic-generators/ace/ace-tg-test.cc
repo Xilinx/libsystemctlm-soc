@@ -481,39 +481,39 @@ ACEPCConfig checker_config()
 
 int sc_main(int argc, char *argv[])
 {
-	ACEMaster_t master0("ace-master0", transfers0);
-	ACEMaster_t master1("ace-master1", transfers1);
-	ACEMaster_t master2("ace-master2", transfers2, WriteThrough);
+	ACEMaster_t master0("ace_master0", transfers0);
+	ACEMaster_t master1("ace_master1", transfers1);
+	ACEMaster_t master2("ace_master2", transfers2, WriteThrough);
 
-	ACELiteMaster al_master("acelite-master", acelite_transfers0);
+	ACELiteMaster al_master("acelite_master", acelite_transfers0);
 
-	iconnect_ace_t iconnect("ace-iconnect");
+	iconnect_ace_t iconnect("ace_iconnect");
 
 	memory mem("mem", sc_time(10, SC_NS), RAM_SIZE);
 
-	ACESignals_t signals0("ace-signals0");
-	ACESignals_t signals1("ace-signals1");
-	ACESignals_t signals2("ace-signals2");
+	ACESignals_t signals0("ace_signals0");
+	ACESignals_t signals1("ace_signals1");
+	ACESignals_t signals2("ace_signals2");
 
-	ACELiteSignals_t al_signals("acelite-signals");
+	ACELiteSignals_t al_signals("acelite_signals");
 
-	tlm2ace_bridge_t t2a_bridge0("tlm2ace-bridge0");
-	tlm2ace_bridge_t t2a_bridge1("tlm2ace-bridge1");
-	tlm2ace_bridge_t t2a_bridge2("tlm2ace-bridge2");
+	tlm2ace_bridge_t t2a_bridge0("tlm2ace_bridge0");
+	tlm2ace_bridge_t t2a_bridge1("tlm2ace_bridge1");
+	tlm2ace_bridge_t t2a_bridge2("tlm2ace_bridge2");
 
-	tlm2acelite_bridge_t t2al_bridge("tlm2acelite-bridge");
+	tlm2acelite_bridge_t t2al_bridge("tlm2acelite_bridge");
 
-	ace2tlm_bridge_t a2t_bridge0("ace2tlm-bridge0");
-	ace2tlm_bridge_t a2t_bridge1("ace2tlm-bridge1");
-	ace2tlm_bridge_t a2t_bridge2("ace2tlm-bridge2");
+	ace2tlm_bridge_t a2t_bridge0("ace2tlm_bridge0");
+	ace2tlm_bridge_t a2t_bridge1("ace2tlm_bridge1");
+	ace2tlm_bridge_t a2t_bridge2("ace2tlm_bridge2");
 
-	acelite2tlm_bridge_t al2t_bridge("acelite2tlm-bridge");
+	acelite2tlm_bridge_t al2t_bridge("acelite2tlm_bridge");
 
 	ACEChecker checker0("checker0", checker_config());
 	ACEChecker checker1("checker1", checker_config());
 	ACEChecker checker2("checker2", checker_config());
 
-	ACELiteChecker al_checker("acelite-checker",
+	ACELiteChecker al_checker("acelite_checker",
 					checker_config());
 
 	sc_clock clk("clk", sc_time(20, SC_US));

@@ -143,10 +143,10 @@ public:
 	acelite2tlm_bridge(sc_core::sc_module_name name) :
 		sc_module(name),
 
-		m_bridge("tlm2axi-bridge"),
-		m_tgt_socket("target-socket"),
+		m_bridge("tlm2axi_bridge"),
+		m_tgt_socket("target_socket"),
 
-		socket("init-socket"),
+		socket("init_socket"),
 
 		clk(m_bridge.clk),
 		resetn(m_bridge.resetn),

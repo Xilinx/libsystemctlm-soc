@@ -143,10 +143,10 @@ public:
 	tlm2acelite_bridge(sc_core::sc_module_name name, bool aligner_enable=true) :
 		sc_module(name),
 
-		m_bridge("tlm2axi-bridge", V_AXI4, aligner_enable),
-		m_init_socket("init-socket"),
+		m_bridge("tlm2axi_bridge", V_AXI4, aligner_enable),
+		m_init_socket("init_socket"),
 
-		tgt_socket("target-socket"),
+		tgt_socket("target_socket"),
 
 		clk(m_bridge.clk),
 		resetn(m_bridge.resetn),

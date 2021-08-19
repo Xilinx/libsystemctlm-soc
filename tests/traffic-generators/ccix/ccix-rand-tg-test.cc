@@ -62,8 +62,8 @@ int sc_main(int argc, char *argv[])
 	RandomTraffic transfers1(0, ram_sz, (~(0x3llu)),
 					1, ram_sz, ram_sz, 100000);
 
-	CXSSignals_t sgnls_cxs0("cxs-signals0");
-	CXSSignals_t sgnls_cxs1("cxs-signals1");
+	CXSSignals_t sgnls_cxs0("cxs_signals0");
+	CXSSignals_t sgnls_cxs1("cxs_signals1");
 
 	sc_signal<bool> resetn("resetn", true);
 	sc_clock clk("clk", sc_time(20, SC_US));

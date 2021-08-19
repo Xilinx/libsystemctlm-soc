@@ -302,10 +302,10 @@ int sc_main(int argc, char *argv[])
 			checker("checker", checker_config());
 
 	AXISignals<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-			signals("axi-signals", version);
+			signals("axi_signals", version);
 
 	SignalGen<AXI_ADDR_WIDTH, AXI_DATA_WIDTH>
-			siggen("sig-gen", version);
+			siggen("sig_gen", version);
 
 	sc_clock clk("clk", sc_time(20, SC_US));
 	sc_signal<bool> resetn("resetn", true);

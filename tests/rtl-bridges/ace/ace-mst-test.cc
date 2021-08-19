@@ -284,38 +284,38 @@ SC_MODULE(Top)
 		rst("rst"),
 		rst_n("rst_n"),
 
-		signals_host("signals-host"),
-		signals_dut("ace-signals-dut"),
-		signals_m1("ace-signals-m1"),
+		signals_host("signals_host"),
+		signals_dut("ace_signals_dut"),
+		signals_m1("ace_signals_m1"),
 
-		signals_host_dma("signals-host-dma"),
+		signals_host_dma("signals_host_dma"),
 
-		signals_h2c_intr_out("c2h-intr-out"),
+		signals_h2c_intr_out("c2h_intr_out"),
 		signals_h2c_gpio_out("h2c_gpio_out"),
-		signals_c2h_intr_in("c2h-intr-in"),
-		signals_c2h_gpio_in("c2h-gpio-in"),
-		signals_usr_resetn("signals-usr-resetn"),
-		signals_irq_out("signals-irq-out"),
-		signals_irq_ack("signals-irq-ack"),
+		signals_c2h_intr_in("c2h_intr_in"),
+		signals_c2h_gpio_in("c2h_gpio_in"),
+		signals_usr_resetn("signals_usr_resetn"),
+		signals_irq_out("signals_irq_out"),
+		signals_irq_ack("signals_irq_ack"),
 
                 rand_xfers0(0, ram_size - 4, UINT64_MAX,
 				1, ram_size, ram_size, NUM_TXNS_MSTR0),
                 rand_xfers1(0, ram_size - 4, UINT64_MAX,
 				1, ram_size, ram_size, NUM_TXNS_MSTR1),
 
-		bridge_tlm2axilite("bridge-tlm2axilite"),
-		checker_axilite("checker-axilite",
+		bridge_tlm2axilite("bridge_tlm2axilite"),
+		checker_axilite("checker_axilite",
 				AXILitePCConfig::all_enabled()),
 
-		m0("ace-master0"),
-		m1("ace-master1", rand_xfers1),
+		m0("ace_master0"),
+		m1("ace_master1", rand_xfers1),
 
-		a2t_bridge0("ace2tlm-bridge0"),
-		t2a_bridge1("tlm2ace-bridge1"),
-		a2t_bridge1("ace2tlm-bridge1"),
+		a2t_bridge0("ace2tlm_bridge0"),
+		t2a_bridge1("tlm2ace_bridge1"),
+		a2t_bridge1("ace2tlm_bridge1"),
 
-		t2a_hw_bridge0("tlm2ace-hw-bridge0"),
-		iconnect("ace-iconnect"),
+		t2a_hw_bridge0("tlm2ace_hw_bridge0"),
+		iconnect("ace_iconnect"),
 
 		dut("dut"),
 

@@ -181,14 +181,14 @@ public:
 		rid("rid"),
 		rlast("rlast"),
 
-		dummy("axi-dummy"),
+		dummy("axi_dummy"),
 		m_cfg(*reinterpret_cast<__AXIPCConfig*>(&cfg)),
-		m_checker_axi_stable("checker-axi-stable", this),
-		m_check_rd_tx("check-rd-tx", this),
-		m_check_wr_tx("check-wr-tx", this),
-		m_check_addr_alignment("check-addr-alignment", this),
-		m_check_axi_handshakes("check-axi-handshakes", this),
-		m_check_axi_reset("check-axi-reset", this)
+		m_checker_axi_stable("checker_axi_stable", this),
+		m_check_rd_tx("check_rd_tx", this),
+		m_check_wr_tx("check_wr_tx", this),
+		m_check_addr_alignment("check_addr_alignment", this),
+		m_check_axi_handshakes("check_axi_handshakes", this),
+		m_check_axi_reset("check_axi_reset", this)
 	{}
 
 	AXIVersion GetVersion() { return m_cfg.get_axi_version(); }

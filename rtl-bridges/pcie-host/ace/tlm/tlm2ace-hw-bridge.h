@@ -1132,7 +1132,7 @@ public:
 		sc_module(name),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		version_major(0),
 		version_minor(0),
@@ -1140,7 +1140,7 @@ public:
 		m_base_addr(base_addr),
 
 		m_snp_chnls(new ACESnoopChannels_M__(
-					"ace-snp-chnls", this, clk, resetn)),
+					"ace_snp_chnls", this, clk, resetn)),
 
 		m_maxBurstLength(AXI4_MAX_BURSTLENGTH),
 
@@ -1150,10 +1150,10 @@ public:
 		proxy_init_socket(NULL),
 		proxy_target_socket(NULL),
 
-		tgt_socket("target-socket"),
+		tgt_socket("target_socket"),
 		snoop_init_socket(m_snp_chnls->snoop_init_socket),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		clk("clk"),
 		resetn("resetn"),
@@ -1166,8 +1166,8 @@ public:
 						  4 * 1024, /* AXI never allows crossing of 4K boundary.  */
 						  true); /* WRAP burst-types require natural alignment.  */
 
-			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2ace_hw_bridge>("proxy-init-socket");
-			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2ace_hw_bridge>("proxy-target-socket");
+			proxy_init_socket = new tlm_utils::simple_initiator_socket<tlm2ace_hw_bridge>("proxy_init_socket");
+			proxy_target_socket = new tlm_utils::simple_target_socket<tlm2ace_hw_bridge>("proxy_target_socket");
 
 			(*proxy_init_socket)(aligner->target_socket);
 			aligner->init_socket(*proxy_target_socket);

@@ -256,8 +256,8 @@ int sc_main(int argc, char *argv[])
 {
 	unsigned int ram_sz = DEFAULT_RAM_SIZE;
 
-	CXSSignals_t sgnls_cxs0("cxs-signals0");
-	CXSSignals_t sgnls_cxs1("cxs-signals1");
+	CXSSignals_t sgnls_cxs0("cxs_signals0");
+	CXSSignals_t sgnls_cxs1("cxs_signals1");
 
 	sc_signal<bool> resetn("resetn", true);
 	sc_clock clk("clk", sc_time(20, SC_US));

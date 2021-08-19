@@ -127,15 +127,15 @@ public:
 			uint32_t base_addr = 0) :
 		sc_module(name),
 
-		rxreq_init_socket("rxreq-init-socket"),
-		rxrsp_init_socket("rxrsp-init-socket"),
-		rxdat_init_socket("rxdat-init-socket"),
+		rxreq_init_socket("rxreq_init_socket"),
+		rxrsp_init_socket("rxrsp_init_socket"),
+		rxdat_init_socket("rxdat_init_socket"),
 
-		txrsp_tgt_socket("txrsp-tgt-socket"),
-		txdat_tgt_socket("txdat-tgt-socket"),
-		txsnp_tgt_socket("txsnp-tgt-socket"),
+		txrsp_tgt_socket("txrsp_tgt_socket"),
+		txdat_tgt_socket("txdat_tgt_socket"),
+		txsnp_tgt_socket("txsnp_tgt_socket"),
 
-		bridge_socket("bridge-socket"),
+		bridge_socket("bridge_socket"),
 
 		resetn("resetn"),
 		irq("irq"),
@@ -144,7 +144,7 @@ public:
 		m_sysco_handshake_en(false),
 
 		probed(false),
-		probed_event("probed-event"),
+		probed_event("probed_event"),
 
 		version_major(0),
 		version_minor(0),
