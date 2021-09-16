@@ -220,11 +220,11 @@
 		<ipxact:fileSet>
 			<ipxact:name>sc_fileset</ipxact:name>
 			<ipxact:file>
-				<ipxact:name>../../../../../../zynqmp/xilinx-zynqmp.cc</ipxact:name>
+				<ipxact:name>../../../../../../soc/xilinx/zynqmp/xilinx-zynqmp.cc</ipxact:name>
 				<ipxact:fileType>systemCSource</ipxact:fileType>
 			</ipxact:file>
 			<ipxact:file>
-				<ipxact:name>../../../../../../zynqmp/xilinx-zynqmp.h</ipxact:name>
+				<ipxact:name>../../../../../../soc/xilinx/zynqmp/xilinx-zynqmp.h</ipxact:name>
 				<ipxact:fileType>systemCSource</ipxact:fileType>
 				<ipxact:isIncludeFile>true</ipxact:isIncludeFile>
 				<ipxact:dependency>../../../../../..</ipxact:dependency>
