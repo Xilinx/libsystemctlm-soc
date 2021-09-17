@@ -28,7 +28,7 @@ public:
 
 	const sc_time LATENCY;
 
-	memory(sc_core::sc_module_name name, sc_time latency, int size_,
+	memory(sc_core::sc_module_name name, sc_time latency, off_t size_,
 	       uint8_t *buf = NULL);
 
 	~memory();
@@ -41,7 +41,7 @@ public:
 
 private:
 	uint8_t *mem;
-	int size;
+	off_t size;
 
 	bool free_mem;
 };

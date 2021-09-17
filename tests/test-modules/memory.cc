@@ -35,7 +35,7 @@ using namespace std;
 
 #include "memory.h"
 
-memory::memory(sc_module_name name, sc_time latency, int size_,
+memory::memory(sc_module_name name, sc_time latency, off_t size_,
 	       uint8_t *buf)
 	: sc_module(name), socket("socket"), LATENCY(latency),
 	  mem(buf),
