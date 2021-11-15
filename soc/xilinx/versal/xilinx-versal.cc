@@ -60,6 +60,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	  rp_noc_lpd_axi_0("rp_noc_lpd_axi_0"),
 	  rp_pmc_noc_axi_0("rp_pmc_noc_axi_0"),
 	  rp_reserved_0("rp_reserved_0"),
+	  rp_pmc_npi("rp_pmc_npi"),
 
 	  rp_s_axi_fpd("rp_s_axi_fpd"),
 	  rp_s_axi_gp_2("rp_s_axi_gp_2"),
@@ -95,6 +96,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	cpm_pcie_noc_1 = &rp_cpm_pcie_noc_1.sk;
 	noc_lpd_axi_0 = &rp_noc_lpd_axi_0.sk;
 	pmc_noc_axi_0 = &rp_pmc_noc_axi_0.sk;
+	pmc_npi = &rp_pmc_npi.sk;
 
 	s_axi_fpd = &rp_s_axi_fpd.sk;
 	s_axi_gp_2 = &rp_s_axi_gp_2.sk;
@@ -144,6 +146,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	register_dev(57, &rp_cpm_pcie_noc_1);
 	register_dev(58, &rp_noc_lpd_axi_0);
 	register_dev(59, &rp_pmc_noc_axi_0);
+	register_dev(60, &rp_pmc_npi);
 
 	register_dev(80, &rp_pl2ps_irq);
 	register_dev(83, &rp_wires_out);
