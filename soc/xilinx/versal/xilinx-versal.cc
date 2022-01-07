@@ -76,6 +76,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	  rp_noc_cpm_pcie_0("rp_noc_cpm_pcie_0"),
 	  rp_noc_cpm_pcie_1("rp_noc_cpm_pcie_1"),
 	  rp_noc_pmc_axi_0("rp_noc_pmc_axi_0"),
+	  rp_s_axi_xram("rp_s_axi_xram"),
 	  rp_pl2ps_irq("rp_pl2ps_irq", VERSAL_NUM_PL2PS_IRQ, 0),
 	  rp_wires_out("rp_wires_out", 0, VERSAL_NUM_PS2PL_WIRES),
 	  pl2ps_irq("pl2ps_irq", VERSAL_NUM_PL2PS_IRQ),
@@ -113,6 +114,8 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	noc_cpm_pcie_1 = &rp_noc_cpm_pcie_1.sk;
 	noc_pmc_axi_0 = &rp_noc_pmc_axi_0.sk;
 
+	s_axi_xram = &rp_s_axi_xram.sk;
+
 	for (i = 0; i < pl2ps_irq.size(); i++) {
 		rp_pl2ps_irq.wires_in[i](pl2ps_irq[i]);
 	}
@@ -133,6 +136,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	register_dev(21, &rp_noc_cpm_pcie_0);
 	register_dev(22, &rp_noc_cpm_pcie_1);
 	register_dev(23, &rp_noc_pmc_axi_0);
+	register_dev(24, &rp_s_axi_xram);
 
 	register_dev(40, &rp_m_axi_fpd);
 	register_dev(42, &rp_m_axi_lpd);

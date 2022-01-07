@@ -69,6 +69,8 @@ private:
 	remoteport_tlm_memory_slave rp_noc_cpm_pcie_1;
 	remoteport_tlm_memory_slave rp_noc_pmc_axi_0;
 
+	remoteport_tlm_memory_slave rp_s_axi_xram;
+
 	remoteport_tlm_wires rp_pl2ps_irq;
 	remoteport_tlm_wires rp_wires_out;
 
@@ -104,6 +106,8 @@ public:
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_cpm_pcie_0;
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_cpm_pcie_1;
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *noc_pmc_axi_0;
+
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_xram;
 
 	sc_vector<sc_signal<bool> > pl2ps_irq;
 	sc_vector<sc_signal<bool> > pl_reset;
