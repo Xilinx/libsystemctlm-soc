@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include <sys/utsname.h>
 #include <assert.h>
+#include <sstream>
 
 #include "systemc.h"
 #include "tlm_utils/simple_initiator_socket.h"
@@ -181,10 +182,25 @@ void remoteport_tlm_memory_master::cmd_write(struct rp_pkt &pkt, bool can_sync,
 	cmd_write_null(adaptor, pkt, can_sync, data, len, this);
 }
 
+void remoteport_tlm_memory_master::b_transport(tlm::tlm_generic_payload& trans,
+				       sc_time& delay)
+{
+	tlm::tlm_command cmd = trans.get_command();
+	uint64_t addr = trans.get_address();
+	const char *cmd_str = cmd == tlm::TLM_WRITE_COMMAND ? "write" : "read";
+	std::ostringstream msg;
+
+	msg << name() << ": Tied-off " << cmd_str << " to 0x" << std::hex << addr << endl;
+	SC_REPORT_WARNING("remote-port-tlm-memory-master", msg.str().c_str());
+	trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+}
+
 void remoteport_tlm_memory_master::tie_off(void)
 {
 	if (!sk.size()) {
 		tieoff_sk = new tlm_utils::simple_target_socket<remoteport_tlm_memory_master>();
+		tieoff_sk->register_b_transport(this, &remoteport_tlm_memory_master::b_transport);
+
 		sk.bind(*tieoff_sk);
 	}
 }
