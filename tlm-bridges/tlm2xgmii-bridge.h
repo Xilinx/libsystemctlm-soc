@@ -48,10 +48,22 @@ public:
 	sc_out<sc_bv<64> > xxd;
 	sc_out<sc_bv<8> > xxc;
 private:
+	SC_HAS_PROCESS(tlm2xgmii_bridge);
+	sc_fifo<tlm::tlm_generic_payload*> rxfifo;
+
 	void push_data_buf(const char *name, unsigned char *buf,
 				int len, uint64_t ctrl);
 
 	void process_packet(unsigned char *data, int len);
+	void process_thread() {
+		while(true) {
+			tlm::tlm_generic_payload *gp = rxfifo.read();
+			process_packet(gp->get_data_ptr(), gp->get_data_length());
+
+			delete gp->get_data_ptr();
+			delete gp;
+		}
+	}
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay);
 };
@@ -62,8 +74,10 @@ tlm2xgmii_bridge::tlm2xgmii_bridge(sc_module_name name, enum xgmii_mode mode)
 	mode(mode),
 	clk("clk"),
 	xxd("xxd"),
-	xxc("xxc")
+	xxc("xxc"),
+	rxfifo("rxfifo", 1)
 {
+	SC_THREAD(process_thread);
 	tgt_socket.register_b_transport(this, &tlm2xgmii_bridge::b_transport);
 }
 
@@ -147,10 +161,13 @@ void tlm2xgmii_bridge::process_packet(unsigned char *data, int len)
 void tlm2xgmii_bridge::b_transport(tlm::tlm_generic_payload& trans,
 					sc_time& delay)
 {
-	unsigned char *data = trans.get_data_ptr();
-	unsigned int len = trans.get_data_length();
+	tlm::tlm_generic_payload *gp = new tlm::tlm_generic_payload();
+	unsigned char *buf = new unsigned char [trans.get_data_length()];
 
-	process_packet(data, len);
+	gp->set_data_ptr(buf);
+	gp->deep_copy_from(trans);
+	rxfifo.write(gp);
+
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 #undef D
