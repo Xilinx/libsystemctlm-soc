@@ -94,6 +94,8 @@ iconnect<N_INITIATORS, N_TARGETS>::iconnect (sc_module_name name)
 	char txt[32];
 	unsigned int i;
 
+	set_target_offset(0,0x0);
+
 	for (i = 0; i < N_INITIATORS; i++) {
 		sprintf(txt, "target_socket_%d", i);
 
