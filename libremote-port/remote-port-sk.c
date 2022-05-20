@@ -73,7 +73,7 @@ static int sk_unix_client(const char *descr)
 	memset(&addr, 0, sizeof addr);
 	addr.sun_family = AF_UNIX;
 	strncpy(addr.sun_path, descr + strlen(UNIX_PREFIX),
-		sizeof addr.sun_path);
+		sizeof addr.sun_path - 1);
 	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) >= 0)
 		return fd;
 
