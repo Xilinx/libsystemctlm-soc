@@ -79,6 +79,8 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	  rp_s_axi_xram("rp_s_axi_xram"),
 	  rp_pl2ps_irq("rp_pl2ps_irq", VERSAL_NUM_PL2PS_IRQ, 0),
 	  rp_wires_out("rp_wires_out", 0, VERSAL_NUM_PS2PL_WIRES),
+	  rp_user_master("rp_user_master", VERSAL_NUM_USER_PORTS),
+	  rp_user_slave("rp_user_slave", VERSAL_NUM_USER_PORTS),
 	  pl2ps_irq("pl2ps_irq", VERSAL_NUM_PL2PS_IRQ),
 	  pl_reset("pl_reset", VERSAL_NUM_PL_RESET)
 {
@@ -123,6 +125,11 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 		rp_wires_out.wires_out[i](pl_reset[i]);
 	}
 
+	for (i = 0; i < rp_user_master.size(); i++) {
+		user_master[i] = &rp_user_master[i].sk;
+		user_slave[i] = &rp_user_slave[i].sk;
+	}
+
 	register_dev(2, &rp_reserved_0);
 	register_dev(10, &rp_s_axi_fpd);
 	register_dev(12, &rp_s_axi_gp_2);
@@ -154,4 +161,9 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 
 	register_dev(80, &rp_pl2ps_irq);
 	register_dev(83, &rp_wires_out);
+
+	for (i = 0; i < rp_user_master.size(); i++) {
+		register_dev(256 + i, &rp_user_master[i]);
+		register_dev(256 + rp_user_master.size() + i, &rp_user_slave[i]);
+	}
 }

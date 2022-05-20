@@ -36,6 +36,8 @@
 #include "remote-port-tlm-memory-slave.h"
 #include "remote-port-tlm-wires.h"
 
+#define VERSAL_NUM_USER_PORTS 32
+
 class xilinx_versal
 : public remoteport_tlm
 {
@@ -74,6 +76,9 @@ private:
 	remoteport_tlm_wires rp_pl2ps_irq;
 	remoteport_tlm_wires rp_wires_out;
 
+	sc_vector<remoteport_tlm_memory_master > rp_user_master;
+	sc_vector<remoteport_tlm_memory_slave > rp_user_slave;
+
 public:
 	/* FPD 0 and 1. Base PS only has port 0.  */
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *m_axi_fpd;
@@ -111,6 +116,12 @@ public:
 
 	sc_vector<sc_signal<bool> > pl2ps_irq;
 	sc_vector<sc_signal<bool> > pl_reset;
+
+	/*
+	 * User-defined ports.
+	 */
+	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *user_master[VERSAL_NUM_USER_PORTS];
+	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *user_slave[VERSAL_NUM_USER_PORTS];
 
 	xilinx_versal(sc_core::sc_module_name name, const char *sk_descr,
 			Iremoteport_tlm_sync *sync = NULL,
