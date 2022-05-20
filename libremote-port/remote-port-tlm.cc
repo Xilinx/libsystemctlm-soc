@@ -258,7 +258,6 @@ static void *thread_trampoline(void *arg) {
 void remoteport_tlm::rp_sk_open(void)
 {
 	if (fd == -1) {
-		printf("open socket\n");
 		this->fd = sk_open(sk_descr);
 		if (this->fd == -1) {
 			if (sk_descr) {
