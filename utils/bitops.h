@@ -26,6 +26,28 @@
 #ifndef BITOPS_H__
 #define BITOPS_H__
 
+static inline uint32_t bitops_mask32(unsigned int bitlen)
+{
+	assert(bitlen <= 32);
+
+	if (bitlen == 32)
+		return ~0;
+
+	return (1ULL << bitlen) - 1;
+}
+
+static inline uint32_t bitops_field32(uint32_t val,
+				      unsigned int bit, unsigned int len)
+{
+	uint32_t r;
+
+	assert(bit < 32);
+	assert(len <= 32);
+
+	r = val >> bit;
+	return r & bitops_mask32(len);
+}
+
 static inline uint64_t bitops_mask64(unsigned int start, unsigned int len)
 {
 	uint64_t v;
