@@ -49,7 +49,7 @@ xilinx_mrmac::xilinx_mrmac(sc_core::sc_module_name name) :
 	phy_rx_socket("phy_rx_socket"),
 	reg_socket("reg_socket"),
 	rst("rst"),
-	rb("regs", mrmac_reginfo),
+	rb("regs", mrmac_reginfo, true),
 	rxfifo("rxfifo", 2),
 	txpos(0)
 {
