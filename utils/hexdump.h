@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void hexdump(const char *prefix, unsigned char *buf, size_t len)
+static inline void hexdump(const char *prefix, unsigned char *buf, size_t len)
 {
         unsigned char *u8 = buf;
         size_t i;
