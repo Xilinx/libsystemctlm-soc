@@ -36,6 +36,7 @@ def pytest_configure(config):
 	config.addinivalue_line("markers" ,"checker: A protocol checker")
 	config.addinivalue_line("markers" ,"examples: Example setups")
 	config.addinivalue_line("markers" ,"hw_bridge: A HW bridge / transactor")
+	config.addinivalue_line("markers" ,"mrmac: Xilinx MRMAC")
 	config.addinivalue_line("markers" ,"pcie: PCI-express")
 	config.addinivalue_line("markers" ,"tg: A traffic generator")
 
