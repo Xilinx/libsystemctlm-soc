@@ -189,6 +189,10 @@ private:
 	// exclusive and was processed as an exclusive transaction.
 	bool exclusive_handled;
 
+	//
+	// This is set if the access targets the IO address space
+	//
+	bool IO_access;
 public:
 	PROP_GETSET_GEN(secure, bool, true);
 	PROP_GETSET_GEN(master_id, uint64_t, 0);
@@ -205,6 +209,7 @@ public:
 	PROP_GETSET_GEN(qos, uint8_t, 0);
 	PROP_GETSET_GEN(region, uint8_t, 0);
 	PROP_GETSET_GEN(exclusive_handled, bool, false);
+	PROP_GETSET_GEN(IO_access, bool, false);
 
 	genattr_bus() {
 		set_secure();
@@ -222,6 +227,7 @@ public:
 		set_qos();
 		set_region();
 		set_exclusive_handled();
+		set_IO_access();
 	}
 
 	// Compatibility layer for older versions and other frameworks.
