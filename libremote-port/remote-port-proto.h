@@ -162,6 +162,11 @@ enum {
     RP_BUS_ATTR_PHYS_ADDR  =  (1 << 3),
 
     /*
+     * The access targets the I/O address space.
+     */
+    RP_BUS_ATTR_IO_ACCESS  =  (1 << 4),
+
+    /*
      * Bits [11:8] are allocated for storing transaction response codes.
      * These new response codes are backward compatible as existing
      * implementations will not set/read these bits.
