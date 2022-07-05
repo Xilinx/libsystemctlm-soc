@@ -73,6 +73,7 @@ int remoteport_tlm_memory_master::rp_bus_access(struct rp_pkt &pkt,
 	genattr->set_posted(pkt.hdr.flags & RP_PKT_FLAGS_posted);
 	genattr->set_eop(pkt.busaccess.attributes & RP_BUS_ATTR_EOP);
 	genattr->set_secure(pkt.busaccess.attributes & RP_BUS_ATTR_SECURE);
+	genattr->set_IO_access(pkt.busaccess.attributes & RP_BUS_ATTR_IO_ACCESS);
 	genattr->set_master_id(pkt.busaccess.master_id);
 	tr.set_extension(genattr);
 
