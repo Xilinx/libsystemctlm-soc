@@ -414,14 +414,15 @@ public:
 		GEN_FIELD_FUNCS(addr_32_2, 2, 30); // Get addr_32_2 from u32
 
 		//
-		// Generates 3DW header
+		// Generates 3DW header if address does not use the upper 32
+		// bits, otherwise it generates a 4 DW header
 		//
 		TLP_Mem(tlm::tlm_generic_payload *gp) :
 			TLPHdr_Base(gp),
 			m_tlp_data(nullptr),
 			m_tlp_dw_len(0)
 		{
-			uint64_t addr = static_cast<uint32_t>(gp->get_address());
+			uint64_t addr = gp->get_address();
 			uint32_t fmt = gp->is_write() ?
 					FMT_3DW_WithData : FMT_3DW_NoData;
 			uint32_t firstDWBE = 0;
@@ -432,6 +433,16 @@ public:
 			uint32_t masterID = 0;
 			uint32_t txID = 0;
 			uint32_t dlen = gp->get_data_length()/4;
+			bool gen4DWhdr = (addr >> 32) ?
+                                         true : false; // Any upper bit set
+
+			if (gen4DWhdr) {
+				fmt = gp->is_write() ?
+					FMT_4DW_WithData : FMT_4DW_NoData;
+			} else {
+				fmt = gp->is_write() ?
+					FMT_3DW_WithData : FMT_3DW_NoData;
+			}
 
 			if (gp->get_data_length() % 4) {
 				//
@@ -510,6 +521,12 @@ public:
 			// Bits [127:96] on the 4DW header
 			// Bits [95:64] on the 3DW header
 			//
+			if (gen4DWhdr) {
+				//
+				// Upper 32 bits of the addr
+				//
+				m_hdr.push_back(addr >> 32);
+			}
 			addr = get_addr_32_2(addr & 0xFFFFFFFF);
 			m_hdr.push_back(set_4DWHdr_addr_31_2(addr) |
 					set_4DWHdr_ph(0));
