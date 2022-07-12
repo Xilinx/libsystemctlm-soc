@@ -52,6 +52,7 @@ public:
 		mem_init_socket("mem-init-socket"),
 		io_init_socket("io-init-socket"),
 		msg_init_socket("msg-init-socket"),
+		brdg_dma_tgt_socket("brdg-dma-tgt-socket"),
 
 		brdg_fwd_tgt_socket("brdg-fwd-tgt-socket"),
 		brdg_fwd_init_socket("brdg-fwd-init-socket"),
@@ -62,6 +63,13 @@ public:
 		mem_init_socket.bind(tlm2tlp_brdg.mem_tgt_socket);
 		io_init_socket.bind(tlm2tlp_brdg.io_tgt_socket);
 		msg_init_socket.bind(tlm2tlp_brdg.msg_tgt_socket);
+
+		//
+		// Setup DMA fwd path (tlm2tlp_brdg -> upstream to host)
+		//
+		tlm2tlp_brdg.dma_init_socket.bind(brdg_dma_tgt_socket);
+		brdg_dma_tgt_socket.register_b_transport(
+			this, &pcie_root_port::brdg_dma_b_transport);
 
 		//
 		// Setup TLP Tx fwd path (tlm2tlp_brdg -> pcie-root-port)
@@ -125,6 +133,14 @@ private:
 	}
 
 	//
+	// Forward DMA requests received from tlm2tlp_bridge
+	//
+	void brdg_dma_b_transport(tlm::tlm_generic_payload& trans,
+					sc_time& delay)
+	{
+		dma->b_transport(trans, delay);
+	}
+	//
 	// Wrap the tlm2tlp-bridge in this class
 	//
 	// Internal TLM connections (input to the tlm2tlp_bridge)
@@ -133,6 +149,7 @@ private:
 	tlm_utils::simple_initiator_socket<pcie_root_port> mem_init_socket;
 	tlm_utils::simple_initiator_socket<pcie_root_port> io_init_socket;
 	tlm_utils::simple_initiator_socket<pcie_root_port> msg_init_socket;
+	tlm_utils::simple_target_socket<pcie_root_port> brdg_dma_tgt_socket;
 	//
 	// Internal TLP sockets forwarding to/from the tlm2tlp_bridge
 	//
