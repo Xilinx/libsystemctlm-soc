@@ -303,15 +303,19 @@ public:
 			//
 			dlen = (gp->get_data_length() < 4) ? gp->get_data_length() : 4;
 			if (be && be_len) {
+				unsigned int start_be_bit = get_ECAMAddr_BE(addr);
+
 				for (unsigned int i = 0; i < dlen; i++) {
 					uint8_t b = be[i % be_len];
 					if (b == TLM_BYTE_ENABLED) {
-						 firstDWBE |= 1 << i;
+						 firstDWBE |= 1 << (start_be_bit + i);
 					}
 				}
 			} else {
+				unsigned int start_be_bit = get_ECAMAddr_BE(addr);
+
 				for (unsigned int i = 0; i < dlen; i++) {
-					 firstDWBE |= 1 << i;
+					 firstDWBE |= 1 << (start_be_bit + i);
 				}
 			}
 			m_hdr.push_back(
