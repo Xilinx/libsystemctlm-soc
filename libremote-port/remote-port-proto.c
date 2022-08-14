@@ -54,8 +54,18 @@
 #    define be64toh(x) _byteswap_uint64(x)
 #    define be32toh(x) _byteswap_ulong(x)
 #    define be16toh(x) _byteswap_ushort(x)
-#endif
+#elif defined(__APPLE__)
+#  include <libkern/OSByteOrder.h>
 
+/* We assume little endian. */
+#  define htobe64(x) OSSwapHostToBigInt64(x)
+#  define htobe32(x) OSSwapHostToBigInt32(x)
+#  define htobe16(x) OSSwapHostToBigInt16(x)
+
+#  define be64toh(x) OSSwapBigToHostInt64(x)
+#  define be32toh(x) OSSwapBigToHostInt32(x)
+#  define be16toh(x) OSSwapBigToHostInt16(x)
+#endif
 /* Fallback for ancient Linux systems.  */
 #ifndef htobe64
 #  include <byteswap.h>
