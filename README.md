@@ -1,5 +1,3 @@
-![Xilinx Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Xilinx_logo_2008.svg/320px-Xilinx_logo_2008.svg.png)
-
 # LibSystemCTLM-SoC
 
 This library contains various SystemC/TLM-2.0 modules that enable co-simulation of Xilinx QEMU, SystemC/TLM-2.0 models and RTL.
