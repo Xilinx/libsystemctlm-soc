@@ -155,7 +155,6 @@ int rp_decode_payload(struct rp_pkt *pkt)
         assert(pkt->hdr.len >= sizeof pkt->busaccess - sizeof pkt->hdr);
         pkt->busaccess.timestamp = be64toh(pkt->busaccess.timestamp);
         pkt->busaccess.addr = be64toh(pkt->busaccess.addr);
-        pkt->busaccess.master_id = be16toh(pkt->busaccess.master_id);
         pkt->busaccess.attributes = be64toh(pkt->busaccess.attributes);
         pkt->busaccess.len = be32toh(pkt->busaccess.len);
         pkt->busaccess.width = be32toh(pkt->busaccess.width);
