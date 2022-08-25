@@ -967,6 +967,20 @@ public:
 		transmitTLP(reinterpret_cast<TLPHdr_Base*>(&tlp), delay);
 	}
 
+	void transmitCplD(tlm::tlm_generic_payload& trans, sc_time& delay)
+	{
+		TLP_Cpl tlp(&trans);
+
+		tlp.ByteSwap();
+		init_socket->b_transport(*tlp.GetTLPGP(), delay);
+
+		//
+		// Wait for the delay here (and allow the TLP to get processed)
+		//
+		wait(delay);
+		delay = SC_ZERO_TIME;
+	}
+
 	void cfg_b_transport(tlm::tlm_generic_payload& trans,
 			sc_time& delay)
 	{
@@ -1104,7 +1118,7 @@ public:
 		//
 		// transmit the DMA read completion
 		//
-		transmit<TLP_Cpl>(gp, delay);
+		transmitCplD(gp, delay);
 	}
 
 	void ProcessWriteDMA(TLP_Mem *t)
