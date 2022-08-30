@@ -243,7 +243,7 @@ void xilinx_mcdma::dma_thread(void)
 		/* MM2S.  */
 		for (ch = 0; ch < num_channels; ch++) {
 			int ch_offset = CH_OFFSET(ch);
-			bool tx_sof, tx_eof;
+			bool tx_eof;
 			unsigned int tmp;
 			int len;
 			mm2s_bd bd;
@@ -275,7 +275,6 @@ void xilinx_mcdma::dma_thread(void)
 				continue;
 			}
 
-			tx_sof = bd.ctrl & (1U << 31);
 			tx_eof = bd.ctrl & (1U << 30);
 			len = bd.ctrl & bitops_mask64(0, 26);
 			dma_load(buf, bd.buffer, len);
