@@ -158,7 +158,7 @@ public:
 	void reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay) {
 		unsigned char *data = tr.get_data_ptr();
 		int len = tr.get_data_length();
-		T val;
+		T val = 0;
 
 		if (sizeof val != len) {
 			tr.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
