@@ -69,7 +69,7 @@ xilinx_mcdma::xilinx_mcdma(sc_module_name name, int num_channels)
 	  num_channels(num_channels),
 	  rb("rb", mcdma_reginfo)
 {
-	unsigned int ch;
+	int ch;
 
 	for (ch = 0; ch < num_channels; ch++) {
 		s2mm_stream_socket[ch].register_b_transport(this, &xilinx_mcdma::stream_b_transport, ch);
