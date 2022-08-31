@@ -528,7 +528,6 @@ public:
 		}
 	}
 
-private:
 	class HandshakeMonitor
 	{
 	public:
@@ -620,6 +619,7 @@ private:
 		uint64_t m_max_clks;
 	};
 
+private:
 	bool in_list(std::list<uint32_t>& l, uint32_t id)
 	{
 		for (typename std::list<uint32_t>::iterator it = l.begin();
