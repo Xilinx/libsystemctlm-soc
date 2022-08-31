@@ -59,7 +59,12 @@ public:
 		// Some IOMMUs have a smaller address space than the CPU.
 		// Use a 1:1 low-mem mapping.
 		if (dev) {
+#ifdef MAP_32BIT
 			flags |= MAP_32BIT;
+#else
+			// FIXME: Can we ask the kernel for memory that works
+			// for a given vfio-dev?
+#endif
 		}
 
 		m = mmap(0, map_size * 2, PROT_READ | PROT_WRITE, flags, 0, 0);
