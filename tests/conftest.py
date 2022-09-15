@@ -39,4 +39,5 @@ def pytest_configure(config):
 	config.addinivalue_line("markers" ,"mrmac: Xilinx MRMAC")
 	config.addinivalue_line("markers" ,"pcie: PCI-express")
 	config.addinivalue_line("markers" ,"tg: A traffic generator")
+	config.addinivalue_line("markers" ,"qdma: Xilinx QDMA")
 

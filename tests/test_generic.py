@@ -81,6 +81,8 @@ hwb_pcie_tests = ['./rtl-bridges/pcie/{0}'.format(i) for i in hwb_pcie_testnames
 
 mrmac_tests = ['./soc/net/ethernet/check-mrmac']
 
+qdma_tests = ['./soc/pci/xilinx/check-qdma']
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -237,5 +239,11 @@ def test_hwb_pcie_tests(filename):
 @pytest.mark.mrmac
 @pytest.mark.parametrize("filename", mrmac_tests)
 def test_mrmac_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.qdma
+@pytest.mark.parametrize("filename", qdma_tests)
+def test_qdma_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
