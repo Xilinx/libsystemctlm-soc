@@ -8,6 +8,16 @@ FILE2=$TEMP/test2.txt
 FILE3=$TEMP/test_8k.txt
 FILE4=$TEMP/test3.txt
 
+# Use the device connected to the second PCIEHost by default which is the one
+# used in the versal-cpie-cpm5 demo.  This might change in case the qdma
+# device is wired directly to a remote port.
+DEVICE="${DEVICE:-02}"
+SYSFS_QMAX=/sys/bus/pci/devices/0000:${DEVICE}:00.0/qdma/qmax
+DRVDEV=qdma${DEVICE}000
+CHRDEV=/dev/${DRVDEV}-MM-0
+DIRMODE=${DEVICE}:0:2
+INDIRMODE=${DEVICE}:0:3
+
 # Regression test for the QEMU + xxx + QDMA device.
 #
 # This requires a little test harness in order to work:
@@ -16,23 +26,38 @@ FILE4=$TEMP/test3.txt
 #     with the 4K keyhole.
 
 ################################################################################
+# TEST0: Check that the device is correctly detected by the driver.
+################################################################################
+echo "TEST0: Load the driver"
+insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=${DIRMODE}
+echo "TEST0: Check that the SYSFS exists."
+if [ ! -f ${SYSFS_QMAX} ]; then
+    echo "FAILED: cannot continue: check DEVICE variable"
+    exit 1
+else
+    echo "SUCCESS"
+fi
+
+echo "TEST0: Unloading the driver"
+rmmod qdma-pf.ko
+
+################################################################################
 # TEST1: Load simple data in Direct Interrupt Mode.
 ################################################################################
 echo "TEST1: Load the driver in Direct Interrupt Mode"
-insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=1:0:2 \
-       config_bar=1:0:0 master_pf=1:0
+insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=${DIRMODE}
 echo "TEST1: Setting the number of queue"
-echo 1 > /sys/bus/pci/devices/0000:02:00.0/qdma/qmax
+echo 1 > ${SYSFS_QMAX}
 echo "TEST1: Configuring H2C and C2H mm queues"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q add idx 0 mode mm dir h2c
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q add idx 0 mode mm dir c2h
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q start idx 0 dir c2h
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q start idx 0 dir h2c
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir h2c
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir h2c
 echo "TEST1: Sending 1KB to the device @0x102100000"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d /dev/qdma02000-MM-0 -f \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d ${CHRDEV} -f \
 						$FILE1 -s 1024 -a 0x102100000
 echo "TEST1: Getting 1KB from the device @0x102100000"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d /dev/qdma02000-MM-0 -f \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d ${CHRDEV} -f \
 						$FILE2 -s 1024 -a 0x102100000
 echo "TEST1: Unloading the driver"
 rmmod qdma-pf.ko
@@ -53,20 +78,19 @@ rm $FILE2
 # TEST2: Load simple data in Indirect Interrupt Mode.
 ################################################################################
 echo "TEST2: Load the driver in Indirect Interrupt Mode"
-insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=1:0:3 \
-       config_bar=1:0:0 master_pf=1:0
+insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=${INDIRMODE}
 echo "TEST2: Setting the number of queue"
-echo 1 > /sys/bus/pci/devices/0000:02:00.0/qdma/qmax
+echo 1 > ${SYSFS_QMAX}
 echo "TEST2: Configuring H2C and C2H mm queues"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q add idx 0 mode mm dir h2c
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q add idx 0 mode mm dir c2h
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q start idx 0 dir c2h
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q start idx 0 dir h2c
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir h2c
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir h2c
 echo "TEST2: Sending 1KB to the device @0x102100000"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d /dev/qdma02000-MM-0 -f \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d ${CHRDEV} -f \
 						$FILE1 -s 1024 -a 0x102100000
 echo "TEST2: Getting 1KB from the device @0x102100000"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d /dev/qdma02000-MM-0 -f \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d ${CHRDEV} -f \
 						$FILE2 -s 1024 -a 0x102100000
 echo "TEST2: Unloading the driver"
 rmmod qdma-pf.ko
@@ -89,21 +113,20 @@ rm $FILE2
 #        sequential descriptor.  The driver will cut the transfer in two part.
 ################################################################################
 echo "TEST3: Load the driver in Direct Interrupt Mode"
-insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=1:0:2 \
-       config_bar=1:0:0 master_pf=1:0
+insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko mode=${DIRMODE}
 echo "TEST3: Setting the number of queue"
-echo 1 > /sys/bus/pci/devices/0000:02:00.0/qdma/qmax
+echo 1 > ${SYSFS_QMAX}
 echo "TEST3: Configuring H2C and C2H mm queues"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q add idx 0 mode mm dir h2c
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q add idx 0 mode mm dir c2h
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q start idx 0 dir c2h
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl qdma02000 q start idx 0 dir h2c \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir h2c
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir h2c \
 					  aperture_sz 4096
 echo "TEST3: Send 8KB to the device @0x102100000"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d /dev/qdma02000-MM-0 -f \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d ${CHRDEV} -f \
 						$FILE3 -s 8192 -a 0x102100000
 echo "TEST3: Get last written 4KB from the device @0x102100000"
-$DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d /dev/qdma02000-MM-0 -f \
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d ${CHRDEV} -f \
 						$FILE2 -s 4096 -a 0x102100000
 echo "TEST3: Unloading the driver"
 rmmod qdma-pf.ko
