@@ -32,7 +32,7 @@
 #include "tlm.h"
 #include "soc/pci/core/pci-device-base.h"
 
-#define NR_QDMA_IRQ       8
+#define NR_QDMA_IRQ      8
 
 /*
  * IP configuration:
@@ -267,6 +267,31 @@ private:
 
 	/* Current index in the interrupt ring.  */
 	int irq_ring_idx[QDMA_QUEUE_COUNT];
+
+	/* MSI-X handling.  */
+	enum msix_status { QDMA_MSIX_LOW = 0, QDMA_MSIX_HIGH }
+		msix_status[NR_QDMA_IRQ];
+	sc_event msix_trig[NR_QDMA_IRQ];
+
+	void msix_strobe(unsigned int msix_id)
+	{
+		sc_event *msix_trig;
+
+		/* Sanity check on the number of queue.	 */
+		if (!(msix_id < NR_QDMA_IRQ)) {
+			SC_REPORT_ERROR("qdma", "invalid MSIX ID");
+		}
+
+		/* Each queue has it's own event to be triggered.  */
+		msix_trig = &this->msix_trig[msix_id];
+		while (1) {
+			/* Waiting for an MSIX to be triggered.	 */
+			wait(*msix_trig);
+			this->irq[msix_id].write(true);
+			wait(10, SC_NS);
+			this->irq[msix_id].write(false);
+		}
+	}
 
 	/* Context commands.  */
 	enum {
@@ -515,16 +540,6 @@ private:
 
 		sw_ctx->pidx = pidx;
 
-		if (sw_ctx->pidx == hw_ctx->hw_cidx) {
-			if (sw_ctx->int_aggr) {
-				this->send_msix(intr_ctx->vector, false);
-			} else if (sw_ctx->msix_vector >=
-					QDMA_PF0_FIRST_DATA_MSIX_VECTOR) {
-				this->send_msix(sw_ctx->msix_vector, false);
-			}
-			return;
-		}
-
 		/* Running through the remaining descriptors from sw_idx to
 		 * hw_idx.  */
 		while (sw_ctx->pidx > hw_ctx->hw_cidx) {
@@ -605,7 +620,7 @@ private:
 				this->write_irq_ring_entry(qid, &entry);
 
 				/* Send the MSI-X.  */
-				this->send_msix(intr_ctx->vector, true);
+				this->msix_trig[intr_ctx->vector].notify();
 			} else {
 				/* Direct interrupt: legacy or MSI-X.  */
 				/* Pends an IRQ for the driver.  */
@@ -614,30 +629,13 @@ private:
 					R_GLBL_INTR_CFG_INT_PEND;
 				this->update_legacy_irq();
 #endif
-
-				if (sw_ctx->msix_vector >=
-					QDMA_PF0_FIRST_DATA_MSIX_VECTOR) {
-					this->send_msix(sw_ctx->msix_vector,
-							true);
-				}
+				/* Send the MSI-X.  */
+				this->msix_trig[sw_ctx->msix_vector].notify();
 			}
 		}
 	}
 
-	/* Send an MSI-X on the @vec.  */
-	void send_msix(uint32_t vec, bool val)
-	{
-#ifdef QDMA_SOFT_IP
-		if (this->regs.u32[R_GLBL_INTR_CFG] & R_GLBL_INTR_CFG_INT_EN) {
-			return;
-		}
-#endif
-
-		/* Value doesn't matter here, but must be != 0.  */
-		this->irq[vec].write(val);
-	}
-
-	/* Update the IRQ, or MSI-X depending on the configuration.  */
+	/* Update the IRQ.  */
 	void update_legacy_irq(void)
 	{
 #ifndef QDMA_SOFT_IP
@@ -885,6 +883,14 @@ err:
 			<< QDMA_USER_BAR_ID;
 	}
 
+	void init_msix()
+	{
+		for (int i = 0; i < NR_QDMA_IRQ; i++) {
+			sc_spawn(sc_bind(&qdma_cpm5::msix_strobe,
+				 this,
+				 i));
+		}
+	}
 public:
 	SC_HAS_PROCESS(qdma_cpm5);
 	sc_in<bool> rst;
@@ -914,6 +920,7 @@ public:
 						&qdma_cpm5::config_bar_b_transport);
 		user_bar.register_b_transport(this,
 			&qdma_cpm5::axi_master_light_bar_b_transport);
+		this->init_msix();
 	}
 };
 
