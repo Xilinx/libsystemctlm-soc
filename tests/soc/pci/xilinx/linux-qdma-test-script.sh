@@ -25,6 +25,10 @@ INDIRMODE=${DEVICE}:0:3
 #     mapped at 0x102100000 on the "card" interface.  This acts as a dummy SBI
 #     with the 4K keyhole.
 
+# Create some dummy files for the tests below.
+dd if=/dev/random of=$FILE1 bs=1K count=1
+dd if=/dev/random of=$FILE3 bs=1K count=8
+
 ################################################################################
 # TEST0: Check that the device is correctly detected by the driver.
 ################################################################################
@@ -66,7 +70,8 @@ diff $FILE1 $FILE2 > /dev/null
 
 if [ $? -gt 0 ]
 then
-    echo "FAILED"
+    echo "FAILED: file are not identical!"
+    exit 1
 else
     echo "SUCCESS"
 fi
@@ -99,7 +104,8 @@ diff $FILE1 $FILE2 > /dev/null
 
 if [ $? -gt 0 ]
 then
-    echo "FAILED"
+    echo "FAILED: files are not identical!"
+    exit 1
 else
     echo "SUCCESS"
 fi
@@ -137,7 +143,8 @@ if [ $? -gt 0 ]
 then
     echo "SUCCESS"
 else
-    echo "FAILED"
+    echo "FAILED: file are identical!"
+    exit 1
 fi
 
 dd if=$FILE3 of=$FILE4 bs=4k count=1 skip=1 &> /dev/null
@@ -147,6 +154,7 @@ diff $FILE4 $FILE2 > /dev/null
 if [ $? -gt 0 ]
 then
     echo "FAILED"
+    exit 1
 else
     echo "SUCCESS"
 fi
