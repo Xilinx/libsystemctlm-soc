@@ -197,8 +197,8 @@ private:
 		 * BASE + CIDX.  */
 		uint32_t desc_base_low;
 		uint32_t desc_base_high;
-		/* MSI-X vector index.  */
-		uint16_t msix_vector : 11;
+		/* MSI-X vector (direct irq), IRQ Ring index (indirect irq).  */
+		uint16_t vec : 11;
 		uint16_t int_aggr : 1;
 		uint16_t dis_intr_on_vf : 1;
 		uint16_t virtio_en : 1;
@@ -265,8 +265,8 @@ private:
 		uint32_t data[QDMA_U32_PER_CONTEXT];
 	} queue_contexts[QDMA_QUEUE_COUNT][QDMA_MAX_CONTEXT_SELECTOR];
 
-	/* Current index in the interrupt ring.  */
-	int irq_ring_idx[QDMA_QUEUE_COUNT];
+	/* Current entry in a given interrupt ring.  */
+	int irq_ring_entry_idx[QDMA_QUEUE_COUNT];
 
 	/* MSI-X handling.  */
 	enum msix_status { QDMA_MSIX_LOW = 0, QDMA_MSIX_HIGH }
@@ -377,9 +377,9 @@ private:
 
 	/* This one diserve a special treatment, because it has some side
 	 * effects.  */
-	void handle_irq_ctxt_cmd(uint32_t qid, uint32_t cmd) {
+	void handle_irq_ctxt_cmd(uint32_t ring_idx, uint32_t cmd) {
 		struct intr_ctx *intr_ctx =
-			(struct intr_ctx *)this->queue_contexts[qid]
+			(struct intr_ctx *)this->queue_contexts[ring_idx]
 						[QDMA_CTXT_SELC_INT_COAL].data;
 
 		switch (cmd) {
@@ -401,7 +401,8 @@ private:
 					if (intr_ctx->valid && !valid) {
 						/* Interrupt context validated,
 						 * reset the ring index.  */
-						this->irq_ring_idx[qid] = 0;
+						this->irq_ring_entry_idx
+						  [ring_idx] = 0;
 					}
 				}
 				break;
@@ -502,7 +503,6 @@ private:
 	{
 		struct sw_ctx *sw_ctx;
 		struct hw_ctx *hw_ctx;
-		struct intr_ctx *intr_ctx;
 		uint16_t pidx;
 		uint8_t desc[QDMA_DESC_MAX_SIZE];
 		int desc_size;
@@ -529,9 +529,6 @@ private:
 			(struct hw_ctx *)this->queue_contexts[qid]
 			[h2c ? QDMA_CTXT_SELC_DEC_HW_H2C :
 				QDMA_CTXT_SELC_DEC_HW_C2H].data;
-		intr_ctx =
-			(struct intr_ctx *)this->queue_contexts[qid]
-			[QDMA_CTXT_SELC_INT_COAL].data;
 		pidx = this->regs.u32
 			[h2c ? R_DMAP_SEL_H2C_DSC_PIDX(qid) :
 				R_DMAP_SEL_C2H_DSC_PIDX(qid)] & 0xffff;
@@ -593,7 +590,15 @@ private:
 			}
 
 			if (sw_ctx->int_aggr) {
+				struct intr_ctx *intr_ctx;
 				struct intr_ring_entry entry;
+
+				/* Each queue has a programmable irq ring
+				 * associated to it.  */
+				intr_ctx =
+				  (struct intr_ctx *)this->queue_contexts
+				      [sw_ctx->vec]
+				      [QDMA_CTXT_SELC_INT_COAL].data;
 
 				/* Update the PIDX in the Interrupt Context
 				 * Structure.  */
@@ -617,9 +622,10 @@ private:
 				entry.pidx = intr_ctx->pidx;
 
 				/* Write it to the buffer.  */
-				this->write_irq_ring_entry(qid, &entry);
+				this->write_irq_ring_entry(sw_ctx->vec,
+							   &entry);
 
-				/* Send the MSI-X.  */
+				/* Send the MSI-X associated to the ring.  */
 				this->msix_trig[intr_ctx->vector].notify();
 			} else {
 				/* Direct interrupt: legacy or MSI-X.  */
@@ -630,7 +636,7 @@ private:
 				this->update_legacy_irq();
 #endif
 				/* Send the MSI-X.  */
-				this->msix_trig[sw_ctx->msix_vector].notify();
+				this->msix_trig[sw_ctx->vec].notify();
 			}
 		}
 	}
@@ -699,18 +705,19 @@ err:
 
 	/* Write the IRQ ring entry and increment the ring pointer and the
 	 * color in case of a warp arround.  */
-	void write_irq_ring_entry(uint32_t qid,
-				const struct intr_ring_entry *entry) {
+	void write_irq_ring_entry(uint32_t ring_idx,
+				  const struct intr_ring_entry *entry) {
 		sc_time delay(SC_ZERO_TIME);
 		tlm::tlm_generic_payload trans;
 		uint64_t addr;
 		struct intr_ctx *intr_ctx =
-			(struct intr_ctx *)this->queue_contexts[qid]
+			(struct intr_ctx *)this->queue_contexts[ring_idx]
 			[QDMA_CTXT_SELC_INT_COAL].data;
 
 		/* Compute the address of the entry.  */
 		addr = QDMA_INTR_RING_ENTRY_ADDR(intr_ctx->baddr);
-		addr += QDMA_INTR_RING_ENTRY_SZ * this->irq_ring_idx[qid];
+		addr += QDMA_INTR_RING_ENTRY_SZ
+		  * this->irq_ring_entry_idx[ring_idx];
 
 		trans.set_command(tlm::TLM_WRITE_COMMAND);
 		trans.set_address(addr);
@@ -725,12 +732,12 @@ err:
 					"error writing to the IRQ ring");
 		}
 
-		this->irq_ring_idx[qid]++;
-		if (this->irq_ring_idx[qid] * QDMA_INTR_RING_ENTRY_SZ
+		this->irq_ring_entry_idx[ring_idx]++;
+		if (this->irq_ring_entry_idx[ring_idx] * QDMA_INTR_RING_ENTRY_SZ
 				== (1 + intr_ctx->page_size) * 4096) {
 			/* IRQ ring wrapped, swap the color in the IRQ context.
 			 */
-			this->irq_ring_idx[qid] = 0;
+			this->irq_ring_entry_idx[ring_idx] = 0;
 			intr_ctx->color = intr_ctx->color ? 0 : 1;
 		}
 	}
