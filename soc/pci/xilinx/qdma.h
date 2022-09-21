@@ -26,6 +26,12 @@
 #ifndef __PCI_QDMA_H__
 #define __PCI_QDMA_H__
 
+/* Generate the different structures for the contexts.  */
+#define QDMA_CPM4
+#include "qdma-ctx.inc"
+#undef QDMA_CPM4
+#include "qdma-ctx.inc"
+
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
 #include "systemc.h"
@@ -67,7 +73,9 @@
  *   1: Versal CPM4.
  *   2: Versal CPM5.
  */
-#define QDMA_DEVICE_ID 2
+#define QDMA_SOFT_DEVICE_ID 0
+#define QDMA_CPM4_DEVICE_ID 1
+#define QDMA_CPM5_DEVICE_ID 2
 
 /*
  * QDMA_VERSAL_IP:
@@ -96,8 +104,9 @@
  * Versal IP:   23 .. 20
  * RTL Version: 19 .. 16
  */
-#define QDMA_VERSION (QDMA_DEVICE_ID << 28 ) + (QDMA_VIVADO_REL << 24) + \
-  (QDMA_VERSAL_IP << 20)
+#define QDMA_VERSION_FIELD(devid, vivado, versalip) ((devid << 28 )     \
+						     + (vivado << 24)	\
+						     + (versalip << 20))
 
 /* Number of queue, as described in the QDMA_GLBL2_CHANNEL_QDMA_CAP register
    @0x120.  */
@@ -129,11 +138,16 @@
 #define R_GLBL_INTR_CFG_INT_PEND   (1UL << 1)
 #define R_GLBL_INTR_CFG_INT_EN     (1UL << 0)
 #define R_IND_CTXT_DATA            (0x804 >> 2)
-#define R_IND_CTXT_CMD             (0x844 >> 2)
-#define R_DMAP_SEL_INT_CIDX(n)     ((0x18000 + (0x10 * n)) >> 2)
-#define R_DMAP_SEL_H2C_DSC_PIDX(n) ((0x18004 + (0x10 * n)) >> 2)
-#define R_DMAP_SEL_C2H_DSC_PIDX(n) ((0x18008 + (0x10 * n)) >> 2)
-#define R_DMAP_SEL_CMPT_CIDX(n)    ((0x1800C + (0x10 * n)) >> 2)
+/* Those registers are not at the same place for CPM4.  */
+#define R_IND_CTXT_CMD(v)             ((v ? 0x824 : 0x844) >> 2)
+#define R_DMAP_SEL_INT_CIDX(v, n)     (((v ? 0x6400 : 0x18000) \
+					+ (0x10 * n)) >> 2)
+#define R_DMAP_SEL_H2C_DSC_PIDX(v, n) (((v ? 0x6404 : 0x18004) \
+					+ (0x10 * n)) >> 2)
+#define R_DMAP_SEL_C2H_DSC_PIDX(v, n) (((v ? 0x6408 : 0x18008) \
+					+ (0x10 * n)) >> 2)
+#define R_DMAP_SEL_CMPT_CIDX(v, n)    (((v ? 0x640C : 0x1800C) \
+					+ (0x10 * n)) >> 2)
 
 /* About MSIX Vector mapping:
  *
@@ -154,68 +168,15 @@
 #define QDMA_PF0_FIRST_DATA_MSIX_VECTOR (2)
 #endif
 
-class qdma_cpm5 : public sc_module
+template<typename SW_CTX, typename INTR_CTX, typename INTR_RING_ENTRY>
+class qdma : public sc_module
 {
 private:
 	/* Context handling.  */
 
-	/* The per queue SW contexts.  */
-	struct __attribute__((__packed__)) sw_ctx {
-		/* Producer index.  */
-		uint16_t pidx;
-		/* The queue is allowed to raise an IRQ.  */
-		uint16_t irq_arm : 1;
-		uint16_t fn_id : 12;
-		uint16_t rsv : 3;
-		/* Queue is enabled.  */
-		uint16_t enabled : 1;
-		uint16_t fcrd_en : 1;
-		uint16_t wbi_chk : 1;
-		uint16_t wbi_int_en : 1;
-		uint16_t at : 1;
-		uint16_t fetch_max : 4;
-		uint16_t reserved2 : 3;
-		/* Number of the descriptor for this context.  */
-		uint16_t ring_size : 4;
-		/* desc_size: 0: 8 bytes ... 3: 64 bytes.  */
-		uint16_t desc_size : 2;
-		uint16_t bypass : 1;
-		/* 0.  */
-		uint16_t mm_chan : 1;
-		/* Write to the status descriptor upon status update.  */
-		uint16_t writeback_en : 1;
-		/* Send an irq upon status update.  */
-		uint16_t irq_enabled : 1;
-		uint16_t port_id : 3;
-		uint16_t irq_no_last : 1;
-		uint16_t err : 2;
-		uint16_t err_wb_sent : 1;
-		uint16_t irq_req : 1;
-		uint16_t mrkr : 1;
-		uint16_t is_mm : 1;
-		/* Descriptor base address, descriptor for CIDX will be at
-		 * BASE + CIDX.  */
-		uint32_t desc_base_low;
-		uint32_t desc_base_high;
-		/* MSI-X vector (direct irq), IRQ Ring index (indirect irq).  */
-		uint16_t vec : 11;
-		uint16_t int_aggr : 1;
-		uint16_t dis_intr_on_vf : 1;
-		uint16_t virtio_en : 1;
-		uint16_t pack_byp_out : 1;
-		uint16_t irq_byp : 1;
-		uint16_t host_id : 4;
-		uint16_t pasid_low : 12;
-		uint16_t pasid_high : 10;
-		uint16_t pasid_en : 1;
-		uint16_t virtio_desc_base_low : 12;
-		uint32_t virtio_desc_base_med;
-		uint16_t virtio_desc_base_high : 11;
-	};
-
 	/* The per queue HW contexts.  */
 	struct __attribute__((__packed__)) hw_ctx {
-		/* CIDX of the last fetched descriptor.  */
+		/* CIDX of the last fetched descriptor.	 */
 		uint16_t hw_cidx;
 		/* Credit consumed.  */
 		uint16_t credit_used;
@@ -228,45 +189,10 @@ private:
 		uint8_t rsvd2 : 1;
 	};
 
-	/* Interrupt Aggregation.  */
-
-	/* Interrupt contexts.  */
-	struct __attribute__((__packed__)) intr_ctx {
-		uint32_t valid : 1;
-		uint32_t vector : 11;
-		uint32_t rsvd : 1;
-		uint32_t status : 1;
-		uint32_t color : 1;
-		uint64_t baddr : 52;
-		uint32_t page_size : 3;
-		uint32_t pidx : 12;
-		uint32_t at : 1;
-		uint32_t host_id : 4;
-		uint32_t pasid : 22;
-		uint32_t pasid_en : 1;
-		uint32_t rsvd2 : 4;
-		uint32_t func : 12;
-	};
-
-	/* Interrupt entry as written in the ring.  */
-	struct __attribute__((__packed__)) intr_ring_entry {
-		uint16_t pidx : 16;
-		uint16_t cidx : 16;
-		uint16_t color : 1;
-		uint16_t interrupt_state : 2;
-		uint16_t error : 2;
-		uint32_t rsvd : 1;
-		uint32_t interrupt_type : 1;
-		uint32_t qid : 24;
-		uint32_t coal_color : 1;
-	};
-
+	/* Register area for the contexts described above.  */
 	struct {
 		uint32_t data[QDMA_U32_PER_CONTEXT];
 	} queue_contexts[QDMA_QUEUE_COUNT][QDMA_MAX_CONTEXT_SELECTOR];
-
-	/* Current entry in a given interrupt ring.  */
-	int irq_ring_entry_idx[QDMA_QUEUE_COUNT];
 
 	/* MSI-X handling.  */
 	enum msix_status { QDMA_MSIX_LOW = 0, QDMA_MSIX_HIGH }
@@ -301,7 +227,8 @@ private:
 		QDMA_CTXT_CMD_INV = 3
 	};
 
-	/* Context selectors.  */
+	/* The contexts are indirectly accessed by the driver, also they are
+	 * slightly version dependent (CPM4 vs CPM5).  */
 	enum {
 		QDMA_CTXT_SELC_DEC_SW_C2H = 0,
 		QDMA_CTXT_SELC_DEC_SW_H2C = 1,
@@ -316,7 +243,7 @@ private:
 		QDMA_CTXT_SELC_INT_COAL = 8,
 		QDMA_CTXT_SELC_HOST_PROFILE = 0xA,
 		QDMA_CTXT_SELC_TIMER = 0xB,
-		QDMA_CTXT_SELC_FMAP = 0xC,
+		QDMA_CTXT_SELC_FMAP_QID2VEC = 0xC,
 		QDMA_CTXT_SELC_FNC_STS = 0xD,
 	};
 
@@ -335,7 +262,7 @@ private:
 		/* Find the context data.  */
 		assert(qid < QDMA_QUEUE_COUNT);
 		switch (sel) {
-			case QDMA_CTXT_SELC_FMAP:
+			case QDMA_CTXT_SELC_FMAP_QID2VEC:
 			case QDMA_CTXT_SELC_PFTCH:
 			case QDMA_CTXT_SELC_WRB:
 			case QDMA_CTXT_SELC_DEC_CR_H2C:
@@ -378,9 +305,9 @@ private:
 	/* This one diserve a special treatment, because it has some side
 	 * effects.  */
 	void handle_irq_ctxt_cmd(uint32_t ring_idx, uint32_t cmd) {
-		struct intr_ctx *intr_ctx =
-			(struct intr_ctx *)this->queue_contexts[ring_idx]
-						[QDMA_CTXT_SELC_INT_COAL].data;
+		INTR_CTX *intr_ctx =
+			(INTR_CTX *)this->queue_contexts[ring_idx]
+				[QDMA_CTXT_SELC_INT_COAL].data;
 
 		switch (cmd) {
 			case QDMA_CTXT_CMD_CLR:
@@ -407,7 +334,7 @@ private:
 				}
 				break;
 			case QDMA_CTXT_CMD_INV:
-				/* Drop the valid bit.  */
+				/* Drop the valid bit.	*/
 				intr_ctx->valid = 0;
 				break;
 			default:
@@ -415,7 +342,7 @@ private:
 		}
 	}
 
-	/* Descriptors: for h2c and c2h memory mapped transfer.  */
+	/* Descriptors: for h2c and c2h memory mapped transfer.	 */
 	struct x2c_mm_descriptor {
 		uint64_t src_address : 64;
 		uint64_t byte_count : 28;
@@ -498,10 +425,10 @@ private:
 	}
 
 	/* The driver wrote the @pidx in the update register of the given qid.
-	   Handle the request.  */
+	   Handle the request.	*/
 	void run_mm_dma(int16_t qid, bool h2c)
 	{
-		struct sw_ctx *sw_ctx;
+		SW_CTX *sw_ctx;
 		struct hw_ctx *hw_ctx;
 		uint16_t pidx;
 		uint8_t desc[QDMA_DESC_MAX_SIZE];
@@ -521,17 +448,14 @@ private:
 		}
 
 		/* Compute some useful information from the context.  */
-		sw_ctx =
-			(struct sw_ctx *)this->queue_contexts[qid]
-			[h2c ? QDMA_CTXT_SELC_DEC_SW_H2C :
-				QDMA_CTXT_SELC_DEC_SW_C2H].data;
+		sw_ctx = this->get_software_context(qid, h2c);
 		hw_ctx =
 			(struct hw_ctx *)this->queue_contexts[qid]
 			[h2c ? QDMA_CTXT_SELC_DEC_HW_H2C :
 				QDMA_CTXT_SELC_DEC_HW_C2H].data;
 		pidx = this->regs.u32
-			[h2c ? R_DMAP_SEL_H2C_DSC_PIDX(qid) :
-				R_DMAP_SEL_C2H_DSC_PIDX(qid)] & 0xffff;
+		  [h2c ? R_DMAP_SEL_H2C_DSC_PIDX(this->is_cpm4(), qid) :
+		   R_DMAP_SEL_C2H_DSC_PIDX(this->is_cpm4(), qid)] & 0xffff;
 		desc_size = 8 << sw_ctx->desc_size;
 		ring_size = ring_sizes[sw_ctx->ring_size];
 
@@ -589,15 +513,16 @@ private:
 				continue;
 			}
 
-			if (sw_ctx->int_aggr) {
-				struct intr_ctx *intr_ctx;
-				struct intr_ring_entry entry;
+			if (this->irq_aggregation_enabled(qid, h2c)) {
+				INTR_CTX *intr_ctx;
+				INTR_RING_ENTRY entry;
+				int ring_idx = this->get_vec(qid, h2c);
 
 				/* Each queue has a programmable irq ring
 				 * associated to it.  */
 				intr_ctx =
-				  (struct intr_ctx *)this->queue_contexts
-				      [sw_ctx->vec]
+				  (INTR_CTX *)this->queue_contexts
+				      [ring_idx]
 				      [QDMA_CTXT_SELC_INT_COAL].data;
 
 				/* Update the PIDX in the Interrupt Context
@@ -622,21 +547,20 @@ private:
 				entry.pidx = intr_ctx->pidx;
 
 				/* Write it to the buffer.  */
-				this->write_irq_ring_entry(sw_ctx->vec,
-							   &entry);
+				this->write_irq_ring_entry(ring_idx, &entry);
 
 				/* Send the MSI-X associated to the ring.  */
 				this->msix_trig[intr_ctx->vector].notify();
 			} else {
 				/* Direct interrupt: legacy or MSI-X.  */
-				/* Pends an IRQ for the driver.  */
+				/* Pends an IRQ for the driver.	 */
 #ifdef QDMA_SOFT_IP
 				this->regs.u32[R_GLBL_INTR_CFG] |=
 					R_GLBL_INTR_CFG_INT_PEND;
 				this->update_legacy_irq();
 #endif
 				/* Send the MSI-X.  */
-				this->msix_trig[sw_ctx->vec].notify();
+				this->msix_trig[get_vec(qid, h2c)].notify();
 			}
 		}
 	}
@@ -660,12 +584,12 @@ private:
 		}
 	}
 
-	/* Descriptors.  */
+	/* Descriptors.	 */
 	void fetch_descriptor(uint64_t addr, uint8_t size, uint8_t *data) {
 		sc_time delay(SC_ZERO_TIME);
 		tlm::tlm_generic_payload trans;
 
-		/* Do only 4bytes transactions.  */
+		/* Do only 4bytes transactions.	 */
 		trans.set_command(tlm::TLM_READ_COMMAND);
 		trans.set_data_length(4);
 		trans.set_streaming_width(4);
@@ -704,14 +628,17 @@ err:
 	}
 
 	/* Write the IRQ ring entry and increment the ring pointer and the
-	 * color in case of a warp arround.  */
+	 * color in case of a warp arround.  NOTE: The IRQ context is not queue
+	 * specific, but rather each queue has a ring index which is selecting
+	 * the interrupt context.  In the CPM4 flavour it's defined in the
+	 * qid2vec table.  */
 	void write_irq_ring_entry(uint32_t ring_idx,
-				  const struct intr_ring_entry *entry) {
+				  const INTR_RING_ENTRY *entry) {
 		sc_time delay(SC_ZERO_TIME);
 		tlm::tlm_generic_payload trans;
 		uint64_t addr;
-		struct intr_ctx *intr_ctx =
-			(struct intr_ctx *)this->queue_contexts[ring_idx]
+		INTR_CTX *intr_ctx =
+			(INTR_CTX *)this->queue_contexts[ring_idx]
 			[QDMA_CTXT_SELC_INT_COAL].data;
 
 		/* Compute the address of the entry.  */
@@ -732,11 +659,12 @@ err:
 					"error writing to the IRQ ring");
 		}
 
+		/* Now that the entry is written increment the counter, if
+		 * there is a wrap around, invert the color, so the driver
+		 * doesn't risk to miss / overwrite data.  */
 		this->irq_ring_entry_idx[ring_idx]++;
 		if (this->irq_ring_entry_idx[ring_idx] * QDMA_INTR_RING_ENTRY_SZ
-				== (1 + intr_ctx->page_size) * 4096) {
-			/* IRQ ring wrapped, swap the color in the IRQ context.
-			 */
+		    == (1 + intr_ctx->page_size) * 4096) {
 			this->irq_ring_entry_idx[ring_idx] = 0;
 			intr_ctx->color = intr_ctx->color ? 0 : 1;
 		}
@@ -798,23 +726,28 @@ err:
 		}
 		if (cmd == tlm::TLM_READ_COMMAND) {
 			switch (addr >> 2) {
+				case R_GLBL2_MISC_CAP:
+					v = this->qdma_get_version();
+					break;
 				default:
 					v = this->regs.u32[addr >> 2];
 					break;
 			}
 			memcpy(data, &v, len);
 		} else if (cmd == tlm::TLM_WRITE_COMMAND) {
+			bool done = true;
 			memcpy(&v, data, len);
 
-			switch (addr >> 2) {
-				case R_CONFIG_BLOCK_IDENT:
-				case R_GLBL2_MISC_CAP:
-					/* Read Only register.  */
-					break;
-				case R_DMAP_SEL_INT_CIDX(0) ...
-					R_DMAP_SEL_CMPT_CIDX(QDMA_QUEUE_COUNT):
+			/* There is some differences in the register set for
+			 * the cpm4 flavour, handle those register appart.  */
+			if (this->is_cpm4()) {
+			  switch (addr >> 2) {
+			  case R_DMAP_SEL_INT_CIDX(1, 0) ...
+			    R_DMAP_SEL_CMPT_CIDX(1, QDMA_QUEUE_COUNT):
 				{
-					int qid = (addr - (R_DMAP_SEL_INT_CIDX(0) << 2)) / 0x10;
+					int qid = (addr
+					  - (R_DMAP_SEL_INT_CIDX(1, 0) << 2))
+					  / 0x10;
 
 					this->regs.u32[addr >> 2] = v;
 
@@ -834,23 +767,75 @@ err:
 					}
 					break;
 				}
-				case R_IND_CTXT_CMD:
+			  case R_IND_CTXT_CMD(1):
 					this->handle_ctxt_cmd(v);
 					/* Drop the busy bit.  */
 					this->regs.u32[addr >> 2] =
 							v & 0xFFFFFFFE;
 					break;
-				case R_GLBL_INTR_CFG:
-					/* W1C */
-					if (v & R_GLBL_INTR_CFG_INT_PEND) {
-						v &= ~R_GLBL_INTR_CFG_INT_PEND;
-					}
+				default:
+					done = false;
+					break;
+			  }
+			} else {
+			  switch (addr >> 2) {
+			  case R_DMAP_SEL_INT_CIDX(0, 0) ...
+			    R_DMAP_SEL_CMPT_CIDX(0, QDMA_QUEUE_COUNT):
+				{
+					int qid = (addr
+					  - (R_DMAP_SEL_INT_CIDX(0, 0) << 2))
+					  / 0x10;
+
 					this->regs.u32[addr >> 2] = v;
-					this->update_legacy_irq();
+
+					switch (addr % 0x10) {
+						case 0x4:
+							/* R_DMAP_SEL_H2C_DSC_PIDX(n) */
+							this->run_mm_dma(qid,
+									true);
+							break;
+						case 0x8:
+							/* R_DMAP_SEL_C2H_DSC_PIDX(n) */
+							this->run_mm_dma(qid,
+									false);
+							break;
+						default:
+							break;
+					}
+					break;
+				}
+			  case R_IND_CTXT_CMD(0):
+					this->handle_ctxt_cmd(v);
+					/* Drop the busy bit.  */
+					this->regs.u32[addr >> 2] =
+							v & 0xFFFFFFFE;
 					break;
 				default:
-					this->regs.u32[addr >> 2] = v;
+					done = false;
 					break;
+			  }
+			}
+
+			if (!done) {
+				switch (addr >> 2) {
+					case R_CONFIG_BLOCK_IDENT:
+					case R_GLBL2_MISC_CAP:
+						/* Read Only register.	*/
+						break;
+					case R_GLBL_INTR_CFG:
+						/* W1C */
+						if (v
+						   & R_GLBL_INTR_CFG_INT_PEND) {
+							v &=
+						      ~R_GLBL_INTR_CFG_INT_PEND;
+						}
+						this->regs.u32[addr >> 2] = v;
+						this->update_legacy_irq();
+						break;
+					default:
+						this->regs.u32[addr >> 2] = v;
+						break;
+				}
 			}
 		} else {
 			goto err;
@@ -879,7 +864,6 @@ err:
 	/* Reset the IP.  */
 	void reset(void) {
 		this->regs.config_block_ident = 0x1FD30001;
-		this->regs.u32[R_GLBL2_MISC_CAP] = QDMA_VERSION;
 		/* One bar mapped for PF0.  */
 		this->regs.u32[R_GLBL2_PF_BARLITE_INT] = 0x01;
 		this->regs.u32[R_GLBL2_CHANNEL_QDMA_CAP] =
@@ -893,23 +877,46 @@ err:
 	void init_msix()
 	{
 		for (int i = 0; i < NR_QDMA_IRQ; i++) {
-			sc_spawn(sc_bind(&qdma_cpm5::msix_strobe,
+			sc_spawn(sc_bind(&qdma::msix_strobe,
 				 this,
 				 i));
 		}
 	}
+
+	virtual bool is_cpm4() = 0;
+	virtual uint32_t qdma_get_version() = 0;
+	virtual bool irq_aggregation_enabled(int qid, bool h2c) = 0;
+	/* Either get the MSIX Vector (in direct interrupt mode), or the IRQ
+	 * Ring Index (in indirect interrupt mode).  */
+	virtual int get_vec(int qid, bool h2c) = 0;
+protected:
+	SW_CTX *get_software_context(int qid, bool h2c)
+	{
+		return (SW_CTX *)this->queue_contexts[qid]
+			[h2c ? QDMA_CTXT_SELC_DEC_SW_H2C
+			     : QDMA_CTXT_SELC_DEC_SW_C2H].data;
+	}
+
+	qid2vec_ctx_cpm4 *get_qid2vec_context(int qid)
+	{
+		return (qid2vec_ctx_cpm4 *)(this->queue_contexts[qid]
+			[QDMA_CTXT_SELC_FMAP_QID2VEC].data);
+	}
+
+	/* Current entry in a given interrupt ring.  */
+	int irq_ring_entry_idx[QDMA_QUEUE_COUNT];
 public:
-	SC_HAS_PROCESS(qdma_cpm5);
+	SC_HAS_PROCESS(qdma);
 	sc_in<bool> rst;
-	tlm_utils::simple_initiator_socket<qdma_cpm5> card_bus;
+	tlm_utils::simple_initiator_socket<qdma> card_bus;
 
 	/* Interface to toward PCIE.  */
-	tlm_utils::simple_target_socket<qdma_cpm5> config_bar;
-	tlm_utils::simple_target_socket<qdma_cpm5> user_bar;
-	tlm_utils::simple_initiator_socket<qdma_cpm5> dma;
+	tlm_utils::simple_target_socket<qdma> config_bar;
+	tlm_utils::simple_target_socket<qdma> user_bar;
+	tlm_utils::simple_initiator_socket<qdma> dma;
 	sc_vector<sc_out<bool> > irq;
 
-	qdma_cpm5(sc_core::sc_module_name name) :
+	qdma(sc_core::sc_module_name name) :
 		rst("rst"),
 		card_bus("card_initiator_socket"),
 		config_bar("config_bar"),
@@ -924,10 +931,85 @@ public:
 		sensitive << rst;
 
 		config_bar.register_b_transport(this,
-						&qdma_cpm5::config_bar_b_transport);
+						&qdma::config_bar_b_transport);
 		user_bar.register_b_transport(this,
-			&qdma_cpm5::axi_master_light_bar_b_transport);
+			&qdma::axi_master_light_bar_b_transport);
 		this->init_msix();
+	}
+};
+
+class qdma_cpm5:
+  public qdma<struct sw_ctx_cpm5,
+	      struct intr_ctx_cpm5,
+	      struct intr_ring_entry_cpm5>
+{
+private:
+	bool is_cpm4()
+	{
+		return false;
+	}
+
+	bool irq_aggregation_enabled(int qid, bool h2c)
+	{
+		struct sw_ctx_cpm5 *sw_ctx = this->get_software_context(qid,
+									h2c);
+		return (sw_ctx->int_aggr != 0);
+	}
+
+	int get_vec(int qid, bool h2c)
+	{
+		struct sw_ctx_cpm5 *sw_ctx
+			= this->get_software_context(qid, h2c);
+		return sw_ctx->vec;
+	}
+
+	uint32_t qdma_get_version()
+	{
+		return QDMA_VERSION_FIELD(QDMA_CPM5_DEVICE_ID, 1, 0);
+	}
+public:
+	qdma_cpm5(sc_core::sc_module_name name):
+	  qdma(name)
+	{
+	}
+};
+
+class qdma_cpm4:
+  public qdma<struct sw_ctx_cpm4,
+	      struct intr_ctx_cpm4,
+	      struct intr_ring_entry_cpm4>
+{
+private:
+	bool is_cpm4()
+	{
+		return true;
+	}
+
+	bool irq_aggregation_enabled(int qid, bool h2c)
+	{
+		struct qid2vec_ctx_cpm4 *qid2vec_ctx =
+			this->get_qid2vec_context(qid);
+
+		return h2c ? qid2vec_ctx->h2c_en_coal
+			   : qid2vec_ctx->c2h_en_coal;
+	}
+
+	int get_vec(int qid, bool h2c)
+	{
+		struct qid2vec_ctx_cpm4 *qid2vec_ctx
+			= this->get_qid2vec_context(qid);
+
+		return h2c ? qid2vec_ctx->h2c_vector : qid2vec_ctx->c2h_vector;
+	}
+
+	uint32_t qdma_get_version()
+	{
+		return QDMA_VERSION_FIELD(QDMA_CPM4_DEVICE_ID, 0, 0);
+	}
+public:
+	qdma_cpm4(sc_core::sc_module_name name):
+	  qdma(name)
+	{
 	}
 };
 
