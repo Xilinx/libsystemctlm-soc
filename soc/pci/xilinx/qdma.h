@@ -737,11 +737,6 @@ err:
 		}
 	}
 
-	void config_b_transport(tlm::tlm_generic_payload &trans,
-			sc_time &delay) {
-		trans.set_response_status(tlm::TLM_OK_RESPONSE);
-	}
-
 	void axi_master_light_bar_b_transport(tlm::tlm_generic_payload &trans,
 					      sc_time &delay) {
 		tlm::tlm_command cmd = trans.get_command();
