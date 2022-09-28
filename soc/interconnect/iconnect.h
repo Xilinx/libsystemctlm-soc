@@ -75,7 +75,7 @@ public:
 	 * Used to allow the users to attach an initiator socket
 	 * to our target socket that gets all of it's accesses offset by
 	 * a base before entering the interconnect.  */
-	void set_target_offset(int id, sc_dt::uint64 offset);
+	void set_target_offset(unsigned int id, sc_dt::uint64 offset);
 	int memmap(sc_dt::uint64 addr, sc_dt::uint64 size,
 		enum addrmode addrmode, int idx, tlm::tlm_target_socket<> &s);
 private:
@@ -118,10 +118,10 @@ iconnect<N_INITIATORS, N_TARGETS>::iconnect (sc_module_name name)
 }
 
 template<unsigned int N_INITIATORS, unsigned int N_TARGETS>
-void iconnect<N_INITIATORS, N_TARGETS>::set_target_offset(int id,
+void iconnect<N_INITIATORS, N_TARGETS>::set_target_offset(unsigned int id,
 		sc_dt::uint64 offset)
 {
-	assert(id >= 0 && id < N_INITIATORS);
+	assert(id < N_INITIATORS);
 	target_offset[id] = offset;
 }
 
