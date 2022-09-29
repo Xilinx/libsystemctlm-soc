@@ -461,24 +461,30 @@ private:
 
 		sw_ctx->pidx = pidx;
 
-		/* Running through the remaining descriptors from sw_idx to
-		 * hw_idx.  */
-		while (sw_ctx->pidx > hw_ctx->hw_cidx) {
-			int current_descriptor;
+		/* Check that the producer index is in the descriptor ring, and
+		   isn't pointing to the status descriptor.  */
+		if (sw_ctx->pidx >= ring_size) {
+			SC_REPORT_ERROR("qdma", "Producer index outside the "
+					"descriptor ring.");
+		}
 
-			/* cidx acts as the current descriptor processed by the
-			 * Q.  */
-			hw_ctx->hw_cidx++;
-			current_descriptor = hw_ctx->hw_cidx;
-
+		/* Running through the remaining descriptors from CIDX to
+		 * PIDX.  Warp around if needed */
+		while (sw_ctx->pidx != hw_ctx->hw_cidx) {
 			this->fetch_descriptor(
 					((uint64_t)sw_ctx->desc_base_high << 32)
 					+ sw_ctx->desc_base_low
-					+ desc_size * (current_descriptor - 1),
+					+ desc_size * hw_ctx->hw_cidx,
 					desc_size, desc);
 
 			this->do_mm_dma(pdesc->src_address, pdesc->dst_address,
 					pdesc->byte_count, h2c);
+
+			/* Descriptor is processed, go to the next one.  This
+			   might warp around the descriptor ring, also skip the
+			   last descriptor which is the status descriptor.  */
+			hw_ctx->hw_cidx = hw_ctx->hw_cidx == ring_size - 1 ?
+				0 : hw_ctx->hw_cidx + 1;
 
 			/* Sending MSIX and / or writing back status descriptor
 			   doesn't make sense at this point since the simulator
