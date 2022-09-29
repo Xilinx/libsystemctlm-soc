@@ -28,8 +28,8 @@ INDIRMODE=${DEVICE}:0:3
 #     with the 4K keyhole.
 
 # Create some dummy files for the tests below.
-dd if=/dev/random of=$FILE1 bs=1K count=1
-dd if=/dev/random of=$FILE3 bs=1K count=8
+dd if=/dev/urandom of=$FILE1 bs=1K count=1
+dd if=/dev/urandom of=$FILE3 bs=1K count=8
 
 ################################################################################
 # TEST0: Check that the device is correctly detected by the driver.
@@ -149,7 +149,7 @@ else
     exit 1
 fi
 
-dd if=$FILE3 of=$FILE4 bs=4k count=1 skip=1 &> /dev/null
+dd if=$FILE3 of=$FILE4 bs=4k count=1 skip=1
 
 echo "TEST3: Comparing the last 4k of the file which should be identical"
 diff $FILE4 $FILE2 > /dev/null
@@ -173,8 +173,8 @@ rm $FILE2 $FILE4
 # the descriptor ring, and check the data.
 
 echo "TEST4: Creating two 4K files"
-dd if=/dev/random of=$FILE5 bs=1K count=4
-dd if=/dev/random of=$FILE6 bs=1K count=4
+dd if=/dev/urandom of=$FILE5 bs=1K count=4
+dd if=/dev/urandom of=$FILE6 bs=1K count=4
 echo "TEST4: Load the driver"
 insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko
 echo "TEST4: Setting the number of queue"
