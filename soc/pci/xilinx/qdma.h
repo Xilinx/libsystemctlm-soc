@@ -480,6 +480,14 @@ private:
 			this->do_mm_dma(pdesc->src_address, pdesc->dst_address,
 					pdesc->byte_count, h2c);
 
+			/* Sending MSIX and / or writing back status descriptor
+			   doesn't make sense at this point since the simulator
+			   won't notice.  Do it once for all when the queue
+			   finishes its work to gain performance.  */
+			if (sw_ctx->pidx != hw_ctx->hw_cidx) {
+				continue;
+			}
+
 			/* Update the status, and write the descriptor back. */
 			if (sw_ctx->writeback_en) {
 				/* Fetch the last descriptor, put the status in
@@ -500,10 +508,6 @@ private:
 					+ desc_size * ring_size,
 					desc_size,
 					desc);
-			}
-
-			if (sw_ctx->pidx != hw_ctx->hw_cidx) {
-				continue;
 			}
 
 			/* Trigger an IRQ?  */
