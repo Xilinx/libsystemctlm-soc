@@ -7,6 +7,8 @@ FILE1=$TEMP/test.txt
 FILE2=$TEMP/test2.txt
 FILE3=$TEMP/test_8k.txt
 FILE4=$TEMP/test3.txt
+FILE5=$TEMP/test4.txt
+FILE6=$TEMP/test5.txt
 
 # Use the device connected to the second PCIEHost by default which is the one
 # used in the versal-cpie-cpm5 demo.  This might change in case the qdma
@@ -161,3 +163,70 @@ fi
 
 echo "TEST3: Cleaning Up"
 rm $FILE2 $FILE4
+
+################################################################################
+# TEST4: Load data and make the descriptor ring overflow.
+################################################################################
+
+# The Software producer Index is not reset, if the driver is not unloaded and
+# the queue is not stopped.  So just do several dma-ctl in order to overflow
+# the descriptor ring, and check the data.
+
+echo "TEST4: Creating two 4K files"
+dd if=/dev/random of=$FILE5 bs=1K count=4
+dd if=/dev/random of=$FILE6 bs=1K count=4
+echo "TEST4: Load the driver"
+insmod $DRIVER_LOC/QDMA/linux-kernel/bin/qdma-pf.ko
+echo "TEST4: Setting the number of queue"
+echo 1 > /sys/bus/pci/devices/0000:02:00.0/qdma/qmax
+echo "TEST4: Configuring H2C / C2H queues, ring size 64"
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir h2c
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q add idx 0 mode mm dir c2h
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir h2c \
+					  idx_ringsz 1
+$DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir c2h \
+					  idx_ringsz 1
+
+echo "TEST4: Sending 128x 4K to the device @0x102100000"
+loop=0
+while [ "$loop" -lt 64 ]
+do
+    $DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d ${CHRDEV} -f $FILE5    \
+						-s $(( 4 * 1024 ))            \
+						-a 0x102100000 > /dev/null
+    $DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d ${CHRDEV} -f $FILE2  \
+						-s $(( 4 * 1024 ))            \
+						-a 0x102100000 > /dev/null
+    diff $FILE5 $FILE2 > /dev/null
+
+    if [ $? -gt 0 ]
+    then
+	echo "FAILED at occurence $loop!"
+	exit 1
+    fi
+
+    $DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d ${CHRDEV} -f $FILE6    \
+						-s $(( 4 * 1024 ))            \
+						-a 0x102100000 > /dev/null
+    $DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d ${CHRDEV} -f $FILE2  \
+						-s $(( 4 * 1024 ))            \
+						-a 0x102100000 > /dev/null
+    diff $FILE6 $FILE2 > /dev/null
+
+    if [ $? -gt 0 ]
+    then
+	echo "FAILED at occurence $loop!"
+	exit 1
+    fi
+
+    echo "SUCCESS $loop / 64"
+    loop=`expr $loop + 1`
+done
+
+echo "SUCCESS"
+
+echo "TEST4: Unloading the driver"
+rmmod qdma-pf.ko
+
+echo "TEST4: Cleaning Up"
+rm $FILE2 $FILE5 $FILE6 -f
