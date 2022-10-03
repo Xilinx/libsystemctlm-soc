@@ -540,7 +540,7 @@ public:
 			//
 			if (gp->is_write()) {
 				uint8_t *d = gp->get_data_ptr();
-				uint8_t len = gp->get_data_length();
+				unsigned int len = gp->get_data_length();
 				uint32_t pos = 0;
 
 				while (pos < len) {
@@ -805,7 +805,7 @@ public:
 			//
 			if (dlen) {
 				uint8_t *d = gp->get_data_ptr();
-				uint8_t len = gp->get_data_length();
+				unsigned int len = gp->get_data_length();
 				uint32_t pos = 0;
 
 				while (pos < len) {
