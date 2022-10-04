@@ -173,7 +173,10 @@ public:
 
 			while (i < dlen) {
 				unsigned int DW_pos = dw_pos(i);
-				uint32_t v = (DW_pos < tlp->get_length()) ?
+				unsigned int dw_len = tlp->get_length() ?
+							tlp->get_length() :
+							MAX_DW_LEN;
+				uint32_t v = (DW_pos < dw_len) ?
 						tlp->GetTLPData(DW_pos) : 0;
 
 				v <<= (addr_offset * 8);
@@ -472,7 +475,7 @@ public:
 					set_attr_1_0(0) |
 					set_at(0) |
 
-					set_length(dlen));
+					set_length(dlen == MAX_DW_LEN ? 0 : dlen));
 
 			//
 			// Bits [63:32]
@@ -622,7 +625,7 @@ public:
 				i+=4;
 			}
 
-			m_tlp_dw_len = get_length();
+			m_tlp_dw_len = get_length() ? get_length() : MAX_DW_LEN;
 
 			if (fmt == FMT_4DW_WithData ||
 				fmt == FMT_3DW_WithData) {
@@ -758,7 +761,7 @@ public:
 					set_attr_1_0(0) |
 					set_at(0) |
 
-					set_length(dlen));
+					set_length(dlen == MAX_DW_LEN ? 0 : dlen));
 
 			//
 			// For bits [63:32]
@@ -776,7 +779,8 @@ public:
 			m_hdr.push_back(set_completerID(0) |
 					set_cplStatus(cpl_status) |
 					set_bcm(0) |
-					set_byteCount(gp->get_data_length()));
+					set_byteCount(gp->get_data_length() == SZ_4K ?
+							0 : gp->get_data_length()));
 
 			//
 			// For bits [95:64]

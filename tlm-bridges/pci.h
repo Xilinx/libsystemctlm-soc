@@ -77,6 +77,7 @@ namespace TLP {
 		//
 		SZ_1K = 1024,
 		SZ_4K = SZ_1K * 4,
+		MAX_DW_LEN = 1024,
 	};
 
 }; // namespace TLP
