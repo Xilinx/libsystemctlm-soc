@@ -39,6 +39,7 @@ using namespace std;
 #include <sys/types.h>
 
 #define VERSAL_NET_NUM_PL2PS_IRQ 16
+#define VERSAL_NET_NUM_CPM_IRQ 4
 
 #define VERSAL_NET_NUM_PL_RESET 4
 #define VERSAL_NET_NUM_PS2PL_WIRES VERSAL_NET_NUM_PL_RESET
@@ -86,7 +87,9 @@ xilinx_versal_net::xilinx_versal_net(sc_module_name name, const char *sk_descr,
 
 	  rp_pl2ps_irq("rp_pl2ps_irq", VERSAL_NET_NUM_PL2PS_IRQ, 0),
 	  rp_wires_out("rp_wires_out", 0, VERSAL_NET_NUM_PS2PL_WIRES),
+	  rp_cpm_irq("rp_cpm_irq", VERSAL_NET_NUM_CPM_IRQ, 0),
 	  pl2ps_irq("pl2ps_irq", VERSAL_NET_NUM_PL2PS_IRQ),
+	  cpm_irq("cpm_irq", VERSAL_NET_NUM_CPM_IRQ),
 	  pl_reset("pl_reset", VERSAL_NET_NUM_PL_RESET)
 {
 	unsigned int i;
@@ -133,6 +136,9 @@ xilinx_versal_net::xilinx_versal_net(sc_module_name name, const char *sk_descr,
 	}
 	for (i = 0; i < pl_reset.size(); i++) {
 		rp_wires_out.wires_out[i](pl_reset[i]);
+	}
+	for (i = 0; i < cpm_irq.size(); i++) {
+		rp_cpm_irq.wires_in[i](cpm_irq[i]);
 	}
 
 	register_dev(2, &rp_reserved_0);
@@ -187,4 +193,5 @@ xilinx_versal_net::xilinx_versal_net(sc_module_name name, const char *sk_descr,
 	register_dev(91, &rp_s_cpm);
 
 	register_dev(92, &rp_m_hnic);
+	register_dev(93, &rp_cpm_irq);
 }

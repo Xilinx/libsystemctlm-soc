@@ -91,6 +91,7 @@ private:
 
 	remoteport_tlm_wires rp_pl2ps_irq;
 	remoteport_tlm_wires rp_wires_out;
+	remoteport_tlm_wires rp_cpm_irq;
 
 public:
 	/* FPD */
@@ -145,6 +146,7 @@ public:
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_noc_axi_pmcx0;
 
 	sc_vector<sc_signal<bool> > pl2ps_irq;
+	sc_vector<sc_signal<bool> > cpm_irq;
 	sc_vector<sc_signal<bool> > pl_reset;
 
 	xilinx_versal_net(sc_core::sc_module_name name, const char *sk_descr,
