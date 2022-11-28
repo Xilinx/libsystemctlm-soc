@@ -47,6 +47,7 @@ SUBDIRS += rtl-bridges/cxs
 SUBDIRS += rtl-bridges/pcie
 SUBDIRS += soc/net/ethernet
 SUBDIRS += soc/pci/xilinx
+SUBDIRS += soc/crypto/xilinx
 
 ifeq "$(HAVE_CONFIG_PARSER)" "y"
 SUBDIRS += traffic-generators/config-parser/

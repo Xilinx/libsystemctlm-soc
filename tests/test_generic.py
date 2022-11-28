@@ -83,6 +83,8 @@ mrmac_tests = ['./soc/net/ethernet/check-mrmac']
 
 qdma_tests = ['./soc/pci/xilinx/check-qdma']
 
+hsc_tests = ['./soc/crypto/xilinx/check-hsc']
+
 @pytest.mark.parametrize("filename", testnames_axi)
 def test_tg_axi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
@@ -245,5 +247,11 @@ def test_mrmac_tests(filename):
 @pytest.mark.qdma
 @pytest.mark.parametrize("filename", qdma_tests)
 def test_qdma_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.hsc
+@pytest.mark.parametrize("filename", hsc_tests)
+def test_hsc_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
