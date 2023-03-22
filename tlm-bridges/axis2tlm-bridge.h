@@ -53,8 +53,7 @@ public:
 	sc_in<AXISignal(USER_WIDTH) > tuser;
 	sc_in<bool> tlast;
 
-	axis2tlm_bridge(sc_core::sc_module_name name,
-				bool aligner_enable=true) :
+	axis2tlm_bridge(sc_core::sc_module_name name) :
 		sc_module(name),
 		axi_common(this),
 		socket("tgt_socket"),
