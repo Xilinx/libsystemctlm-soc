@@ -55,8 +55,7 @@ public:
 
 	sc_mutex m_mutex;
 
-	tlm2axis_bridge(sc_core::sc_module_name name,
-				bool aligner_enable=true) :
+	tlm2axis_bridge(sc_core::sc_module_name name) :
 		sc_module(name),
 		axi_common(this),
 		tgt_socket("tgt_socket"),
