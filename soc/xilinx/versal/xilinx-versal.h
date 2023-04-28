@@ -1,10 +1,11 @@
 /*
  * Xilinx SystemC/TLM-2.0 Versal Wrapper.
  *
- * Written by Edgar E. Iglesias <edgar.iglesias@xilinx.com>
- *
- * Copyright (c) 2020, Xilinx Inc.
+ * Copyright (C) 2020-2022, Xilinx, Inc.
+ * Copyright (C) 2023, Advanced Micro Devices, Inc.
  * All rights reserved.
+ *
+ * Written by Edgar E. Iglesias <edgar.iglesias@xilinx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +43,25 @@ class xilinx_versal
 : public remoteport_tlm
 {
 private:
+	class xilinx_emio_bank
+	{
+	public:
+		sc_vector<sc_signal<bool> > in;
+		sc_vector<sc_signal<bool> > out;
+		sc_vector<sc_signal<bool> > out_enable;
+		xilinx_emio_bank(const char *name_in, const char *name_out,
+				 const char *name_out_en, int num);
+	};
+
+	class xilinx_mio_bank
+	{
+	public:
+		sc_vector<sc_signal<bool> > in;
+		sc_vector<sc_signal<bool> > out;
+		xilinx_mio_bank(const char *name_in, const char *name_out,
+				int num);
+	};
+
 	remoteport_tlm_memory_master rp_m_axi_fpd;
 	remoteport_tlm_memory_master rp_m_axi_lpd;
 	remoteport_tlm_memory_master rp_fpd_cci_noc_0;
@@ -75,6 +95,9 @@ private:
 
 	remoteport_tlm_wires rp_pl2ps_irq;
 	remoteport_tlm_wires rp_wires_out;
+	remoteport_tlm_wires rp_emio0;
+	remoteport_tlm_wires rp_emio1;
+	remoteport_tlm_wires rp_emio2;
 
 	sc_vector<remoteport_tlm_memory_master > rp_user_master;
 	sc_vector<remoteport_tlm_memory_slave > rp_user_slave;
@@ -117,6 +140,8 @@ public:
 	sc_vector<sc_signal<bool> > pl2ps_irq;
 	sc_vector<sc_signal<bool> > pl_reset;
 
+	xilinx_emio_bank *emio[3];
+
 	/*
 	 * User-defined ports.
 	 */
@@ -126,4 +151,5 @@ public:
 	xilinx_versal(sc_core::sc_module_name name, const char *sk_descr,
 			Iremoteport_tlm_sync *sync = NULL,
 			bool blocking_socket = true);
+	~xilinx_versal(void);
 };
