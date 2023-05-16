@@ -1,10 +1,11 @@
 /*
  * Xilinx SystemC/TLM-2.0 ZynqMP Wrapper.
  *
- * Written by Edgar E. Iglesias <edgar.iglesias@xilinx.com>
- *
- * Copyright (c) 2016, Xilinx Inc.
+ * Copyright (C) 2016, Xilinx, Inc.
+ * Copyright (C) 2023, Advanced Micro Devices, Inc.
  * All rights reserved.
+ *
+ * Written by Edgar E. Iglesias <edgar.iglesias@xilinx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,31 +38,29 @@
 #include "remote-port-tlm-wires.h"
 #include "tlm-modules/wire-splitter.h"
 
-class xilinx_emio_bank
-{
-private:
-public:
-	sc_vector<sc_signal<bool> > in;
-	sc_vector<sc_signal<bool> > out;
-	sc_vector<sc_signal<bool> > out_enable;
-	xilinx_emio_bank(const char *name_in, const char *name_out,
-		         const char *name_out_en, int num);
-};
-
-class xilinx_mio_bank
-{
-private:
-public:
-	sc_vector<sc_signal<bool> > in;
-	sc_vector<sc_signal<bool> > out;
-	xilinx_mio_bank(const char *name_in, const char *name_out,
-		         int num);
-};
-
 class xilinx_zynqmp
 : public remoteport_tlm
 {
 private:
+	class xilinx_emio_bank
+	{
+	public:
+		sc_vector<sc_signal<bool> > in;
+		sc_vector<sc_signal<bool> > out;
+		sc_vector<sc_signal<bool> > out_enable;
+		xilinx_emio_bank(const char *name_in, const char *name_out,
+				 const char *name_out_en, int num);
+	};
+
+	class xilinx_mio_bank
+	{
+	public:
+		sc_vector<sc_signal<bool> > in;
+		sc_vector<sc_signal<bool> > out;
+		xilinx_mio_bank(const char *name_in, const char *name_out,
+				int num);
+	};
+
 	remoteport_tlm_memory_master rp_axi_hpm0_fpd;
 	remoteport_tlm_memory_master rp_axi_hpm1_fpd;
 	remoteport_tlm_memory_master rp_axi_hpm_lpd;

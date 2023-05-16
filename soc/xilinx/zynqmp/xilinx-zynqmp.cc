@@ -1,10 +1,11 @@
 /*
  * Xilinx SystemC/TLM-2.0 ZynqMP Wrapper.
  *
- * Written by Edgar E. Iglesias <edgar.iglesias@xilinx.com>
- *
- * Copyright (c) 2016, Xilinx Inc.
+ * Copyright (C) 2016, Xilinx, Inc.
+ * Copyright (C) 2023, Advanced Micro Devices, Inc.
  * All rights reserved.
+ *
+ * Written by Edgar E. Iglesias <edgar.iglesias@xilinx.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,18 +48,24 @@ extern "C" {
 
 #define NUM_MIO_WIRES 78
 
-xilinx_emio_bank::xilinx_emio_bank(const char *name_in, const char *name_out,
-				   const char *name_out_en, int num)
-	:in(name_in, num),
-	 out(name_out, num),
-	 out_enable(name_out_en, num)
-{ }
+xilinx_zynqmp::xilinx_emio_bank::xilinx_emio_bank(const char *name_in,
+						  const char *name_out,
+						  const char *name_out_en,
+						  int num)
+  :in(name_in, num),
+   out(name_out, num),
+   out_enable(name_out_en, num)
+{
+}
 
-xilinx_mio_bank::xilinx_mio_bank(const char *name_in, const char *name_out,
-				   int num)
-	:in(name_in, num),
-	 out(name_out, num)
-{ }
+xilinx_zynqmp::xilinx_mio_bank::xilinx_mio_bank(const char *name_in,
+						const char *name_out,
+						int num)
+  :in(name_in, num),
+   out(name_out, num)
+{
+}
+
 
 xilinx_zynqmp::xilinx_zynqmp(sc_module_name name, const char *sk_descr,
 				Iremoteport_tlm_sync *sync,
