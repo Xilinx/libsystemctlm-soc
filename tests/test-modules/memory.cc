@@ -75,7 +75,7 @@ void memory::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 		streaming_width = len;
 	}
 
-	if (be_len || streaming_width) {
+	if (be_len || streaming_width != len) {
 		// Slow path.
 		unsigned int pos;
 
