@@ -104,12 +104,12 @@ include $(VERILATOR_ROOT)/include/verilated.mk
 $(CHI_HNF_DEV_LIB): $(CHI_HNF_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_CHI_MASTER) $^
 	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_hn_top.mk
-	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_hn_top.mk verilated.o
+	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_hn_top.mk $(BARE_VERILATED_O)
 
 $(CHI_RNF_DEV_LIB): $(CHI_RNF_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_CHI_MASTER) $^
 	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_rn_top.mk
-	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_rn_top.mk verilated.o
+	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vchi_bridge_rn_top.mk $(BARE_VERILATED_O)
 
 $(CHI_HNF_RTL_TEST_OBJS): $(CHI_HNF_DEV_LIB)
 

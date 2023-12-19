@@ -45,7 +45,7 @@ AXILITE_VFLAGS += -y $(AXILITE_DIR)
 DEV_LIBS += $(VOBJ_DIR)/Vaxifull_dev__ALL.a
 DEV_LIBS += $(VOBJ_DIR)/Vaxilite_dev__ALL.a
 
-EXAMPLE_RTL_MIXED_OBJS += example-rtl-mixed.o $(VOBJ_DIR)/verilated.o
+EXAMPLE_RTL_MIXED_OBJS += example-rtl-mixed.o $(VERILATED_O)
 
 ALL_OBJS += $(EXAMPLE_RTL_MIXED_OBJS)
 
@@ -61,7 +61,7 @@ all: $(TARGETS)
 $(VOBJ_DIR)/Vaxifull_dev__ALL.a $(VOBJ_DIR)/$(AXIFULL_DEV_H): $(AXIFULL_DIR)/$(AXIFULL_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(AXIFULL_VFLAGS) -sc $^
 	$(MAKE) -C $(VOBJ_DIR) -f V$(AXIFULL_DEV_V:%.v=%.mk) OPT="$(CXXFLAGS)"
-	$(MAKE) -C $(VOBJ_DIR) -f V$(AXIFULL_DEV_V:%.v=%.mk) OPT="$(CXXFLAGS)" verilated.o
+	$(MAKE) -C $(VOBJ_DIR) -f V$(AXIFULL_DEV_V:%.v=%.mk) OPT="$(CXXFLAGS)" $(BARE_VERILATED_O)
 
 $(VOBJ_DIR)/Vaxilite_dev__ALL.a $(VOBJ_DIR)/$(AXILITE_DEV_H): $(AXILITE_DIR)/$(AXILITE_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(AXILITE_VFLAGS) -sc $^

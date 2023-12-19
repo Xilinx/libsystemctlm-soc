@@ -99,7 +99,7 @@ include $(VERILATOR_ROOT)/include/verilated.mk
 $(CXS_DEV_LIB): $(CXS_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_CXS) $^
 	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vcxs_bridge_top.mk
-	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vcxs_bridge_top.mk verilated.o
+	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vcxs_bridge_top.mk $(BARE_VERILATED_O)
 
 $(CXS_TEST_OBJS): $(CXS_DEV_LIB)
 

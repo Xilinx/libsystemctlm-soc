@@ -59,12 +59,21 @@ class MK_Generator:
 		p += 'CXXFLAGS += -MMD\n'
 		p += 'CXXFLAGS += -Wall -Wno-strict-overflow\n'
 		p += 'VERILATOR ?=' + args.verilator + '\n'
+		p += 'VERILATOR_MAJOR_VERSION=$(shell verilator --version'
+		p += '| cut -d\\  -f2 | cut -d. -f1)\n'
+		p += 'VERILATOR_MINOR_VERSION=$(shell verilator --version'
+		p += '| cut -d\\  -f2 | cut -d. -f2)\n'
 
+		p += 'VOBJ_DIR ?={}/obj_dir\n'.format(args.outdir)
 		p += 'VERILATOR_ROOT=$(shell $(VERILATOR) --getenv '
 		p += 'VERILATOR_ROOT 2>/dev/null || echo -n '
 		p += '/usr/share/verilator)\n'
+		p += 'BARE_VERILATED_O = verilated.o\n'
+		p += 'BARE_VERILATED_O += $(shell [ $(VERILATOR_MAJOR_VERSION) -ge 5 ] \\\n'
+		p += '          && [ $(VERILATOR_MINOR_VERSION) -ge 6 ] \\\n'
+		p += '          && echo verilated_threads.o)\n'
 
-		p += 'VOBJ_DIR ?={}/obj_dir\n'.format(args.outdir)
+		p += 'VERILATED_O = $(addprefix $(VOBJ_DIR)/, $(BARE_VERILATED_O))\n'
 
 		p += 'VENV=SYSTEMC_INCLUDE=$(SYSTEMC_INCLUDE) '
 		p += 'SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR)\n'
@@ -139,7 +148,7 @@ class MK_Generator:
 
 				self.sc_sim_rule += var_lib
 
-			self.sc_sim_rule += ' $(VOBJ_DIR)/verilated.o'
+			self.sc_sim_rule += ' $(VERILATED_O)'
 
 		if len(sc_gen.c_files) > 0:
 			self.sc_sim_rule += ' $(OBJS)'

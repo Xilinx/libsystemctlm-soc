@@ -95,12 +95,12 @@ include $(VERILATOR_ROOT)/include/verilated.mk
 $(ACE_SLV_DEV_LIB): $(ACE_SLV_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_ACE_SLV) $^
 	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vace_slv.mk
-	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vace_slv.mk verilated.o
+	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vace_slv.mk $(BARE_VERILATED_O)
 
 $(ACE_MST_DEV_LIB): $(ACE_MST_DEV_V)
 	$(VENV) $(VERILATOR) $(VFLAGS) $(VFLAGS_RTL_BRIDGE_ACE_MST) $^
 	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vace_mst.mk
-	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vace_mst.mk verilated.o
+	$(MAKE) -C $(VOBJ_DIR) CXXFLAGS="$(CXXFLAGS)" -f Vace_mst.mk $(BARE_VERILATED_O)
 
 $(ACE_SLV_RTL_TEST_OBJS): $(ACE_SLV_DEV_LIB)
 

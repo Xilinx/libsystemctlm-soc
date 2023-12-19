@@ -42,11 +42,19 @@ CXXFLAGS += -Wall -Wno-strict-overflow
 
 # Verilator
 VERILATOR ?=verilator
+VERILATOR_MAJOR_VERSION=$(shell verilator --version | cut -d\  -f2 | cut -d. -f1)
+VERILATOR_MINOR_VERSION=$(shell verilator --version | cut -d\  -f2 | cut -d. -f2)
 
 VERILATOR_ROOT?=$(shell $(VERILATOR) --getenv VERILATOR_ROOT 2>/dev/null || echo -n /usr/share/verilator)
 VOBJ_DIR ?=obj_dir
 VENV=SYSTEMC_INCLUDE=$(SYSTEMC_INCLUDE) SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR)
-VERILATED_O=$(VOBJ_DIR)/verilated.o
+
+BARE_VERILATED_O = verilated.o
+# From Verilator 5.006 and on, verilated_threads is needed.
+BARE_VERILATED_O += $(shell [ $(VERILATOR_MAJOR_VERSION) -ge 5 ] && \
+		            [ $(VERILATOR_MINOR_VERSION) -ge 6 ] && \
+			    echo verilated_threads.o)
+VERILATED_O = $(addprefix $(VOBJ_DIR)/, $(BARE_VERILATED_O))
 
 # VM_TRACE enables internal signals tracing with verilator
 # if the SystemC application supports it.
@@ -69,4 +77,4 @@ verilated_%.o: $(VERILATOR_ROOT)/include/verilated_%.cpp
 $(VOBJ_DIR)/V%__ALL.a $(VOBJ_DIR)/V%.h: %.v
 	$(VENV) $(VERILATOR) $(VFLAGS) -sc $^
 	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)"
-	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)" verilated.o
+	$(MAKE) -C $(VOBJ_DIR) -f V$(<:.v=.mk) OPT="$(CXXFLAGS)" $(BARE_VERILATED_O)
