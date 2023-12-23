@@ -74,4 +74,17 @@ static void map_sc_bv2v(sc_vector<sc_signal<bool> > &v, const sc_bv<width> &s)
 		v[i].write(b);
 	}
 }
+
+// Copy an sc_bv into a C buffer.
+template <int width>
+static void sc_bv2buf(unsigned char *buf, const sc_bv<width> &s, int bitlen)
+{
+	int i;
+
+	assert(width % 8 == 0);
+
+	for (i = 0; i < width && i < bitlen; i += 8) {
+		buf[i / 8] = s.range(i + 8 - 1, i).to_uint();
+	}
+}
 #endif
