@@ -41,3 +41,4 @@ def pytest_configure(config):
 	config.addinivalue_line("markers" ,"tg: A traffic generator")
 	config.addinivalue_line("markers" ,"qdma: Xilinx QDMA")
 	config.addinivalue_line("markers" ,"hsc: Xilinx HSC")
+	config.addinivalue_line("markers" ,"umi: Universal Memory Interface")

@@ -59,6 +59,10 @@ tg_ccix_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
 					"/traffic-generators/ccix/"), '*-tg-test')
 tests_tg_ccix = ['./traffic-generators/ccix/{0}'.format(i) for i in tg_ccix_tests]
 
+tg_umi_tests = fnmatch.filter(os.listdir(os.path.dirname(__file__) +
+					"/traffic-generators/umi/"), 'test-umi-dw*[0-9]')
+tests_tg_umi = ['./traffic-generators/umi/{0}'.format(i) for i in tg_umi_tests]
+
 hwb_axi_testnames = fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-master')
 hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), '*-test-pcie-slave')
 hwb_axi_testnames += fnmatch.filter(os.listdir(os.path.dirname(__file__) + "/rtl-bridges/axi/"), 'test-slave-directed')
@@ -166,6 +170,12 @@ def test_checker_chi_tests(filename):
 @pytest.mark.ccix
 @pytest.mark.parametrize("filename", tests_tg_ccix)
 def test_tg_ccix_tests(filename):
+	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
+	assert(subprocess.call([path_exe]) == 0)
+
+@pytest.mark.umi
+@pytest.mark.parametrize("filename", tests_tg_umi)
+def test_tg_umi_tests(filename):
 	path_exe = os.path.normpath(os.path.dirname(__file__) + '/' + filename)
 	assert(subprocess.call([path_exe]) == 0)
 
