@@ -26,6 +26,7 @@
 SUBDIRS_EXAMPLES += example-rtl-axi4
 SUBDIRS_EXAMPLES += example-rtl-axi4lite
 SUBDIRS_EXAMPLES += example-rtl-mixed
+SUBDIRS_EXAMPLES += example-rtl-umi
 
 SUBDIRS += $(SUBDIRS_EXAMPLES)
 SUBDIRS += tlm-modules
