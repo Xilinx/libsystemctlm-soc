@@ -87,4 +87,17 @@ static void sc_bv2buf(unsigned char *buf, const sc_bv<width> &s, int bitlen)
 		buf[i / 8] = s.range(i + 8 - 1, i).to_uint();
 	}
 }
+
+// Copy a C buffer into a sc_bv.
+template <int width>
+static void sc_buf2bv(unsigned char *buf, sc_bv<width> &s, int bitlen)
+{
+	int i;
+
+	assert(width % 8 == 0);
+
+	for (i = 0; i < width && i < bitlen; i += 8) {
+		s.range(i + 8 - 1, i) = buf[i / 8];
+	}
+}
 #endif
