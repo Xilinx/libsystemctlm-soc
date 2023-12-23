@@ -18,6 +18,11 @@ Full description on how to run the examples can be found here: https://hub.docke
 #### Setting up your environment locally
 Assuming you've installed the [Dependencies](#dependencies) and created the [Configuration](#configuration) file.
 
+Clone submodules:
+```bash
+git submodule update --init --recursive
+```
+
 To run the examples, change directory to the test directory and run:
 ```
 cd tests/
