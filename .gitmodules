@@ -1,0 +1,3 @@
+[submodule "submodules/umi"]
+	path = submodules/umi
+	url = https://github.com/zeroasiccorp/umi.git
