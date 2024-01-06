@@ -133,9 +133,9 @@ $DRIVER_LOC/QDMA/linux-kernel/bin/dma-ctl ${DRVDEV} q start idx 0 dir h2c \
 echo "TEST3: Send 8KB to the device @0x102100000"
 $DRIVER_LOC/QDMA/linux-kernel/bin/dma-to-device -d ${CHRDEV} -f \
 						$FILE3 -s 8192 -a 0x102100000
-echo "TEST3: Get last written 4KB from the device @0x102100000"
+echo "TEST3: Get last written 4KB from the device @0x102101000"
 $DRIVER_LOC/QDMA/linux-kernel/bin/dma-from-device -d ${CHRDEV} -f \
-						$FILE2 -s 4096 -a 0x102100000
+						$FILE2 -s 4096 -a 0x102101000
 echo "TEST3: Unloading the driver"
 rmmod qdma-pf.ko
 echo "TEST3: Comparing the files which should be different"
