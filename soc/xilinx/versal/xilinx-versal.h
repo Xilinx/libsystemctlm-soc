@@ -102,6 +102,8 @@ private:
 	sc_vector<remoteport_tlm_memory_master > rp_user_master;
 	sc_vector<remoteport_tlm_memory_slave > rp_user_slave;
 
+	remoteport_tlm_wires rp_npi_irq;
+
 public:
 	/* FPD 0 and 1. Base PS only has port 0.  */
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *m_axi_fpd;
@@ -138,6 +140,7 @@ public:
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> *s_axi_xram;
 
 	sc_vector<sc_signal<bool> > pl2ps_irq;
+	sc_vector<sc_signal<bool> > npi_irq;
 	sc_vector<sc_signal<bool> > pl_reset;
 
 	xilinx_emio_bank *emio[3];

@@ -40,6 +40,7 @@ using namespace std;
 #include <sys/types.h>
 
 #define VERSAL_NUM_PL2PS_IRQ 16
+#define VERSAL_NUM_NPI_IRQ   12
 
 #define VERSAL_NUM_PL_RESET 4
 #define VERSAL_NUM_PS2PL_WIRES VERSAL_NUM_PL_RESET
@@ -103,7 +104,9 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	  rp_emio2("emio2", 32, 64),
 	  rp_user_master("rp_user_master", VERSAL_NUM_USER_PORTS),
 	  rp_user_slave("rp_user_slave", VERSAL_NUM_USER_PORTS),
+	  rp_npi_irq("rp_npi_irq", VERSAL_NUM_NPI_IRQ, 0),
 	  pl2ps_irq("pl2ps_irq", VERSAL_NUM_PL2PS_IRQ),
+	  npi_irq("npi_irq", VERSAL_NUM_NPI_IRQ),
 	  pl_reset("pl_reset", VERSAL_NUM_PL_RESET)
 {
 	unsigned int i;
@@ -159,6 +162,9 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	for (i = 0; i < pl_reset.size(); i++) {
 		rp_wires_out.wires_out[i](pl_reset[i]);
 	}
+	for (i = 0; i < npi_irq.size(); i++) {
+		rp_npi_irq.wires_in[i](npi_irq[i]);
+	}
 
 	for (i = 0; i < emio[0]->out.size(); i++) {
 		rp_emio0.wires_out[i](emio[0]->out[i]);
@@ -211,6 +217,7 @@ xilinx_versal::xilinx_versal(sc_module_name name, const char *sk_descr,
 	register_dev(95, &rp_emio0);
 	register_dev(96, &rp_emio1);
 	register_dev(97, &rp_emio2);
+	register_dev(98, &rp_npi_irq);
 
 	for (i = 0; i < rp_user_master.size(); i++) {
 		register_dev(256 + i, &rp_user_master[i]);
