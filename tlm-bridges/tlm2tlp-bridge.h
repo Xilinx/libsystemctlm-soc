@@ -344,18 +344,11 @@ public:
 			if (gp->is_write()) {
 				uint8_t *d = gp->get_data_ptr();
 				uint32_t val = 0;
+				unsigned int start_idx = get_ECAMAddr_BE(addr);
 
-				if (dlen > 0) {
-					val |= d[0] << 24;
-				}
-				if (dlen > 1) {
-					val |= d[1] << 16;
-				}
-				if (dlen > 2) {
-					val |= d[2] <<  8;
-				}
-				if (dlen > 3) {
-					val |= d[3];
+				for (unsigned int i = 0; i < dlen; i++) {
+					uint32_t shift = (3 - start_idx - i) * 8;
+					val |= d[i] << shift;
 				}
 				m_hdr.push_back(val);
 			}
