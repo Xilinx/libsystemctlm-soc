@@ -35,9 +35,14 @@ using namespace std;
 #include <sys/types.h>
 #include <time.h>
 
-wiredev::wiredev(sc_module_name name, unsigned int nr_wires_in)
-	: sc_module(name), socket("socket"), wires_in("wires-in", nr_wires_in)
+wiredev::wiredev(sc_module_name name, unsigned int nr_wires_in,
+		 unsigned int nr_wires_out)
+	: sc_module(name), socket("socket"),
+	  wires_in("wires-in", nr_wires_in),
+	  wires_out("wires-out", nr_wires_out)
 {
+	/* We don't support mixed in-outs.  */
+	assert(nr_wires_in == 0 || nr_wires_out == 0);
 	socket.register_b_transport(this, &wiredev::b_transport);
 	socket.register_transport_dbg(this, &wiredev::transport_dbg);
 }
@@ -51,6 +56,8 @@ void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 	unsigned int     len = trans.get_data_length();
 	uint64_t v = 0;
 	uint32_t wire_offset = 0;
+	bool is_input = wires_in.size();
+	int nr_wires = is_input ? wires_in.size() : wires_out.size();
 
 	if (len > sizeof(v)) {
 		trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
@@ -60,15 +67,30 @@ void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 	if (trans.get_command() == tlm::TLM_READ_COMMAND) {
 		wire_offset = addr * 8;
 		for (i = wire_offset; i < wire_offset + (len * 8); i++) {
-			if (i >= wires_in.size()) {
+			bool val;
+
+			if (i >= nr_wires) {
 				break;
 			}
-			bool val = wires_in[i].read();
+
+			val = is_input ? wires_in[i].read() : wires_out[i].read();
 			v = v | (val << (i - wire_offset));
 		}
 		memcpy(data, &v, len);
 	} else if (cmd == tlm::TLM_WRITE_COMMAND) {
-		// Do Noting
+		if (is_input) {
+			trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
+			return;
+		}
+
+		memcpy(&v, data, len);
+		wire_offset = addr * 8;
+		for (i = wire_offset; i < wire_offset + (len * 8); i++) {
+			if (i >= wires_out.size()) {
+				break;
+			}
+			wires_out[i].write(v & ((uint64_t)1 << (i - wire_offset)));
+		}
 	}
 
 	trans.set_response_status(tlm::TLM_OK_RESPONSE);

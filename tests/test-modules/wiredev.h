@@ -27,8 +27,10 @@ class wiredev
 public:
 	tlm_utils::simple_target_socket<wiredev> socket;
 
-	wiredev(sc_core::sc_module_name name, unsigned int nr_wires_in);
+	wiredev(sc_core::sc_module_name name, unsigned int nr_wires_in,
+		unsigned int nr_wires_out = 0);
 	sc_vector<sc_in<bool> > wires_in;
+	sc_vector<sc_out<bool> > wires_out;
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
 						sc_time& delay);
 	virtual unsigned int transport_dbg(tlm::tlm_generic_payload& trans);
