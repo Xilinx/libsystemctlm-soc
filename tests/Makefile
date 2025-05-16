@@ -26,7 +26,7 @@
 SUBDIRS_EXAMPLES += example-rtl-axi4
 SUBDIRS_EXAMPLES += example-rtl-axi4lite
 SUBDIRS_EXAMPLES += example-rtl-mixed
-SUBDIRS_EXAMPLES += example-rtl-umi
+#SUBDIRS_EXAMPLES += example-rtl-umi
 
 SUBDIRS += $(SUBDIRS_EXAMPLES)
 SUBDIRS += tlm-modules
@@ -36,7 +36,7 @@ SUBDIRS += traffic-generators/axis/
 SUBDIRS += traffic-generators/ace/
 SUBDIRS += traffic-generators/chi/
 SUBDIRS += traffic-generators/ccix/
-SUBDIRS += traffic-generators/umi/
+#SUBDIRS += traffic-generators/umi/
 SUBDIRS += checkers/axi
 SUBDIRS += checkers/axilite
 SUBDIRS += checkers/ace
