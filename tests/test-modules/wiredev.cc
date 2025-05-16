@@ -61,7 +61,7 @@ void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 	if (trans.get_command() == tlm::TLM_READ_COMMAND) {
 		wire_offset = addr * 8;
 		for (i = wire_offset; i < wire_offset + (len * 8); i++) {
-			if (i > nr_wires) {
+			if (i >= nr_wires) {
 				break;
 			}
 			bool val = wires[i].read();
