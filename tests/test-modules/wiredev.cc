@@ -35,8 +35,8 @@ using namespace std;
 #include <sys/types.h>
 #include <time.h>
 
-wiredev::wiredev(sc_module_name name, unsigned int nr_wires)
-	: sc_module(name), socket("socket"), wires("wires", nr_wires)
+wiredev::wiredev(sc_module_name name, unsigned int nr_wires_in)
+	: sc_module(name), socket("socket"), wires_in("wires-in", nr_wires_in)
 {
 	socket.register_b_transport(this, &wiredev::b_transport);
 	socket.register_transport_dbg(this, &wiredev::transport_dbg);
@@ -60,10 +60,10 @@ void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 	if (trans.get_command() == tlm::TLM_READ_COMMAND) {
 		wire_offset = addr * 8;
 		for (i = wire_offset; i < wire_offset + (len * 8); i++) {
-			if (i >= wires.size()) {
+			if (i >= wires_in.size()) {
 				break;
 			}
-			bool val = wires[i].read();
+			bool val = wires_in[i].read();
 			v = v | (val << (i - wire_offset));
 		}
 		memcpy(data, &v, len);
