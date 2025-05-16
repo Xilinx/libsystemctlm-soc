@@ -57,7 +57,7 @@ void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 	uint64_t v = 0;
 	uint32_t wire_offset = 0;
 	bool is_input = wires_in.size();
-	int nr_wires = is_input ? wires_in.size() : wires_out.size();
+	unsigned int nr_wires = is_input ? wires_in.size() : wires_out.size();
 
 	if (len > sizeof(v)) {
 		trans.set_response_status(tlm::TLM_GENERIC_ERROR_RESPONSE);
