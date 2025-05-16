@@ -24,7 +24,6 @@
 class wiredev
 : public sc_core::sc_module
 {
-	unsigned int nr_wires;
 public:
 	tlm_utils::simple_target_socket<wiredev> socket;
 

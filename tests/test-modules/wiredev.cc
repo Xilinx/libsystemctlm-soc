@@ -40,7 +40,6 @@ wiredev::wiredev(sc_module_name name, unsigned int nr_wires)
 {
 	socket.register_b_transport(this, &wiredev::b_transport);
 	socket.register_transport_dbg(this, &wiredev::transport_dbg);
-	this->nr_wires = nr_wires;
 }
 
 void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
@@ -61,7 +60,7 @@ void wiredev::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 	if (trans.get_command() == tlm::TLM_READ_COMMAND) {
 		wire_offset = addr * 8;
 		for (i = wire_offset; i < wire_offset + (len * 8); i++) {
-			if (i >= nr_wires) {
+			if (i >= wires.size()) {
 				break;
 			}
 			bool val = wires[i].read();
