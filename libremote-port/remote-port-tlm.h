@@ -62,7 +62,7 @@ public:
 	// Response slots to handling multiple outstanding transactions.
 	struct {
 		remoteport_packet pkt;
-		sc_event ev;
+		sc_core::sc_event ev;
 		uint32_t id;
 		bool used;
 		bool valid;
@@ -106,11 +106,11 @@ public:
 
 	// Convert an sc_time into int64 nanoseconds trying to avoid rounding errors.
 	// This should be good enough as a default implemetation for most synchronizers.
-	virtual int64_t map_time(sc_time t) {
-		sc_time tr, tmp;
+	virtual int64_t map_time(sc_core::sc_time t) {
+		sc_core::sc_time tr, tmp;
 		double dtr;
 
-		tr = sc_get_time_resolution();
+		tr = sc_core::sc_get_time_resolution();
 		dtr = tr.to_seconds() * 1000 * 1000 * 1000;
 
 		tmp = t * dtr;
@@ -148,7 +148,7 @@ class remoteport_tlm
 : public sc_core::sc_module
 {
 public:
-	sc_in<bool> rst;
+	sc_core::sc_in<bool> rst;
 
 	SC_HAS_PROCESS(remoteport_tlm);
         remoteport_tlm(sc_core::sc_module_name name,
@@ -168,7 +168,7 @@ public:
 	bool rp_process(bool sync);
 	ssize_t rp_read(void *rbuf, size_t count);
 	ssize_t rp_write(const void *wbuf, size_t count);
-	int64_t rp_map_time(sc_time t);
+	int64_t rp_map_time(sc_core::sc_time t);
 	void account_time(int64_t rp_time_ns);
 	// Returns true if the current SC_THREAD is the remote-port
 	// thread for this adaptor.
@@ -184,7 +184,7 @@ private:
 	remoteport_tlm_dev dev_null;
 	bool blocking_socket;
 
-	sc_process_handle adaptor_proc;
+	sc_core::sc_process_handle adaptor_proc;
 
 	async_event rp_pkt_event;
 	pthread_t rp_pkt_thread;

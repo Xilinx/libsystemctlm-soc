@@ -25,22 +25,26 @@
 #ifndef REMOTE_PORT_TLM_MEMORY_SLAVE
 #define REMOTE_PORT_TLM_MEMORY_SLAVE
 
+#include <tlm_utils/simple_initiator_socket.h>
+#include <tlm_utils/simple_target_socket.h>
+#include "remote-port-tlm.h"
+
 class remoteport_tlm_memory_slave
-	: public sc_module, public remoteport_tlm_dev
+	: public sc_core::sc_module, public remoteport_tlm_dev
 {
         SC_HAS_PROCESS(remoteport_tlm_memory_slave);
 
 public:
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_slave> sk;
 
-        remoteport_tlm_memory_slave(sc_module_name name);
+        remoteport_tlm_memory_slave(sc_core::sc_module_name name);
 	void tie_off(void);
 
 private:
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_slave> *tieoff_sk;
 
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
-				 sc_time& delay);
+				 sc_core::sc_time& delay);
 };
 
 #endif

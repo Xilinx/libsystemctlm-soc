@@ -33,7 +33,7 @@ public:
 	// Config Address-Space
 	tlm_utils::simple_target_socket<pci_device_base> config;
 	// Up to 6 BAR ports.
-	sc_vector<tlm_utils::simple_target_socket_tagged<pci_device_base> > bar;
+	sc_core::sc_vector<tlm_utils::simple_target_socket_tagged<pci_device_base> > bar;
 	// A DMA port for end-point access into the host.
 	tlm_utils::simple_initiator_socket<pci_device_base> dma;
 
@@ -45,21 +45,21 @@ public:
 	// to handle multiple interrupts (mapping these signals into MSI).
 	//
 	// If not, the DMA port can be used to send MSI/MSI-X interrupts.
-	sc_vector<sc_out<bool> > irq;
+	sc_core::sc_vector<sc_core::sc_out<bool> > irq;
 
-	pci_device_base(sc_module_name name,
+	pci_device_base(sc_core::sc_module_name name,
 			unsigned int nr_bars,
 			unsigned int nr_irqs);
 
 protected:
 	virtual void config_b_transport(tlm::tlm_generic_payload& trans,
-					sc_time& delay);
+					sc_core::sc_time& delay);
 
 	// Tagged callback for BAR access. ID represents the BAR nr.
 	virtual void bar_b_transport(int bar_nr, tlm::tlm_generic_payload& trans,
-				     sc_time& delay);
+				     sc_core::sc_time& delay);
 
 	virtual void b_transport_ats_inv(tlm::tlm_generic_payload& trans,
-				     sc_time& delay);
+				     sc_core::sc_time& delay);
 };
 #endif

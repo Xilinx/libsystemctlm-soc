@@ -45,14 +45,14 @@ public:
   }
 
   // THREADSAFE METHOD:
-  void notify(sc_core::sc_time delay = SC_ZERO_TIME)
+  void notify(sc_core::sc_time delay = sc_core::SC_ZERO_TIME)
     {
       m_delay = delay;
       async_request_update();
     }
 
   // only allow waiting for the event
-  operator const sc_event&() const { return m_event; }
+  operator const sc_core::sc_event&() const { return m_event; }
 
 protected:
   void update(void)

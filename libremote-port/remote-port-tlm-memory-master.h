@@ -25,14 +25,18 @@
 #ifndef REMOTE_PORT_TLM_MEMORY_MASTER
 #define REMOTE_PORT_TLM_MEMORY_MASTER
 
+#include <tlm_utils/simple_initiator_socket.h>
+#include <tlm_utils/simple_target_socket.h>
+#include "remote-port-tlm.h"
+
 class remoteport_tlm_memory_master
-	: public sc_module, public remoteport_tlm_dev
+	: public sc_core::sc_module, public remoteport_tlm_dev
 {
 public:
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> sk;
 
-        remoteport_tlm_memory_master(sc_module_name name)
-		: sc_module(name)
+        remoteport_tlm_memory_master(sc_core::sc_module_name name)
+		: sc_core::sc_module(name)
 	{
 	}
 
@@ -56,7 +60,7 @@ private:
 	tlm_utils::simple_target_socket<remoteport_tlm_memory_master> *tieoff_sk;
 
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
-				 sc_time& delay);
+				 sc_core::sc_time& delay);
 
 	int rp_bus_access(struct rp_pkt &pkt,
                                    tlm::tlm_command cmd,

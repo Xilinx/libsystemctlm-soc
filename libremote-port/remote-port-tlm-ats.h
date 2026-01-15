@@ -28,11 +28,13 @@
 #ifndef REMOTE_PORT_TLM_ATS_H
 #define REMOTE_PORT_TLM_ATS_H
 
+#include <tlm_utils/simple_initiator_socket.h>
+#include <tlm_utils/simple_target_socket.h>
 #include <assert.h>
 #include "remote-port-tlm.h"
 
 class remoteport_tlm_ats
-	: public sc_module, public remoteport_tlm_dev
+	: public sc_core::sc_module, public remoteport_tlm_dev
 {
 public:
 	SC_HAS_PROCESS(remoteport_tlm_ats);
@@ -40,7 +42,7 @@ public:
 	tlm_utils::simple_target_socket<remoteport_tlm_ats> req;
 	tlm_utils::simple_initiator_socket<remoteport_tlm_ats> inv;
 
-	remoteport_tlm_ats(sc_module_name name);
+	remoteport_tlm_ats(sc_core::sc_module_name name);
 
 	void cmd_ats_inv(struct rp_pkt &pkt, bool can_sync);
 	void tie_off(void);
@@ -54,7 +56,7 @@ private:
 	tlm_utils::simple_target_socket<remoteport_tlm_ats> *tieoff_inv;
 
 	virtual void b_transport(tlm::tlm_generic_payload& trans,
-				 sc_time& delay);
+				 sc_core::sc_time& delay);
 
 	void ats_invalidate(struct rp_pkt &pkt);
 };

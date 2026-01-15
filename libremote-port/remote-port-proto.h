@@ -27,6 +27,8 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
+#include <assert.h>
 
 /*
  * Remote-Port (RP) is an inter-simulator protocol. It assumes a reliable

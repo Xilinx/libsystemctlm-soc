@@ -39,7 +39,7 @@
 
 // Remote-Port PCIe End-Point
 class remoteport_tlm_pci_ep
-	: public sc_module
+	: public sc_core::sc_module
 {
 	SC_HAS_PROCESS(remoteport_tlm_pci_ep);
 private:
@@ -48,7 +48,7 @@ private:
 	remoteport_tlm_ats rp_ats;
 
 public:
-	sc_in<bool> rst;
+	sc_core::sc_in<bool> rst;
 
 	// TLM Socket to serve PCIe Config Space acceses.
 	tlm_utils::simple_initiator_socket<remoteport_tlm_memory_master> *config;
@@ -64,21 +64,21 @@ public:
 	// When using MSI/MSI-X, you can either send transactions over the
 	// dma socket or create a larger irq vector and let the remote-port peer
 	// convert these signals into MSI/MSI-X messages.
-	sc_vector<sc_in<bool> > &irq;
+	sc_core::sc_vector<sc_core::sc_in<bool> > &irq;
 
-	sc_vector<sc_signal<bool> > signals_irq;
+	sc_core::sc_vector<sc_core::sc_signal<bool> > signals_irq;
 
 	// Constructor that auto-creates a new Remote-port adaptor.
 	// This is suitable for having one Remote-port session per
 	// PCIe EP, e.g in a hotpluggable setup.
-	remoteport_tlm_pci_ep(sc_module_name name,
+	remoteport_tlm_pci_ep(sc_core::sc_module_name name,
 			int nr_io_bars,
 			int nr_mmio_bars,
 			int nr_irqs,
 			const char *sk_descr,
 			Iremoteport_tlm_sync *sync = NULL,
 			bool blocking_socket = false)
-		: sc_module(name),
+		: sc_core::sc_module(name),
 		  rp_dma("rp_dma"),
 		  rp_irq("rp_irq", nr_irqs, 0),
 		  rp_ats("rp_ats"),
@@ -104,13 +104,13 @@ public:
 	// Constructor that uses a pre-existing Remote-port adaptor.
 	// This is suitable for setups where the PCIe connections are
 	// fixes and not run-time pluggable.
-	remoteport_tlm_pci_ep(sc_module_name name,
+	remoteport_tlm_pci_ep(sc_core::sc_module_name name,
 			int nr_io_bars,
 			int nr_mmio_bars,
 			int nr_irqs,
 			remoteport_tlm *adaptor,
 			int rp_dev_base)
-		: sc_module(name),
+		: sc_core::sc_module(name),
 		  rp_dma("rp_dma"),
 		  rp_irq("rp_irq", nr_irqs, 0),
 		  rp_ats("rp_ats"),
@@ -153,11 +153,11 @@ private:
 	remoteport_tlm *adaptor;
 	bool free_adaptor;
 
-	sc_signal<bool> sig_rst;
+	sc_core::sc_signal<bool> sig_rst;
 
 	remoteport_tlm_memory_master rp_config;
-	sc_vector<remoteport_tlm_memory_master> rp_io;
-	sc_vector<remoteport_tlm_memory_master> rp_mmio;
+	sc_core::sc_vector<remoteport_tlm_memory_master> rp_io;
+	sc_core::sc_vector<remoteport_tlm_memory_master> rp_mmio;
 
 	tlm_utils::simple_target_socket<remoteport_tlm_pci_ep> *tieoff_config;
 

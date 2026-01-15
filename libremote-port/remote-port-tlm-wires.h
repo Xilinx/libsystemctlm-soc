@@ -25,20 +25,22 @@
 #ifndef REMOTE_PORT_TLM_WIRES
 #define REMOTE_PORT_TLM_WIRES
 
+#include "remote-port-tlm.h"
+
 class remoteport_tlm_wires
-	: public sc_module, public remoteport_tlm_dev
+	: public sc_core::sc_module, public remoteport_tlm_dev
 {
 public:
 	SC_HAS_PROCESS(remoteport_tlm_wires);
-	remoteport_tlm_wires(sc_module_name name,
+	remoteport_tlm_wires(sc_core::sc_module_name name,
 			     unsigned int nr_wires_in,
 			     unsigned int nr_wires_out,
 			     bool posted_updates = true);
 	void cmd_interrupt(struct rp_pkt &pkt, bool can_sync);
 	void tie_off(void);
 
-	sc_vector<sc_in<bool> > wires_in;
-	sc_vector<sc_out<bool> > wires_out;
+	sc_core::sc_vector<sc_core::sc_in<bool> > wires_in;
+	sc_core::sc_vector<sc_core::sc_out<bool> > wires_out;
 
 	static void cmd_interrupt_null(remoteport_tlm *adaptor,
 					struct rp_pkt &pkt,
