@@ -48,25 +48,25 @@ class VerilogComponent:
 		inc_dirs = []
 
 		if comp_inst is None:
-			print 'Verilog component instance not found'
+			print('Verilog component instance not found')
 			sys.exit(1)
 
 		filesets = comp.root.find('ipxact:fileSets', ns)
 		if filesets is None:
 			if self.args.verbose:
-				print 'ipxact:fileSets not found!'
+				print('ipxact:fileSets not found!')
 			return
 
 		fs_ref = comp_inst.find('ipxact:fileSetRef', ns)
 		if fs_ref is None:
 			if self.args.verbose:
-				print 'ipxact:fileSetRef not found!'
+				print('ipxact:fileSetRef not found!')
 			return
 
 		local_name = fs_ref.find('ipxact:localName', ns)
 		if local_name is None:
 			if self.args.verbose:
-				print 'ipxact:localName not found!'
+				print('ipxact:localName not found!')
 			return
 
 		#
@@ -320,7 +320,7 @@ class SC_Generator:
 		comp_vlnv = to_vlnv(comp_ref.attrib)
 
 		if self.args.verbose:
-			print '\n[Translate componentInstance]: ', comp_vlnv
+			print('\n[Translate componentInstance]: ', comp_vlnv)
 
 		comp_view = None
 		if self.design_cfg is not None:
@@ -328,7 +328,7 @@ class SC_Generator:
 								comp_inst_name)
 
 		if self.args.verbose:
-			print '\n* View:', comp_view
+			print('\n* View:', comp_view)
 
 		#
 		# Get component
@@ -410,7 +410,7 @@ class SC_Generator:
 				comp_typename = 'V'
 
 		elif self.args.verbose:
-			print '\t- Language not specified, default to SystemC'
+			print('\t- Language not specified, default to SystemC')
 
 		if comp_module_name is not None:
 			comp_typename += comp_module_name.text
@@ -482,7 +482,7 @@ class SC_Generator:
 			comp_typename += '>'
 
 		if self.args.verbose:
-			print '* typename:', comp_typename, '\n'
+			print('* typename:', comp_typename, '\n')
 
 		if comp_language is not None:
 			xml = self.reg.get_ipxact_object_xml(comp_vlnv)
@@ -560,10 +560,10 @@ class SC_Generator:
 
 		# Debug
 		if self.args.verbose:
-			print '\n* Generated instantiation:'
-			print  c_inst
-			print '* Generated initializer:'
-			print c_init
+			print('\n* Generated instantiation:')
+			print(c_inst)
+			print('* Generated initializer:')
+			print(c_init)
 
 			if comp_language is not None:
 				m = '\n* Component language:'
@@ -572,7 +572,7 @@ class SC_Generator:
 				# Assume SystemC
 				m = '\n* Component language: SystemC'
 
-			print m
+			print(m)
 
 		return c_inst, c_init
 
@@ -662,8 +662,8 @@ class SC_Generator:
 		inc_dir = os.path.dirname(os.path.abspath(comp_dir + file))
 
 		if self.args.verbose > 1:
-			print '\t\t* Adding include file:', inc_file
-			print '\t\t* Adding include dir:', inc_dir, '\n'
+			print('\t\t* Adding include file:', inc_file)
+			print('\t\t* Adding include dir:', inc_dir, '\n')
 
 		self.include_dirs.append(inc_dir)
 		self.include_files.append(fmt.format(inc_file))
@@ -676,19 +676,19 @@ class SC_Generator:
 
 		if filesets is None:
 			if self.args.verbose:
-				print '- ipxact:fileSets not found!'
+				print('- ipxact:fileSets not found!')
 			return
 
 		fs_ref = comp_inst.find('ipxact:fileSetRef', ns)
 		if fs_ref is None:
 			if self.args.verbose:
-				print '- ipxact:fileSetRef not found!'
+				print('- ipxact:fileSetRef not found!')
 			return
 
 		local_name = fs_ref.find('ipxact:localName', ns)
 		if local_name is None:
 			if self.args.verbose:
-				print '- ipxact:localName not found!'
+				print('- ipxact:localName not found!')
 			return
 
 		#
@@ -703,7 +703,7 @@ class SC_Generator:
 
 		if comp_fs is not None:
 			if self.args.verbose:
-				print '* Component files:'
+				print('* Component files:')
 
 			for f in comp_fs:
 				name = f.find('ipxact:name', ns)
@@ -712,7 +712,7 @@ class SC_Generator:
 				if name is not None:
 					if self.args.verbose:
 						m = '\t- {}'.format(name.text)
-						print m
+						print(m)
 
 					if (is_include is not None and
 						is_include.text == 'true'):
@@ -729,7 +729,7 @@ class SC_Generator:
 							m += '{}'.format(src_f)
 							m += '\n'
 							if self.args.verbose > 1:
-								print m
+								print(m)
 
 							self.cc_files.append(
 									src_f)
@@ -739,7 +739,7 @@ class SC_Generator:
 							m += '{}'.format(src_f)
 							m += '\n'
 							if self.args.verbose > 1:
-								print m
+								print(m)
 
 							self.c_files.append(
 									src_f)
@@ -751,12 +751,12 @@ class SC_Generator:
 					if self.args.verbose > 1:
 						dep_str = '\t\t* [dependency]:'
 						dep_str += 'Adding include dir:'
-						print dep_str, inc_dir
+						print(dep_str, inc_dir)
 
 					self.include_dirs.append(inc_dir)
 
 		elif self.args.verbose:
-			print 'ComponentInstance referenced fileSet not found!'
+			print('ComponentInstance referenced fileSet not found!')
 
 	def translate_component_instances(self):
 		root = self.design.root
@@ -958,8 +958,8 @@ class SC_Generator:
 		root = self.design.root
 
 		if self.args.verbose:
-			print '\n[Translate abstractionDefinition]: {}'.format(
-				abs_def_vlnv)
+			print('\n[Translate abstractionDefinition]: {}'.format(
+				abs_def_vlnv))
 
 		abs_def = self.reg.get_ipxact_object(abs_def_vlnv)
 		bus_type = abs_def.root.find('ipxact:busType', ns)
@@ -1135,7 +1135,7 @@ class SC_Generator:
 				is_ptr = True;
 
 		if '[]' in t_name.text:
-			p = re.compile('\d+$')
+			p = re.compile(r'\d+$')
 			array_idx = p.search(port_ref).group()
 
 		return is_ptr, array_idx
@@ -1404,7 +1404,7 @@ class SC_Generator:
 
 
 				if array_idx is not None:
-					p = re.compile('_\d+$')
+					p = re.compile(r'_\d+$')
 					socket = p.sub('', socket)
 					socket += '[' + array_idx + ']'
 
@@ -1473,7 +1473,7 @@ class SC_Generator:
 			if self.args.verbose > 1:
 				m = '\n* Connect: {} -> {}\n'.format(
 					tlm_init_socket, tlm_tgt_socket)
-				print m
+				print(m)
 
 			self.bus_sig_cons_generated += fmt.format(
 						tlm_init_socket, tlm_tgt_socket)
@@ -1533,7 +1533,7 @@ class SC_Generator:
 		s_fmt = '{}.{}'
 
 		if array_idx is not None:
-			p = re.compile('_\d+$')
+			p = re.compile(r'_\d+$')
 			socket = p.sub('', socket)
 			socket += '[' + array_idx + ']'
 
@@ -1619,7 +1619,7 @@ class SC_Generator:
 			if self.args.verbose > 1:
 				m = '* Attempt specialized_icn_translation on: '
 				m += name.text
-				print m
+				print(m)
 
 			if name.text == 'iconnect':
 				bus_ifs = comp.root.find('ipxact:busInterfaces', ns)
@@ -1642,7 +1642,7 @@ class SC_Generator:
 
 					if self.args.verbose > 1:
 						m = '\t- Found specialized!'
-						print m
+						print(m)
 
 					return True
 			elif name.text == 'RandomTraffic':
@@ -1650,7 +1650,7 @@ class SC_Generator:
 
 				if self.args.verbose > 1:
 					m = '\t- Found specialized!'
-					print m
+					print(m)
 
 				return True
 
@@ -1668,7 +1668,7 @@ class SC_Generator:
 					icn_inst_name = icn.find('ipxact:name', ns)
 					m = '\n[Translate interconnection]: '
 					m += icn_inst_name.text
-					print m
+					print(m)
 				#
 				# Try specialized translations
 				#
@@ -1676,7 +1676,7 @@ class SC_Generator:
 					self.translate_comp_bus_if_port_maps(icn)
 					if self.args.verbose > 1:
 						m = '\t- Translated non specialized!'
-						print m
+						print(m)
 
 	def get_comp_model_port(self, comp, port_ref):
 		model = comp.root.find('ipxact:model', ns)
@@ -1808,18 +1808,18 @@ class SC_Generator:
 
 		if adhoc_cons is None:
 			if self.args.verbose:
-				print ' - No adHocConnections found!'
+				print(' - No adHocConnections found!')
 			return
 
 		if self.args.verbose:
-			print '\n[Translate adHocConnections]'
+			print('\n[Translate adHocConnections]')
 
 		#
 		# Look for connections not requiring a signal generation (one
 		# of the ports is of type sc_signal)
 		#
 		if self.args.verbose > 1:
-			print '\n* Translate specialized connections'
+			print('\n* Translate specialized connections')
 
 		for con in adhoc_cons:
 			sig_p_ref = self.adhoc_con_get_sc_signal(con)
@@ -1848,7 +1848,7 @@ class SC_Generator:
 		# Generate signals for all external ports first
 		#
 		if self.args.verbose > 1:
-			print '* Translate external port connections'
+			print('* Translate external port connections')
 
 		for con in adhoc_cons:
 
@@ -1885,7 +1885,7 @@ class SC_Generator:
 		# Generate signals for the internal ports
 		#
 		if self.args.verbose > 1:
-			print '* Translate internal port connections'
+			print('* Translate internal port connections')
 
 		for con in adhoc_cons:
 
@@ -2372,10 +2372,10 @@ class SC_Generator:
 
 		if self.args.quiet == False:
 			line = '-' * 80
-			print '\n' + line
-			print 'Start translating:'
-			print self.design.get_vlnv()
-			print line + '\n'
+			print('\n' + line)
+			print('Start translating:')
+			print(self.design.get_vlnv())
+			print(line + '\n')
 
 		filename = '{}/sc_sim.cc'.format(self.args.outdir)
 
@@ -2440,13 +2440,13 @@ class SC_Generator:
 		]
 
 		if self.args.verbose:
-			print '\n[Generate {}]\n'.format(filename)
+			print('\n[Generate {}]\n'.format(filename))
 
 		if not self.args.quiet:
 			for debug, output in sc_sim_generated:
 				if self.args.verbose:
-					print debug
-				print output
+					print(debug)
+				print(output)
 
 		#
 		# Write file

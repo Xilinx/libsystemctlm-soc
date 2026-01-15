@@ -113,7 +113,7 @@ class MK_Generator:
 		# c files rules, CFLAGS, OBJS
 		#
 		if len(sc_gen.cc_files) > 0:
-			p = re.compile('.c$')
+			p = re.compile(r'.c$')
 
 			cflags = ''
 			for d in set(sc_gen.include_dirs):
@@ -209,13 +209,13 @@ class MK_Generator:
 		# Debug
 		#
 		if self.args.verbose:
-			print '\n[Generate {}]\n'.format(filename)
+			print('\n[Generate {}]\n'.format(filename))
 
 		if not self.args.quiet:
 			for debug, output in makefile_generated:
 				if self.args.verbose:
-					print debug
-				print output
+					print(debug)
+				print(output)
 
 		#
 		# Write file

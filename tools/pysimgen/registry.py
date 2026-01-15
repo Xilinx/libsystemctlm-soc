@@ -60,20 +60,20 @@ class IpxactObject:
 		return vendor.text, lib.text, name.text, version.text
 
 	def dump_views(self):
-		print '[Platform]'
-		print self.get_vlnv()
+		print('[Platform]')
+		print(self.get_vlnv())
 		model = self.root.find('ipxact:model', ns)
 		views = model.find('ipxact:views', ns)
 
-		print '[Views]'
+		print('[Views]')
 		for view in views.findall('ipxact:view', ns):
 			self.dump_view(view)
 
 	def dump_view(self, view):
 		start_idx = len(ns['ipxact']) + 2
-		print '[View]'
+		print('[View]')
 		for c in view:
-			print c.tag[start_idx:] + ': ' + c.text
+			print(c.tag[start_idx:] + ': ' + c.text)
 
 class Registry:
 
@@ -104,11 +104,11 @@ class Registry:
 						fmt = '[{0}]: {1}'
 						fmt +='\n\n\t * [{2}]\n\n'
 
-						print fmt.format(root.tag[idx:],
+						print(fmt.format(root.tag[idx:],
 								vlnv,
-								file)
+								file))
 					else:
-						print object.get_vlnv()
+						print(object.get_vlnv())
 
 				file_abspath = os.path.abspath(file)
 
