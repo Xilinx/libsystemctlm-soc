@@ -64,7 +64,7 @@ static inline uint64_t bitops_mask64(unsigned int start, unsigned int len)
 
 // Maps an sc_bv into a vector of booleans.
 template <int width>
-static void map_sc_bv2v(sc_vector<sc_signal<bool> > &v, const sc_bv<width> &s)
+static void map_sc_bv2v(sc_core::sc_vector<sc_core::sc_signal<bool> > &v, const sc_dt::sc_bv<width> &s)
 {
 	int i;
 
@@ -77,7 +77,7 @@ static void map_sc_bv2v(sc_vector<sc_signal<bool> > &v, const sc_bv<width> &s)
 
 // Copy an sc_bv into a C buffer.
 template <int width>
-static void sc_bv2buf(unsigned char *buf, const sc_bv<width> &s, int bitlen)
+static void sc_bv2buf(unsigned char *buf, const sc_dt::sc_bv<width> &s, int bitlen)
 {
 	int i;
 
@@ -90,7 +90,7 @@ static void sc_bv2buf(unsigned char *buf, const sc_bv<width> &s, int bitlen)
 
 // Copy a C buffer into a sc_bv.
 template <int width>
-static void sc_buf2bv(unsigned char *buf, sc_bv<width> &s, int bitlen)
+static void sc_buf2bv(unsigned char *buf, sc_dt::sc_bv<width> &s, int bitlen)
 {
 	int i;
 

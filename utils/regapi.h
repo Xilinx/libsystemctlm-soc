@@ -85,7 +85,7 @@ public:
 		dst |= val << shift;
 	}
 
-	T reg_access(tlm::tlm_generic_payload& tr, sc_time& delay, T val) {
+	T reg_access(tlm::tlm_generic_payload& tr, sc_core::sc_time& delay, T val) {
 		uint64_t addr = tr.get_address();
 		bool is_read = tr.is_read();
 		unsigned int regindex;
@@ -155,7 +155,7 @@ public:
 		}
 	}
 
-	void reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay) {
+	void reg_b_transport(tlm::tlm_generic_payload& tr, sc_core::sc_time& delay) {
 		unsigned char *data = tr.get_data_ptr();
 		int len = tr.get_data_length();
 		T val = 0;
