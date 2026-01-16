@@ -21,6 +21,16 @@ This model emulates port data rate (see [PG369] Port Data Rate) by
 disabling macs that are made unavailable due configured data rates
 of other macs.
 
+### Current status
+
+The model's ports and interfaces have been finalized. The internal
+functionality in the model is under development.
+
+In its current state, the model can be used for early integration into
+simulation platforms as a non-functional model but with correct interfaces.
+Eventually, it will be possible to drop-in replace the non-functional model
+with an updated version that provides functionality.
+
 ### Accuracy
 
 This is a functional LT TLM-2.0 model. It is not cycle accurate and
@@ -61,6 +71,8 @@ libsystemctlm-soc's generic attributes to signal AXI4-Stream's TLAST signal as E
 libsystemctlm-soc's generic attributes is an optional TLM-2.0 extension [genattr].
 
 ### Limitations
+
+See current model status above.
 
 The model does not emulate the IEEE 1588 Timestamping features.
 The model does not emulate FEC.
