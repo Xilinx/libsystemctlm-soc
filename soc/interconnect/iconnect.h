@@ -174,6 +174,7 @@ unsigned int iconnect<N_INITIATORS, N_TARGETS>::map_address(
 
 	/* Did not find any slave !?!?  */
 	printf("DECODE ERROR! %lx\n", (unsigned long) addr);
+	offset = 0;
 	return 0;
 }
 
