@@ -130,6 +130,15 @@ SC_MODULE(Top)
         return v64;
     }
 
+    // creg_* for accessing channel-0 registers
+    void creg_write32(uint64_t offset, uint32_t v) {
+        eth_write32(A_C0_CHANNEL_BASE + offset, v);
+    }
+
+    uint32_t creg_read32(uint64_t offset) {
+        return eth_read32(A_C0_CHANNEL_BASE + offset);
+    }
+
     // reg_* for accessing port-0 registers
     void reg_write32(uint64_t offset, uint32_t v) {
         eth_write32(A_C0_PORT_BASE + offset, v);
@@ -139,11 +148,15 @@ SC_MODULE(Top)
         return eth_read32(A_C0_PORT_BASE + offset);
     }
 
-    uint64_t reg_read64(uint64_t offset) {
-        return eth_read64(A_C0_PORT_BASE + offset);
+    uint64_t reg_read64(uint64_t offset_lsb) {
+        uint64_t hi = eth_read32(A_C0_PORT_BASE + offset_lsb + 4);
+        uint64_t lo = eth_read32(A_C0_PORT_BASE + offset_lsb);
+
+        return (hi << 32) | lo;
     }
 
     void reg_tick(void) {
+        // Atomic { stats_regs = internal_counters; internal_couters = 0 }
         uint32_t v;
 
         reg_write32(A_C0_PORT_TICK_REG_TX,
@@ -175,9 +188,71 @@ SC_MODULE(Top)
     }
 
     void check_tx_csum() {
+        uint32_t v, saved;
+        uint64_t v64;
+
+        printf("%s\n", __func__);
+
+        saved = v = creg_read32(A_C0_CHANNEL_CONFIGURATION_TX);
+        v &= ~R_C0_CHANNEL_CONFIGURATION_TX_c0_ctl_tx_fcs_ins_enable_MASK;
+        v &= ~R_C0_CHANNEL_CONFIGURATION_TX_c0_ctl_tx_ignore_fcs_MASK;
+        creg_write32(A_C0_CHANNEL_CONFIGURATION_TX, v);
+
+        reg_tick();
+        memset(txbuf, 0, 68);
+        tx(mac_tx_socket, 68);
+        assert((stats.phy_tx - stats_prev.phy_tx) == 1);
+        stats_prev = stats;
+
+        reg_tick();
+        v64 = reg_read64(A_C0_STAT_TX_BAD_FCS_LSB);
+        assert(v64 == 1);
+
+        csum(64);
+        tx(mac_tx_socket, 68);
+        assert((stats.phy_tx - stats_prev.phy_tx) == 1);
+        stats_prev = stats;
+
+        reg_tick();
+        v64 = reg_read64(A_C0_STAT_TX_BAD_FCS_LSB);
+        assert(v64 == 0);
+
+        // Restore.
+        creg_write32(A_C0_CHANNEL_CONFIGURATION_TX, saved);
     }
 
     void check_rx_csum() {
+        uint32_t v, saved;
+        uint64_t v64;
+
+        printf("%s\n", __func__);
+
+        saved = v = reg_read32(A_C0_CHANNEL_CONFIGURATION_RX);
+        v |= R_C0_CHANNEL_CONFIGURATION_RX_c0_ctl_rx_delete_fcs_MASK;
+        v &= ~R_C0_CHANNEL_CONFIGURATION_RX_c0_ctl_rx_ignore_fcs_MASK;
+        reg_write32(A_C0_CHANNEL_CONFIGURATION_RX, v);
+
+        reg_tick();
+        memset(txbuf, 0, 68);
+        tx(phy_rx_socket, 68);
+        assert(stats.mac_rx - stats_prev.mac_rx == 0);
+        stats_prev = stats;
+
+        reg_tick();
+        v64 = reg_read64(A_C0_STAT_RX_BAD_FCS_LSB);
+        assert(v64 == 1);
+
+        csum(64);
+        tx(phy_rx_socket, 68);
+        assert(stats.mac_rx - stats_prev.mac_rx == 1);
+        stats_prev = stats;
+
+        reg_tick();
+        v64 = reg_read64(A_C0_STAT_RX_BAD_FCS_LSB);
+        assert(v64 == 0);
+
+        // Restore.
+        creg_write32(A_C0_CHANNEL_CONFIGURATION_RX, saved);
     }
 
     void check_tx_stats_hist() {
