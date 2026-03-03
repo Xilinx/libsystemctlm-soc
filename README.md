@@ -67,6 +67,8 @@ Here's another example with SystemC installed under `/opt/` and built with gnu++
 `SYSTEMC = /opt/systemc-2.3.2
 CXXFLAGS +=-std=gnu++17`
 
+
+
 ### How To Embed Into Your Project
 
 This repository contains the code and header files required to connect your SystemC application with Xilinx's QEMU. There are three directories.
@@ -120,4 +122,17 @@ Include this in your Makefile for all projects:
   SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-ats.o
   SC_OBJS += $(LIBRP_PATH)/remote-port-tlm-pci-ep.o
   CPPFLAGS += -I $(LIBRP_PATH)
+```
+
+### Suppression of warning from SystemC's sc_port.h
+When your project uses both SystemC and SystemC TLM from 2.x.x releases,
+you may encounter the following warning messages:
+```
+warning: ‘void sc_core::sc_port_b<IF>::bind(port_type&) [with IF = tlm::tlm_fw_transport_if<>; port_type = sc_core::sc_port_b<tlm::tlm_fw_transport_if<> >]’ was hidden [-Woverloaded-virtual=]
+```
+This is a known problem and has been addressed by SystemC 3.x.x releases.
+To suppress these warning messages, add the following line to your .config.mk
+(see Configuration above)
+```
+CPPFLAGS += -isystem $(SYSTEMC)/include
 ```
