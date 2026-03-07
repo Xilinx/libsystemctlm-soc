@@ -9,31 +9,31 @@ def usage(err):
 	sys.exit(err)
 
 def match_axi_version(f):
-	m = re.match('axilite', f)
+	m = re.match(r'axilite', f)
 	if m:
 		print("-D__AXI_VERSION_AXILITE__")
 
-	m = re.match('axi(\d+)', f)
+	m = re.match(r'axi(\d+)', f)
 	if m:
 		print("-D__AXI_VERSION_AXI" + m.group(1) + "__")
 
 def match_address_width(f):
-	m = re.match('aw(\d+)', f)
+	m = re.match(r'aw(\d+)', f)
 	if m:
 		print("-DAXI_ADDR_WIDTH=" + m.group(1))
 
 def match_data_width(f):
-	m = re.match('dw(\d+)', f)
+	m = re.match(r'dw(\d+)', f)
 	if m:
 		print("-DAXI_DATA_WIDTH=" + m.group(1))
 
 def match_id_width(f):
-	m = re.match('idw(\d+)', f)
+	m = re.match(r'idw(\d+)', f)
 	if m:
 		print("-DAXI_ID_WIDTH=" + m.group(1))
 
 def match_cacheline_sz(f):
-	m = re.match('cl(\d+)', f)
+	m = re.match(r'cl(\d+)', f)
 	if m:
 		print("-DCACHELINE_SIZE=" + m.group(1))
 
