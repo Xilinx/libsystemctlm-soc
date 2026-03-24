@@ -26,6 +26,9 @@
 #ifndef UTILS_REGAPI_H__
 #define UTILS_REGAPI_H__
 
+#include <string>
+
+#include <tlm>
 #include "tlm-extensions/genattr.h"
 #include "utils/bitops.h"
 
@@ -70,6 +73,10 @@ public:
 	T regs[R_MAX];
 	bool debug;
 
+	virtual std::string debug_prefix() {
+		return std::string("reg:");
+	}
+
 	regapi_block(sc_core::sc_module_name name,
 			const regapi_info <T > *info_p, bool a_debug = false) :
 		sc_module(name),
@@ -102,8 +109,10 @@ public:
 
 		if (!found) {
 			if (debug) {
-				printf("reg: %s INVALID 0x%lx = %x\n",
-					is_read ? "READ" : "WRITE", addr, is_read ? 0 : val);
+				printf("%s %s %s.INVALID 0x%lx = 0x%x\n",
+					debug_prefix().c_str(),
+					is_read ? "READ " : "WRITE",
+					name(), addr, is_read ? 0 : val);
 			}
 			tr.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
 			return 0;
@@ -117,10 +126,10 @@ public:
 			/* Clear bits marked as clear-on-read.  */
 			regs[regindex] &= ~info[i].cor;
 		} else {
+			/* 'val' must be left untouched for correct debug output */
 			if (info[i].ro) {
 				regs[regindex] &= info[i].ro;
-				val &= ~info[i].ro;
-				regs[regindex] |= val;
+				regs[regindex] |= (val & ~info[i].ro);
 			} else {
 				regs[regindex] = val;
 			}
@@ -130,8 +139,10 @@ public:
 		}
 
 		if (debug) {
-			printf("reg: %s %s 0x%lx = %x (%x)\n",
-				is_read ? "READ" : "WRITE", info[i].name, addr, val, regs[regindex]);
+			printf("%s %s %s.%s 0x%lx = 0x%x (0x%x)\n",
+				debug_prefix().c_str(),
+				is_read ? "READ " : "WRITE",
+				name(), info[i].name, addr, val, regs[regindex]);
 		}
 		tr.set_response_status(tlm::TLM_OK_RESPONSE);
 		return regs[regindex];
