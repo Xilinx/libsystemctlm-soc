@@ -31,6 +31,7 @@
 #include <tlm>
 #include "tlm-extensions/genattr.h"
 #include "utils/bitops.h"
+#include "trace/trace.h"
 
 #define REG32(R, N)					\
 	enum { A_ ## R = N };				\
@@ -84,6 +85,9 @@ public:
 		debug(a_debug)
 	{
 		assert(info_p);
+		if (!debug) {
+			debug = trace_on("TLMSOC_TRACE_REGAPI", this->name());
+		}
 	}
 
 	void reg_deposit(T &dst, int shift, int len, T val) {
