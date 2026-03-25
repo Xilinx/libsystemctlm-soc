@@ -26,6 +26,39 @@
 #ifndef TRACE_H__
 #define TRACE_H__
 
-void trace(sc_trace_file* tf, const sc_module& mod, const char *txt);
+#include <systemc>
+
+void trace(sc_core::sc_trace_file* tf, const sc_core::sc_module& mod, const char *txt);
+
+/*
+ * Return true only if ALL of the following are true:
+ * 1. trace.cc is built and linked, and
+ * 2. @env_var environment variable is set, and
+ * 3. @env_var environment variable is a list of comma-separated
+ *    regular expressions, and
+ * 4. @key matches, as whole string, one of those regular expressions
+ *
+ * E.g.
+ *   export FOO='a.*bc,e[.]g'
+ * Then,
+ *   trace_on("FOO", "abc") returns true
+ *   trace_on("FOO", "e.g") returns true
+ *   trace_on("FOO", "e_g") returns false
+ *
+ * The optional linkage is meant for backward compatibility when
+ * trace.cc is not in the built source list of existing simulation
+ * builds.
+ */
+#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+bool trace_on_impl(const char *env_var, const char *key) __attribute__((weak));
+
+static inline bool trace_on(const char *env_var, const char *key) {
+    return trace_on_impl ? trace_on_impl(env_var, key) : false;
+}
+#else
+static inline bool trace_on(const char *env_var, const char *key) {
+    return false;
+}
+#endif
 
 #endif
