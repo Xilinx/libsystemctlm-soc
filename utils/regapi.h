@@ -131,15 +131,14 @@ public:
 			regs[regindex] &= ~info[i].cor;
 		} else {
 			/* 'val' must be left untouched for correct debug output */
-			if (info[i].ro) {
-				regs[regindex] &= info[i].ro;
-				regs[regindex] |= (val & ~info[i].ro);
+			T no_wr = info[i].ro | info[i].w1c | info[i].rsvd | info[i].unimp;
+			if (no_wr) {
+				regs[regindex] &= no_wr;
+				regs[regindex] |= (val & ~no_wr);
+				regs[regindex] &= ~(val & info[i].w1c);
 			} else {
 				regs[regindex] = val;
 			}
-
-			/* Clear bits marked as write one to clear.  */
-			regs[regindex] &= ~info[i].w1c;
 		}
 
 		if (debug) {
