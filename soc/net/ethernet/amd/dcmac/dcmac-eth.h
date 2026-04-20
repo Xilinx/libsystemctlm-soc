@@ -50,7 +50,7 @@ SC_MODULE(amd_dcmac_eth)
     }
 
     // Device-level registers only (see public get_regs())
-    regapi_block<uint32_t, R_ALL_CHANNEL_MAC_TICK_REG_TX + 1> rb;
+    regapi_block<uint32_t, R_GLOBAL_NUM> rb;
     tlm_utils::simple_target_socket<amd_dcmac_eth> reg_socket;
     void reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay);
     void reg_written(uint64_t addr);

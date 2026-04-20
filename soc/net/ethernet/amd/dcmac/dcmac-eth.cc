@@ -57,10 +57,7 @@ std::vector<amd_dcmac_eth::reg_spec> amd_dcmac_eth::get_regs(uint64_t dev_base)
     for (unsigned pn = 0; pn < 6; pn++) {
         uint64_t a = dev_base + pn * 0x1000;
 
-        rbs.emplace_back((a + A_C0_CHANNEL_BASE), sizeof(mac[pn].crb.regs),
-                         mac[pn].creg_socket);
-
-        rbs.emplace_back((a + A_C0_PORT_BASE), sizeof(mac[pn].rb.regs),
+        rbs.emplace_back((a + A_C0_CHANNEL_BASE), sizeof(mac[pn].rb.regs),
                          mac[pn].reg_socket);
     }
 
