@@ -46,7 +46,7 @@ SC_MODULE(Top)
     tlm_utils::simple_initiator_socket<Top> reg_socket;
 
     // mmio targets
-    iconnect<1, (1 + 2 * 6)> eth_regs;
+    iconnect<1, (1 + 6)> eth_regs;
 
     // dcmac in FixedE mode
     amd_dcmac_eth eth;
@@ -84,7 +84,7 @@ SC_MODULE(Top)
         // Connect all device's MMIO targets into a bus
         std::vector<amd_dcmac_eth::reg_spec> regs = eth.get_regs(dev_base);
         for (amd_dcmac_eth::reg_spec& r : regs) {
-            eth_regs.memmap(r.addr, r.size, ADDRMODE_RELATIVE, -1, r.sk);
+            eth_regs.memmap(r.addr, (r.size - 1), ADDRMODE_RELATIVE, -1, r.sk);
         }
 
         // Connect mmio initiator to the bus
@@ -130,27 +130,18 @@ SC_MODULE(Top)
         return v64;
     }
 
-    // creg_* for accessing channel-0 registers
-    void creg_write32(uint64_t offset, uint32_t v) {
+    // reg_* for accessing port-0 registers
+    void reg_write32(uint64_t offset, uint32_t v) {
         eth_write32(A_C0_CHANNEL_BASE + offset, v);
     }
 
-    uint32_t creg_read32(uint64_t offset) {
+    uint32_t reg_read32(uint64_t offset) {
         return eth_read32(A_C0_CHANNEL_BASE + offset);
     }
 
-    // reg_* for accessing port-0 registers
-    void reg_write32(uint64_t offset, uint32_t v) {
-        eth_write32(A_C0_PORT_BASE + offset, v);
-    }
-
-    uint32_t reg_read32(uint64_t offset) {
-        return eth_read32(A_C0_PORT_BASE + offset);
-    }
-
     uint64_t reg_read64(uint64_t offset_lsb) {
-        uint64_t hi = eth_read32(A_C0_PORT_BASE + offset_lsb + 4);
-        uint64_t lo = eth_read32(A_C0_PORT_BASE + offset_lsb);
+        uint64_t hi = eth_read32(A_C0_CHANNEL_BASE + offset_lsb + 4);
+        uint64_t lo = eth_read32(A_C0_CHANNEL_BASE + offset_lsb);
 
         return (hi << 32) | lo;
     }
@@ -193,10 +184,10 @@ SC_MODULE(Top)
 
         printf("%s\n", __func__);
 
-        saved = v = creg_read32(A_C0_CHANNEL_CONFIGURATION_TX);
+        saved = v = reg_read32(A_C0_CHANNEL_CONFIGURATION_TX);
         v &= ~R_C0_CHANNEL_CONFIGURATION_TX_c0_ctl_tx_fcs_ins_enable_MASK;
         v &= ~R_C0_CHANNEL_CONFIGURATION_TX_c0_ctl_tx_ignore_fcs_MASK;
-        creg_write32(A_C0_CHANNEL_CONFIGURATION_TX, v);
+        reg_write32(A_C0_CHANNEL_CONFIGURATION_TX, v);
 
         reg_tick();
         memset(txbuf, 0, 68);
@@ -218,7 +209,7 @@ SC_MODULE(Top)
         assert(v64 == 0);
 
         // Restore.
-        creg_write32(A_C0_CHANNEL_CONFIGURATION_TX, saved);
+        reg_write32(A_C0_CHANNEL_CONFIGURATION_TX, saved);
     }
 
     void check_rx_csum() {
@@ -252,7 +243,7 @@ SC_MODULE(Top)
         assert(v64 == 0);
 
         // Restore.
-        creg_write32(A_C0_CHANNEL_CONFIGURATION_RX, saved);
+        reg_write32(A_C0_CHANNEL_CONFIGURATION_RX, saved);
     }
 
     void check_tx_stats_hist() {
@@ -463,7 +454,7 @@ SC_MODULE(Top)
 
         for (unsigned pn = 0; pn < 6; pn++) {
             uint64_t cb = A_C0_CHANNEL_BASE + pn * 0x1000;
-            uint64_t pb = A_C0_PORT_BASE + pn * 0x1000;
+            uint64_t pb = A_C0_CHANNEL_BASE + pn * 0x1000;
 
             assert(eth_read32(cb + A_C0_CHANNEL_CONFIGURATION_TX) == 0xc03);
             assert(eth_read32(pb + A_C0_TX_MODE_REG) == 0x40220);

@@ -11,6 +11,7 @@ CPPFLAGS += -I $(TOP)/ -I .
 CXXFLAGS += -Wall -O0 -g
 
 CHECK_OBJS += check-dcmac-eth.o
+CHECK_OBJS += $(TOP)/trace/trace.o
 CHECK_OBJS += $(TOP)/soc/net/ethernet/amd/dcmac/dcmac-eth.o
 CHECK_OBJS += $(TOP)/soc/net/ethernet/amd/dcmac/dcmac-ethmac.o
 ALL_OBJS += $(OBJS_COMMON) $(CHECK_OBJS)
