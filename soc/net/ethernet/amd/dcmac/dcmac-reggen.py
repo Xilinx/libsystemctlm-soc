@@ -29,7 +29,18 @@ gTemplate = '''\
 #ifndef VERSAL_600G_DCMAC_REGS_H_
 #define VERSAL_600G_DCMAC_REGS_H_
 
-{defs}
+{defg}
+#ifndef R_STAT_TX_ECC_DROPPED
+  enum {{ R_GLOBAL_NUM = R_ALL_CHANNEL_MAC_TICK_REG_TX + 1 }};
+  enum {{ A_GLOBAL_END = A_ALL_CHANNEL_MAC_TICK_REG_TX + 4 }};
+#else
+  enum {{ R_GLOBAL_NUM = R_STAT_TX_ECC_ERR_REG + 1 }};
+  enum {{ A_GLOBAL_END = A_STAT_TX_ECC_ERR_REG + 4 }};
+#endif
+
+{defc}
+
+{defp}
 #endif /* VERSAL_600G_DCMAC_REGS_H_ */
 
 /*
@@ -42,17 +53,21 @@ gTemplate = '''\
     {{}},
 #endif /* VERSAL_600G_DCMAC_GREGS_INIT */
 
+#ifdef VERSAL_600G_DCMAC_PREGS_INIT
+# define VERSAL_600G_DCMAC_CREGS_INIT  /* PREGS is a super-set */
+#endif
+
 #ifdef VERSAL_600G_DCMAC_CREGS_INIT
 #undef VERSAL_600G_DCMAC_CREGS_INIT
 {creg}
-    {{}},
-#endif /* VERSAL_600G_DCMAC_CREGS_INIT */
 
-#ifdef VERSAL_600G_DCMAC_PREGS_INIT
-#undef VERSAL_600G_DCMAC_PREGS_INIT
+    #ifdef VERSAL_600G_DCMAC_PREGS_INIT
+    #undef VERSAL_600G_DCMAC_PREGS_INIT
 {preg}
+    #endif /* VERSAL_600G_DCMAC_PREGS_INIT */
+
     {{}},
-#endif /* VERSAL_600G_DCMAC_PREGS_INIT */\
+#endif /* VERSAL_600G_DCMAC_CREGS_INIT */\
 '''
 
 def mesg(s):
@@ -74,7 +89,7 @@ def src_open():
 
 def src_rdr():
     dl = src_dl()
-    xl = 'dcmac-reg-map/dcmac-reg-map.xlsx'
+    xl = 'dcmac-reg-map/dcmac-reg-map_v1_4.xlsx'
     mesg('Extract %s ...' % xl)
     zf = zipfile.ZipFile(dl)
     rdr = zf.open(xl)
@@ -162,14 +177,34 @@ class Reg:
         self.flds = list(fld_generator(self))
         self.dval = 0
         self.ro = 0
+        self.w1c = 0
+        self.unimp = (1 << 32) - 1;
 
         for f in self.flds:
             self.dval |= f.dval << f.bit
+            self.unimp ^= 1 << f.bit
 
         fo = [f for f in self.flds if f.attr.startswith('RO')]
         for f in fo:
             fm = (1 << f.width) - 1
             self.ro |= fm << f.bit
+
+        fo = [f for f in self.flds if f.attr.startswith('RO L')]
+        for f in fo:
+            fm = (1 << f.width) - 1
+            self.w1c |= fm << f.bit
+
+    def amax(self, other):
+        if other is None or other.addr < self.addr:
+            return self
+        else:
+            return other
+
+    def emit_amax(self, base):
+        t = [f'enum {{ R_{base}_NUM = R_{self.name} + 1 }};',
+             f'enum {{ A_{base}_END = A_{self.name} + 4 }};',
+             ]
+        return t
 
     def emit_def(self):
         t = []
@@ -183,9 +218,14 @@ class Reg:
         # For C++, the designated initializers must be listed in the
         # order same as 'struct regapi_info' defined in utils/regapi.h
         #
+        # Add unimplemented bits to .ro since utils/regapi.h does not
+        # support .rsvd or .unimp masks.
+        #
         t.append(    f'    {{ .name = "{self.name}"')
         if self.ro != 0:
-            t.append(f'      .ro = 0x{self.ro:02x}')
+            t.append(f'      .ro = 0x{(self.ro | self.unimp):02x}')
+        if self.w1c != 0:
+            t.append(f'      .w1c = 0x{self.w1c:02x}')
         if self.dval != 0:
             t.append(f'      .reset = 0x{self.dval:02x}')
 
@@ -205,10 +245,9 @@ def fld_generator(reg):
 
 # Extract a list of register, until end of C0_*
 # Display progress every 20 registers
-# C0_* registers are sorted into 2 groups, with their
-# 'address' offsets adjusted
-# 1. Those common for all 40 channels; -0x1000 adjusted
-# 2. Those common for all 6 ports; -0x1040 adjusted
+#
+# C0_* registers' addresses -0x1000 adjusted.
+# Generation stops upon encountering 1st C1_CHANNEL_*
 def reg_generator(ws):
     row = 3
     while True:
@@ -221,10 +260,10 @@ def reg_generator(ws):
             row = row + len(reg.flds)
             if reg.name.startswith('C1_CHANNEL'):
                 break
-            if reg.name.startswith('C0_CHANNEL_'):
+            if reg.addr >= 0x1000:
                 reg.addr -= 0x1000
-            elif reg.name.startswith('C0_'):
-                reg.addr -= 0x1040
+                if not reg.name.startswith('C0_'):
+                    reg.name = f'C0_{reg.name}' # Fix the odd balls
 
             mesg('\rrow %u' % row)
             yield reg
@@ -242,37 +281,48 @@ def main():
     #   2. They are not present in ranges of the other 5 ports; so
     #   3. They do not seem to be C0 port specific
     inig = []
-    defs = []
+    defg = []
 
     inic = []
-    defc = ['']
+    defc = []
     for c in range(0, 40):
         defc.append(f'REG32(C{c}_CHANNEL_BASE, 0x{(0x1000 + c*0x1000):06x})')
 
     inip = []
-    defp = ['']
-    for c in range(0, 6):
-        defp.append(f'REG32(C{c}_PORT_BASE, 0x{(0x1040 + c*0x1000):06x})')
+    defp = []
 
+    def reg_max(m, r):
+        if m is None or m.addr < r.addr:
+            return r
+        else:
+            return m
+
+    c_max = None
+    p_max = None
     for reg in regs:
         if reg.name.startswith('C0_CHANNEL_'):
             defc.extend(reg.emit_def())
             inic.extend(reg.emit_init())
+            c_max = reg.amax(c_max)
         elif reg.name.startswith('C0_'):
             defp.extend(reg.emit_def())
             inip.extend(reg.emit_init())
-        else:
-            defs.extend(reg.emit_def())
-            if reg.name == 'STAT_TX_ECC_ERR_REG':
-                inig.append('    #ifndef R_STAT_TX_ECC_DROPPED')
+            p_max = reg.amax(p_max)
+        elif reg.name == 'STAT_TX_ECC_ERR_REG':
+            defg.extend(reg.emit_def())
+            inig.append('    #ifndef R_STAT_TX_ECC_DROPPED')
             inig.extend(reg.emit_init())
-            if reg.name == 'STAT_TX_ECC_UNCORRECTABLE_COUNT':
-                inig.append('    #endif /* !R_STAT_TX_ECC_DROPPED */')
+            inig.append('    #endif /* !R_STAT_TX_ECC_DROPPED */')
+        else:
+            defg.extend(reg.emit_def())
+            inig.extend(reg.emit_init())
 
-    defs.extend(defc)
-    defs.extend(defp)
+    defc.extend(c_max.emit_amax('C0_CHANNEL'))
+    defp.extend(p_max.emit_amax('C0_PORT'))
 
-    print(gTemplate.format(defs = '\n'.join(defs),
+    print(gTemplate.format(defg = '\n'.join(defg),
+                           defc = '\n'.join(defc),
+                           defp = '\n'.join(defp),
                            greg = '\n'.join(inig),
                            creg = '\n'.join(inic),
                            preg = '\n'.join(inip)))
