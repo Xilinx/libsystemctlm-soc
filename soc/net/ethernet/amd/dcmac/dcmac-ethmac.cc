@@ -22,12 +22,7 @@ using namespace std;
 
 #define D(x)
 
-static const regapi_info<uint32_t> dcmac_channel_reginfo[] = {
-#define VERSAL_600G_DCMAC_CREGS_INIT
-#include "dcmac-regs.h"
-};
-
-static const regapi_info<uint32_t> dcmac_ethmac_reginfo[] = {
+static const regapi_info<uint32_t> dcmac_port_reginfo[] = {
 #define VERSAL_600G_DCMAC_PREGS_INIT
 #include "dcmac-regs.h"
 };
@@ -40,19 +35,16 @@ amd_dcmac_ethmac::amd_dcmac_ethmac(sc_module_name name,
     mac_tx_socket("mac_tx_socket"),
     phy_tx_socket("phy_tx_socket"),
     phy_rx_socket("phy_rx_socket"),
-    creg_socket("creg_socket"),
     reg_socket("reg_socket"),
     rst("rst"),
     mode_set(mode_set_ev),
-    crb("cregs", dcmac_channel_reginfo),
-    rb("regs", dcmac_ethmac_reginfo),
+    rb("regs", dcmac_port_reginfo),
     rxfifo("rxfifo", 2),
     txpos(0)
 {
     mac_tx_socket.register_b_transport(this, &amd_dcmac_ethmac::mac_b_transport);
     phy_rx_socket.register_b_transport(this, &amd_dcmac_ethmac::phy_b_transport);
 
-    creg_socket.register_b_transport(this, &amd_dcmac_ethmac::creg_b_transport);
     reg_socket.register_b_transport(this, &amd_dcmac_ethmac::reg_b_transport);
 
     memset(&stats, 0, sizeof(stats));
@@ -68,7 +60,6 @@ amd_dcmac_ethmac::amd_dcmac_ethmac(sc_module_name name,
 void amd_dcmac_ethmac::on_reset()
 {
     // Reset all the registers.
-    crb.reg_reset_all();
     rb.reg_reset_all();
     memset(&stats, 0, sizeof(stats));
 }
@@ -446,15 +437,6 @@ void amd_dcmac_ethmac::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& de
     if (tr.is_write()) {
         reg_written(tr.get_address());
     }
-}
-
-void amd_dcmac_ethmac::creg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
-{
-    if (reg_read0(tr)) {
-        return;
-    }
-
-    crb.reg_b_transport(tr, delay);
 }
 
 bool amd_dcmac_ethmac::reg_read0(tlm::tlm_generic_payload& tr)

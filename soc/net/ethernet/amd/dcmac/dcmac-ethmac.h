@@ -30,7 +30,6 @@ SC_MODULE(amd_dcmac_ethmac)
     tlm_utils::simple_target_socket<amd_dcmac_ethmac> mac_tx_socket;
     tlm_utils::simple_initiator_socket<amd_dcmac_ethmac> phy_tx_socket;
     tlm_utils::simple_target_socket<amd_dcmac_ethmac> phy_rx_socket;
-    tlm_utils::simple_target_socket<amd_dcmac_ethmac> creg_socket;
     tlm_utils::simple_target_socket<amd_dcmac_ethmac> reg_socket;
 
     sc_core::sc_in<bool> rst;
@@ -57,8 +56,7 @@ SC_MODULE(amd_dcmac_ethmac)
  private:
     sc_core::sc_event& mode_set;
 
-    regapi_block<uint32_t, R_C0_CHANNEL_CONFIGURATION_RX + 1> crb;
-    regapi_block<uint32_t, R_C0_STAT_RX_ECC_COUNT + 1> rb;
+    regapi_block<uint32_t, R_C0_PORT_NUM> rb;
     struct {
         struct {
             uint64_t total_packets;
@@ -156,22 +154,22 @@ SC_MODULE(amd_dcmac_ethmac)
     void stats_rx_ticked();
 
     bool cfgs_tx_fcs_insert() {
-        return ARRAY_FIELD_EX(crb.regs, C0_CHANNEL_CONFIGURATION_TX,
+        return ARRAY_FIELD_EX(rb.regs, C0_CHANNEL_CONFIGURATION_TX,
                               c0_ctl_tx_fcs_ins_enable);
     }
 
     bool cfgs_tx_fcs_check() {
-        return !ARRAY_FIELD_EX(crb.regs, C0_CHANNEL_CONFIGURATION_TX,
+        return !ARRAY_FIELD_EX(rb.regs, C0_CHANNEL_CONFIGURATION_TX,
                                c0_ctl_tx_ignore_fcs);
     }
 
     bool cfgs_rx_fcs_delete() {
-        return ARRAY_FIELD_EX(crb.regs, C0_CHANNEL_CONFIGURATION_RX,
+        return ARRAY_FIELD_EX(rb.regs, C0_CHANNEL_CONFIGURATION_RX,
                               c0_ctl_rx_delete_fcs);
     }
 
     bool cfgs_rx_fcs_check() {
-        return !ARRAY_FIELD_EX(crb.regs, C0_CHANNEL_CONFIGURATION_RX,
+        return !ARRAY_FIELD_EX(rb.regs, C0_CHANNEL_CONFIGURATION_RX,
                                c0_ctl_rx_ignore_fcs);
     }
 
@@ -203,7 +201,6 @@ SC_MODULE(amd_dcmac_ethmac)
     void phy_b_transport(tlm::tlm_generic_payload& tr, sc_core::sc_time& delay);
     void phy_rx_thread();
 
-    void creg_b_transport(tlm::tlm_generic_payload& tr, sc_core::sc_time& delay);
     void reg_b_transport(tlm::tlm_generic_payload& tr, sc_core::sc_time& delay);
     void reg_written(uint64_t addr);
     bool reg_read0(tlm::tlm_generic_payload& tr);
