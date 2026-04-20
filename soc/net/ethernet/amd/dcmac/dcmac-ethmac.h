@@ -203,6 +203,7 @@ SC_MODULE(amd_dcmac_ethmac)
 
     void reg_b_transport(tlm::tlm_generic_payload& tr, sc_core::sc_time& delay);
     void reg_written(uint64_t addr);
+    void reg_preread(uint64_t addr);
     bool reg_read0(tlm::tlm_generic_payload& tr);
 };
 #endif

@@ -62,6 +62,24 @@ void amd_dcmac_ethmac::on_reset()
     // Reset all the registers.
     rb.reg_reset_all();
     memset(&stats, 0, sizeof(stats));
+
+    // Since FEC and PCS are not modelled, fill in all good status
+    // in real-time status registers, which are copied to W1C latched
+    // peers.
+    rb.regs[R_C0_STAT_PORT_TX_FEC_RT_STATUS_REG] =
+        R_C0_STAT_PORT_TX_FEC_RT_STATUS_REG_c0_stat_tx_fec_pcs_lane_align_MASK |
+        R_C0_STAT_PORT_TX_FEC_RT_STATUS_REG_c0_stat_tx_fec_pcs_block_lock_MASK |
+        R_C0_STAT_PORT_TX_FEC_RT_STATUS_REG_c0_stat_tx_fec_pcs_am_lock_MASK;
+
+    rb.regs[R_C0_STAT_PORT_RX_PHY_RT_STATUS_REG] =
+        R_C0_STAT_PORT_RX_PHY_RT_STATUS_REG_c0_stat_rx_status_MASK |
+        R_C0_STAT_PORT_RX_PHY_RT_STATUS_REG_c0_stat_rx_block_lock_MASK |
+        R_C0_STAT_PORT_RX_PHY_RT_STATUS_REG_c0_stat_rx_aligned_MASK |
+        R_C0_STAT_PORT_RX_PHY_RT_STATUS_REG_c0_stat_rx_synced_MASK;
+
+    rb.regs[R_C0_STAT_PORT_RX_FEC_RT_STATUS_REG] =
+            R_C0_STAT_PORT_RX_FEC_RT_STATUS_REG_c0_stat_rx_fec_aligned_MASK |
+            R_C0_STAT_PORT_RX_FEC_RT_STATUS_REG_c0_stat_rx_fec_lane_lock_MASK;
 }
 
 void amd_dcmac_ethmac::push_stream(unsigned char *buf, int len, bool eop)
@@ -424,10 +442,48 @@ void amd_dcmac_ethmac::reg_written(uint64_t addr)
     }
 }
 
+void amd_dcmac_ethmac::reg_preread(uint64_t addr)
+{
+    unsigned rn = addr / 4;
+
+    switch (rn) {
+    case R_C0_STAT_PORT_TX_FEC_STATUS_REG:
+        // Restore W1C bits on read
+        // FECs are not modelled so always return good and no error
+        rb.regs[rn] = rb.regs[R_C0_STAT_PORT_TX_FEC_RT_STATUS_REG];
+        break;
+    case R_C0_STAT_PORT_RX_PHY_STATUS_REG:
+        // Restore W1C bits on read
+        // PHYs are not modelled so always return good and no error
+        rb.regs[rn] = rb.regs[R_C0_STAT_PORT_RX_PHY_RT_STATUS_REG];
+        break;
+    case R_C0_STAT_PORT_RX_FEC_STATUS_REG:
+        // Restore W1C bits on read
+        // FECs are not modelled so always return good and no error
+        rb.regs[rn] = rb.regs[R_C0_STAT_PORT_RX_FEC_RT_STATUS_REG];
+        break;
+    case R_C0_STAT_PORT_RX_BLOCK_LOCK_REG:
+        // Restore W1C bits on read
+        // PCSs are not modelled so always return good and no error
+        rb.regs[rn] = R_C0_STAT_PORT_RX_BLOCK_LOCK_REG_c0_stat_rx_block_lock_MASK;
+        break;
+    case R_C0_STAT_PORT_RX_LANE_SYNC_REG:
+        // Restore W1C bits on read
+        // PCSs are not modelled so always return good and no error
+        rb.regs[rn] = R_C0_STAT_PORT_RX_LANE_SYNC_REG_c0_stat_rx_synced_MASK;
+        break;
+    }
+}
+
 void amd_dcmac_ethmac::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
 {
     if (reg_read0(tr)) {
         return;
+    }
+
+    // Evaluate before read
+    if (tr.is_read()) {
+        reg_preread(tr.get_address());
     }
 
     // Transfer data between transaction and reg-block
