@@ -52,7 +52,12 @@ std::vector<amd_dcmac_eth::reg_spec> amd_dcmac_eth::get_regs(uint64_t dev_base)
 {
     std::vector<amd_dcmac_eth::reg_spec> rbs;
 
-    rbs.emplace_back(dev_base, sizeof(rb.regs), reg_socket);
+    /*
+     * Linux DCMAC driver writes to BASE + 0x40c, which is outside of
+     * rb.regs[].  So capture the entire 0x1000 range and let regapi
+     * ignore all out-of-range writes.
+     */
+    rbs.emplace_back(dev_base, 0x1000, reg_socket);
 
     for (unsigned pn = 0; pn < 6; pn++) {
         uint64_t a = dev_base + pn * 0x1000;
