@@ -8,7 +8,7 @@
 #include <sstream>
 
 #define SC_INCLUDE_DYNAMIC_PROCESSES
-#include "soc/net/ethernet/xilinx/dcmac/dcmac-eth.h"
+#include "soc/net/ethernet/amd/dcmac/dcmac-eth.h"
 
 using namespace sc_core;
 using namespace sc_dt;
@@ -49,7 +49,7 @@ SC_MODULE(Top)
     iconnect<1, (1 + 2 * 6)> eth_regs;
 
     // dcmac in FixedE mode
-    xilinx_dcmac_eth eth;
+    amd_dcmac_eth eth;
 
     SC_HAS_PROCESS(Top);
 
@@ -82,8 +82,8 @@ SC_MODULE(Top)
 
     void eth_bind_mmio(uint64_t dev_base) {
         // Connect all device's MMIO targets into a bus
-        std::vector<xilinx_dcmac_eth::reg_spec> regs = eth.get_regs(dev_base);
-        for (xilinx_dcmac_eth::reg_spec& r : regs) {
+        std::vector<amd_dcmac_eth::reg_spec> regs = eth.get_regs(dev_base);
+        for (amd_dcmac_eth::reg_spec& r : regs) {
             eth_regs.memmap(r.addr, r.size, ADDRMODE_RELATIVE, -1, r.sk);
         }
 

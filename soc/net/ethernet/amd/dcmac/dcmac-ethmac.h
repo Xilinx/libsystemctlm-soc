@@ -17,26 +17,26 @@
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
 
-class xilinx_dcmac_eth;
+class amd_dcmac_eth;
 
-SC_MODULE(xilinx_dcmac_ethmac)
+SC_MODULE(amd_dcmac_ethmac)
 {
-    friend xilinx_dcmac_eth;
+    friend amd_dcmac_eth;
 
  public:
-    SC_HAS_PROCESS(xilinx_dcmac_ethmac);
+    SC_HAS_PROCESS(amd_dcmac_ethmac);
 
-    tlm_utils::simple_initiator_socket<xilinx_dcmac_ethmac> mac_rx_socket;
-    tlm_utils::simple_target_socket<xilinx_dcmac_ethmac> mac_tx_socket;
-    tlm_utils::simple_initiator_socket<xilinx_dcmac_ethmac> phy_tx_socket;
-    tlm_utils::simple_target_socket<xilinx_dcmac_ethmac> phy_rx_socket;
-    tlm_utils::simple_target_socket<xilinx_dcmac_ethmac> creg_socket;
-    tlm_utils::simple_target_socket<xilinx_dcmac_ethmac> reg_socket;
+    tlm_utils::simple_initiator_socket<amd_dcmac_ethmac> mac_rx_socket;
+    tlm_utils::simple_target_socket<amd_dcmac_ethmac> mac_tx_socket;
+    tlm_utils::simple_initiator_socket<amd_dcmac_ethmac> phy_tx_socket;
+    tlm_utils::simple_target_socket<amd_dcmac_ethmac> phy_rx_socket;
+    tlm_utils::simple_target_socket<amd_dcmac_ethmac> creg_socket;
+    tlm_utils::simple_target_socket<amd_dcmac_ethmac> reg_socket;
 
     sc_core::sc_in<bool> rst;
-    xilinx_dcmac_ethmac(sc_core::sc_module_name name,
-                        sc_core::sc_event& mode_set_ev,
-                        bool insert_rx_crc = false);
+    amd_dcmac_ethmac(sc_core::sc_module_name name,
+                     sc_core::sc_event& mode_set_ev,
+                     bool insert_rx_crc = false);
 
     unsigned data_rate() {
         unsigned tr = ARRAY_FIELD_EX(rb.regs, C0_TX_MODE_REG,

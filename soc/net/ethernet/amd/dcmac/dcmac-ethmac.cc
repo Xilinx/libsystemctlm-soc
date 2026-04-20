@@ -32,9 +32,9 @@ static const regapi_info<uint32_t> dcmac_ethmac_reginfo[] = {
 #include "dcmac-regs.h"
 };
 
-xilinx_dcmac_ethmac::xilinx_dcmac_ethmac(sc_module_name name,
-                                           sc_event& mode_set_ev,
-                                           bool insert_rx_crc) :
+amd_dcmac_ethmac::amd_dcmac_ethmac(sc_module_name name,
+                                   sc_event& mode_set_ev,
+                                   bool insert_rx_crc) :
     sc_module(name),
     mac_rx_socket("mac_rx_socket"),
     mac_tx_socket("mac_tx_socket"),
@@ -49,11 +49,11 @@ xilinx_dcmac_ethmac::xilinx_dcmac_ethmac(sc_module_name name,
     rxfifo("rxfifo", 2),
     txpos(0)
 {
-    mac_tx_socket.register_b_transport(this, &xilinx_dcmac_ethmac::mac_b_transport);
-    phy_rx_socket.register_b_transport(this, &xilinx_dcmac_ethmac::phy_b_transport);
+    mac_tx_socket.register_b_transport(this, &amd_dcmac_ethmac::mac_b_transport);
+    phy_rx_socket.register_b_transport(this, &amd_dcmac_ethmac::phy_b_transport);
 
-    creg_socket.register_b_transport(this, &xilinx_dcmac_ethmac::creg_b_transport);
-    reg_socket.register_b_transport(this, &xilinx_dcmac_ethmac::reg_b_transport);
+    creg_socket.register_b_transport(this, &amd_dcmac_ethmac::creg_b_transport);
+    reg_socket.register_b_transport(this, &amd_dcmac_ethmac::reg_b_transport);
 
     memset(&stats, 0, sizeof(stats));
 
@@ -65,7 +65,7 @@ xilinx_dcmac_ethmac::xilinx_dcmac_ethmac(sc_module_name name,
     SC_THREAD(phy_rx_thread);
 }
 
-void xilinx_dcmac_ethmac::on_reset()
+void amd_dcmac_ethmac::on_reset()
 {
     // Reset all the registers.
     crb.reg_reset_all();
@@ -73,7 +73,7 @@ void xilinx_dcmac_ethmac::on_reset()
     memset(&stats, 0, sizeof(stats));
 }
 
-void xilinx_dcmac_ethmac::push_stream(unsigned char *buf, int len, bool eop)
+void amd_dcmac_ethmac::push_stream(unsigned char *buf, int len, bool eop)
 {
     genattr_extension *genattr = new genattr_extension();
     sc_time delay = SC_ZERO_TIME;
@@ -95,7 +95,7 @@ void xilinx_dcmac_ethmac::push_stream(unsigned char *buf, int len, bool eop)
     tr.release_extension(genattr);
 }
 
-void xilinx_dcmac_ethmac::stats_update_tx_hist(unsigned len)
+void amd_dcmac_ethmac::stats_update_tx_hist(unsigned len)
 {
     if (len < 64) {
         stats_add47(stats.tx.packet_small, 1);
@@ -128,7 +128,7 @@ void xilinx_dcmac_ethmac::stats_update_tx_hist(unsigned len)
     }
 }
 
-void xilinx_dcmac_ethmac::stats_update_rx_hist(unsigned len)
+void amd_dcmac_ethmac::stats_update_rx_hist(unsigned len)
 {
     if (len < 64) {
         stats_add47(stats.rx.packet_small, 1);
@@ -161,7 +161,7 @@ void xilinx_dcmac_ethmac::stats_update_rx_hist(unsigned len)
     }
 }
 
-void xilinx_dcmac_ethmac::stats_update64(unsigned reg, uint64_t &v)
+void amd_dcmac_ethmac::stats_update64(unsigned reg, uint64_t &v)
 {
     // Move accumulators into user accessible registers.
     rb.regs[reg] = v;
@@ -171,7 +171,7 @@ void xilinx_dcmac_ethmac::stats_update64(unsigned reg, uint64_t &v)
     v = 0;
 }
 
-void xilinx_dcmac_ethmac::stats_update32(unsigned reg, uint64_t &v)
+void amd_dcmac_ethmac::stats_update32(unsigned reg, uint64_t &v)
 {
     // Move accumulators into user accessible registers.
     rb.regs[reg] = v & UINT32_MAX;
@@ -180,7 +180,7 @@ void xilinx_dcmac_ethmac::stats_update32(unsigned reg, uint64_t &v)
     v = 0;
 }
 
-void xilinx_dcmac_ethmac::stats_tx_ticked()
+void amd_dcmac_ethmac::stats_tx_ticked()
 {
     stats_update32(R_C0_STAT_TX_PACKET_LARGE, stats.tx.packet_large);
 
@@ -214,7 +214,7 @@ void xilinx_dcmac_ethmac::stats_tx_ticked()
                    c0_stat_tx_port_statistics_ready, 1);
 }
 
-void xilinx_dcmac_ethmac::stats_rx_ticked()
+void amd_dcmac_ethmac::stats_rx_ticked()
 {
     stats_update32(R_C0_STAT_RX_PACKET_LARGE, stats.rx.packet_large);
 
@@ -249,7 +249,7 @@ void xilinx_dcmac_ethmac::stats_rx_ticked()
                    c0_stat_rx_port_statistics_ready, 1);
 }
 
-void xilinx_dcmac_ethmac::mac_b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+void amd_dcmac_ethmac::mac_b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 {
     unsigned char *data = trans.get_data_ptr();
     int len = trans.get_data_length();
@@ -324,7 +324,7 @@ done:
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
-void xilinx_dcmac_ethmac::phy_rx_thread()
+void amd_dcmac_ethmac::phy_rx_thread()
 {
     while (true) {
         tlm::tlm_generic_payload *trans;
@@ -389,7 +389,7 @@ void xilinx_dcmac_ethmac::phy_rx_thread()
     }
 }
 
-void xilinx_dcmac_ethmac::phy_b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+void amd_dcmac_ethmac::phy_b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 {
     tlm::tlm_generic_payload *gp = new tlm::tlm_generic_payload();
     int len = trans.get_data_length();
@@ -413,7 +413,7 @@ void xilinx_dcmac_ethmac::phy_b_transport(tlm::tlm_generic_payload& trans, sc_ti
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
-void xilinx_dcmac_ethmac::reg_written(uint64_t addr)
+void amd_dcmac_ethmac::reg_written(uint64_t addr)
 {
     switch (addr) {
     case A_C0_TX_MODE_REG:
@@ -433,7 +433,7 @@ void xilinx_dcmac_ethmac::reg_written(uint64_t addr)
     }
 }
 
-void xilinx_dcmac_ethmac::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
+void amd_dcmac_ethmac::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
 {
     if (reg_read0(tr)) {
         return;
@@ -448,7 +448,7 @@ void xilinx_dcmac_ethmac::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time&
     }
 }
 
-void xilinx_dcmac_ethmac::creg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
+void amd_dcmac_ethmac::creg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
 {
     if (reg_read0(tr)) {
         return;
@@ -457,7 +457,7 @@ void xilinx_dcmac_ethmac::creg_b_transport(tlm::tlm_generic_payload& tr, sc_time
     crb.reg_b_transport(tr, delay);
 }
 
-bool xilinx_dcmac_ethmac::reg_read0(tlm::tlm_generic_payload& tr)
+bool amd_dcmac_ethmac::reg_read0(tlm::tlm_generic_payload& tr)
 {
     // No-op when reset held in reset, e.g., disabled by global config
     if (!rst.read()) {

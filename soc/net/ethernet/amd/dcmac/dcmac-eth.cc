@@ -23,7 +23,7 @@ static const regapi_info<uint32_t> dcmac_eth_reginfo[] = {
 #include "dcmac-regs.h"
 };
 
-xilinx_dcmac_eth::xilinx_dcmac_eth(sc_module_name name, bool insert_rx_crc) :
+amd_dcmac_eth::amd_dcmac_eth(sc_module_name name, bool insert_rx_crc) :
     sc_module(name),
     rst("rst"),
     mac("mac"),
@@ -33,13 +33,13 @@ xilinx_dcmac_eth::xilinx_dcmac_eth(sc_module_name name, bool insert_rx_crc) :
     rb("regs", dcmac_eth_reginfo),
     reg_socket("reg_socket")
 {
-    mac.init(6, sc_bind(&xilinx_dcmac_eth::mac_item_creator, this,
+    mac.init(6, sc_bind(&amd_dcmac_eth::mac_item_creator, this,
                         sc_unnamed::_1, sc_unnamed::_2));
     for (unsigned pn = 0; pn < 6; pn++) {
         mac[pn].rst.bind(mac_rst[pn]);
     }
 
-    reg_socket.register_b_transport(this, &xilinx_dcmac_eth::reg_b_transport);
+    reg_socket.register_b_transport(this, &amd_dcmac_eth::reg_b_transport);
 
     SC_METHOD(on_mode_set);
     sensitive << mode_set;
@@ -48,9 +48,9 @@ xilinx_dcmac_eth::xilinx_dcmac_eth(sc_module_name name, bool insert_rx_crc) :
     sensitive << rst;
 }
 
-std::vector<xilinx_dcmac_eth::reg_spec> xilinx_dcmac_eth::get_regs(uint64_t dev_base)
+std::vector<amd_dcmac_eth::reg_spec> amd_dcmac_eth::get_regs(uint64_t dev_base)
 {
-    std::vector<xilinx_dcmac_eth::reg_spec> rbs;
+    std::vector<amd_dcmac_eth::reg_spec> rbs;
 
     rbs.emplace_back(dev_base, sizeof(rb.regs), reg_socket);
 
@@ -67,12 +67,12 @@ std::vector<xilinx_dcmac_eth::reg_spec> xilinx_dcmac_eth::get_regs(uint64_t dev_
     return rbs;
 }
 
-void xilinx_dcmac_eth::mac_reset(unsigned n, bool v)
+void amd_dcmac_eth::mac_reset(unsigned n, bool v)
 {
     mac_rst[n].write(v);
 }
 
-void xilinx_dcmac_eth::on_reset()
+void amd_dcmac_eth::on_reset()
 {
     bool on = rst.posedge();
 
@@ -86,7 +86,7 @@ void xilinx_dcmac_eth::on_reset()
     }
 }
 
-void xilinx_dcmac_eth::on_mode_set()
+void amd_dcmac_eth::on_mode_set()
 {
     unsigned dr[6] = {0};
 
@@ -121,7 +121,7 @@ void xilinx_dcmac_eth::on_mode_set()
     }
 }
 
-void xilinx_dcmac_eth::soft_reset_tx()
+void amd_dcmac_eth::soft_reset_tx()
 {
     bool c = ARRAY_FIELD_EX(rb.regs, GLOBAL_CONTROL_REG_TX, soft_tx_core_reset);
     bool m = ARRAY_FIELD_EX(rb.regs, GLOBAL_CONTROL_REG_TX, soft_tx_macif_reset);
@@ -137,7 +137,7 @@ void xilinx_dcmac_eth::soft_reset_tx()
     }
 }
 
-void xilinx_dcmac_eth::soft_reset_rx()
+void amd_dcmac_eth::soft_reset_rx()
 {
     bool c = ARRAY_FIELD_EX(rb.regs, GLOBAL_CONTROL_REG_RX, soft_rx_core_reset);
     bool m = ARRAY_FIELD_EX(rb.regs, GLOBAL_CONTROL_REG_RX, soft_rx_macif_reset);
@@ -153,7 +153,7 @@ void xilinx_dcmac_eth::soft_reset_rx()
     }
 }
 
-void xilinx_dcmac_eth::reg_written(uint64_t addr)
+void amd_dcmac_eth::reg_written(uint64_t addr)
 {
     switch (addr) {
     case A_GLOBAL_CONTROL_REG_TX:
@@ -165,7 +165,7 @@ void xilinx_dcmac_eth::reg_written(uint64_t addr)
     }
 }
 
-void xilinx_dcmac_eth::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
+void amd_dcmac_eth::reg_b_transport(tlm::tlm_generic_payload& tr, sc_time& delay)
 {
     // Transfer data between transaction and reg-block
     rb.reg_b_transport(tr, delay);
