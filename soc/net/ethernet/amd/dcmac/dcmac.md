@@ -14,22 +14,22 @@ via [PG369].
 
 ## Model dcmac-eth
 
-This model emulates DCMAC operating in the Coupled MAC+PCS
-(FixedE) mode. The model includes all 6 FixedE ethernet macs.
+This SystemC/TLM-2.0 model emulates DCMAC operating in the
+Coupled MAC+PCS (FixedE) mode. The model includes all 6 FixedE
+ethernet macs.
 
 This model emulates port data rate (see [PG369] Port Data Rate) by
-disabling macs that are made unavailable due configured data rates
+disabling macs that are made unavailable due to configured data rates
 of other macs.
 
 ### Current status
 
-The model's ports and interfaces have been finalized. The internal
-functionality in the model is under development.
+The model's ports and interfaces have been finalized.
 
-In its current state, the model can be used for early integration into
-simulation platforms as a non-functional model but with correct interfaces.
-Eventually, it will be possible to drop-in replace the non-functional model
-with an updated version that provides functionality.
+The internal functionality in the model has reached a level sufficient
+to enable bi-directional packet flow with AMD/Xilinx VPK120 Linux
+distribution running in AMD/Xilinx QEMU emulator bundled with 25.11
+release of AMD Embedded Development Framework (see [DEMO] for detail).
 
 ### Accuracy
 
@@ -70,6 +70,9 @@ The AXI4-Stream interfaces towards the user-logic are modelled as TLM sockets us
 libsystemctlm-soc's generic attributes to signal AXI4-Stream's TLAST signal as EOP.
 libsystemctlm-soc's generic attributes is an optional TLM-2.0 extension [genattr].
 
+[DEMO] contains a simplified block diagram illustrating connections with
+all interfaces of one MAC port of this model.
+
 ### Limitations
 
 See current model status above.
@@ -79,4 +82,5 @@ The model does not emulate FEC.
 
 ## References:
 [PG369]: https://docs.amd.com/r/en-US/pg369-dcmac/<br />
+[DEMO]: https://github.com/Xilinx/systemctlm-cosim-demo/tree/b36e1dd/versal-dcmac-demo<br />
 [genattr]: https://github.com/Xilinx/libsystemctlm-soc/blob/master/tlm-extensions/genattr.h<br />
